@@ -6,13 +6,19 @@ multi-backend declarative package manager
 
 ### Cargo
 
-```bash
+```shell
 cargo install metapac
 ```
 
 ### AUR
 
-Coming soon.
+```shell
+pacman -S metapac
+```
+
+```shell
+pacman -S metapac-bin
+```
 
 ## Use-case
 
