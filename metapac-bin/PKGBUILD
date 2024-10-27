@@ -10,8 +10,9 @@ arch=("x86_64")
 provides=("metapac")
 conflicts=("metapac")
 source=("https://github.com/ripytide/metapac/releases/download/v$pkgver/metapac-x86_64-unknown-linux-gnu.tar.xz")
-sha256sums=("75b73137f35ba659f3a8583f3384d015c4f3d659a2d056841404870023bd56a6")
+options=(!debug !lto)
+sha256sums=('2f47cd4d48ccbf3115ec17ce671635a290d16552d7e4c1408a3b675b8faf9dbe')
 
 package() {
-    install -Dm755 metapac -t "$pkgdir/usr/bin"
+    install -Dm755 metapac-x86_64-unknown-linux-gnu/metapac -t "$pkgdir/usr/bin"
 }
