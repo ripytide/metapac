@@ -58,6 +58,7 @@ pub enum ArchPackageManager {
     #[default]
     Pacman,
     Paru,
+    Pikaur,
     Yay,
 }
 impl ArchPackageManager {
@@ -65,6 +66,7 @@ impl ArchPackageManager {
         match self {
             ArchPackageManager::Pacman => "pacman",
             ArchPackageManager::Paru => "paru",
+            ArchPackageManager::Pikaur => "pikaur",
             ArchPackageManager::Yay => "yay",
         }
     }
@@ -73,6 +75,7 @@ impl ArchPackageManager {
         match self {
             ArchPackageManager::Pacman => Perms::Sudo,
             ArchPackageManager::Paru => Perms::Same,
+            ArchPackageManager::Pikaur => Perms::Same,
             ArchPackageManager::Yay => Perms::Same,
         }
     }

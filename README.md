@@ -58,16 +58,16 @@ but not in your group files (`metapac clean`).
 At the moment, supported backends are the following. Pull Requests for
 additional backends are welcome!
 
-| Backend               | Group Name  | Notes                                 |
-| --------------------- | ----------- | ------------------------------------- |
-| `pacman`/`paru`/`yay` | `[arch]`    | see the `arch_package_manager` config |
-| `apt`                 | `[apt]`     |                                       |
-| `dnf`                 | `[dnf]`     |                                       |
-| `flatpak`             | `[flatpak]` |                                       |
-| `pipx`                | `[pipx]`    |                                       |
-| `cargo`               | `[cargo]`   |                                       |
-| `rustup`              | `[rustup]`  |                                       |
-| `xbps`                | `[xbps]`    |                                       |
+| Backend                        | Group Name  | Notes                                 |
+| ------------------------------ | ----------- | ------------------------------------- |
+| `pacman`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
+| `apt`                          | `[apt]`     |                                       |
+| `dnf`                          | `[dnf]`     |                                       |
+| `flatpak`                      | `[flatpak]` |                                       |
+| `pipx`                         | `[pipx]`    |                                       |
+| `cargo`                        | `[cargo]`   |                                       |
+| `rustup`                       | `[rustup]`  |                                       |
+| `xbps`                         | `[xbps]`    |                                       |
 
 ## Config
 
@@ -80,10 +80,10 @@ additional backends are welcome!
 # metapac uses the machine's hostname in the hostname_groups table in
 # the config file to get a list of group file names.
 
-# Since pacman, yay and paru all operate on the same package database
+# Since pacman, paru, pikaur and yay all operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
 # metapac to use.
-# Must be one of: ["pacman", "paru", "yay"]
+# Must be one of: ["pacman", "paru", "pikaur", "yay"]
 # Default: "pacman"
 arch_package_manager = "paru"
 
