@@ -25,18 +25,16 @@ macro_rules! is_empty {
 macro_rules! to_package_ids {
     ($($backend:ident),*) => {
         pub fn to_package_ids(&self) -> PackageIds {
-            PackageIds (
-                 BTreeMap::from([
-                    $( (AnyBackend::$backend, self.$backend.keys().cloned().collect()), )*
-                ])
-            )
+            PackageIds {
+                $( $backend: self.$backend.keys().cloned().collect() ),*
+            }
         }
     };
 }
 
 macro_rules! any {
     ($($backend:ident),*) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, derive_more::FromStr, derive_more::Display)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
         pub enum AnyBackend {
             $($backend,)*
         }
@@ -51,93 +49,86 @@ macro_rules! any {
 }
 apply_public_backends!(any);
 
-#[derive(Debug, Clone, Default, Serialize, derive_more::Deref, derive_more::DerefMut)]
-#[serde(transparent)]
-pub struct RawPackageIds(BTreeMap<AnyBackend, Vec<String>>);
-impl RawPackageIds {
-    pub fn contains(&self, backend: AnyBackend, package: &String) -> bool {
-        self.get(&backend).is_some_and(|x| x.contains(package))
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, derive_more::Deref, derive_more::DerefMut)]
-#[serde(transparent)]
-pub struct PackageIds(BTreeMap<AnyBackend, BTreeSet<String>>);
-impl PackageIds {
-    pub fn append(&mut self, other: &mut Self) {
-        for (backend, packages) in other.iter_mut() {
-            self.entry(*backend).or_default().append(packages);
+macro_rules! raw_package_ids {
+    ($($backend:ident),*) => {
+        #[derive(Debug, Clone, Default)]
+        #[allow(non_snake_case)]
+        pub struct RawPackageIds {
+            $(
+                pub $backend: Vec<String>,
+            )*
         }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.values().all(|x| x.is_empty())
-    }
-
-    pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
-        self.get(&backend).is_some_and(|x| x.contains(package))
-    }
-
-    pub fn remove(&mut self, backend: AnyBackend, package: &str) -> bool {
-        if let Some(packages) = self.get_mut(&backend) {
-            packages.remove(package)
-        } else {
-            false
-        }
-    }
-
-    pub fn difference(&self, other: &Self) -> Self {
-        let mut output = Self::default();
-        for (backend, packages) in self.iter() {
-            if let Some(other_packages) = other.get(backend) {
-                output.0.insert(
-                    *backend,
-                    packages.difference(other_packages).cloned().collect(),
-                );
-            }
-        }
-        output
-    }
-
-    pub fn remove_packages(&self, no_confirm: bool, config: &Config) -> Result<()> {
-        for (backend, packages) in self.0.iter() {
-            if is_enabled(*backend, config) {
-                backend.remove_packages(packages, no_confirm, config)?;
-            }
-        }
-
-        Ok(())
-    }
-}
-impl std::fmt::Display for PackageIds {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (backend, packages) in self.iter() {
-            if !packages.is_empty() {
-                writeln!(f, "[{backend}]")?;
-                for package in packages {
-                    writeln!(f, "{package}")?;
+        impl RawPackageIds {
+            pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
+                match backend {
+                    $( AnyBackend::$backend => self.$backend.iter().any(|p| p == package) ),*
                 }
-                writeln!(f)?;
             }
         }
-        Ok(())
     }
 }
+apply_public_backends!(raw_package_ids);
+
 macro_rules! package_ids {
     ($($backend:ident),*) => {
+        #[derive(Debug, Clone, Default, Serialize)]
+        #[allow(non_snake_case)]
+        pub struct PackageIds {
+            $(
+                #[serde(skip_serializing_if = "BTreeSet::is_empty")]
+                pub $backend: BTreeSet<String>,
+            )*
+        }
         impl PackageIds {
-            pub fn to_install_options(self) -> InstallOptions {
-                InstallOptions {
-                    $(
-                        $backend: if let Some(packages) = self.get(&AnyBackend::$backend) {
-                            packages.iter().map(|x| (x.clone(), <$backend as Backend>::InstallOptions::default())).collect()
-                        } else {
-                            Default::default()
-                        },
-                    )*
+            append!($($backend),*);
+            is_empty!($($backend),*);
+
+            pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
+                match backend {
+                    $( AnyBackend::$backend => self.$backend.contains(package) ),*
                 }
             }
 
+            pub fn remove(&mut self, backend: AnyBackend, package: &str) -> bool {
+                match backend {
+                    $( AnyBackend::$backend => self.$backend.remove(package) ),*
+                }
+            }
+
+            pub fn difference(&self, other: &Self) -> Self {
+                let mut output = Self::default();
+
+                $(
+                    output.$backend = self.$backend.difference(&other.$backend).cloned().collect();
+                )*
+
+                output
+            }
+
+            pub fn remove_packages(&self, no_confirm: bool, config: &Config) -> Result<()> {
+                $(
+                    if is_enabled(AnyBackend::$backend, config) {
+                        AnyBackend::$backend.remove_packages(&self.$backend, no_confirm, config)?;
+                    }
+                )*
+
+                Ok(())
+            }
+        }
+        impl std::fmt::Display for PackageIds {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                $(
+                    if !self.$backend.is_empty() {
+                        writeln!(f, "[{}]", AnyBackend::$backend)?;
+                        for package_id in self.$backend.iter() {
+                            writeln!(f, "{package_id}")?;
+                        }
+                        writeln!(f)?;
+                    }
+                )*
+
+                Ok(())
+            }
         }
     }
 }
@@ -187,11 +178,9 @@ macro_rules! raw_install_options {
             append!($($backend),*);
 
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
-                RawPackageIds(
-                    BTreeMap::from([
-                        $( (AnyBackend::$backend, self.$backend.iter().map(|(x, _)| x).cloned().collect()), )*
-                    ])
-                )
+                RawPackageIds {
+                    $( $backend: self.$backend.iter().map(|(x, _)| x).cloned().collect() ),*
+                }
             }
         }
     }

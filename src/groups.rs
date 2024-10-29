@@ -16,7 +16,7 @@ use std::{
 pub struct Groups(BTreeMap<PathBuf, RawInstallOptions>);
 
 impl Groups {
-    pub fn contains(&self, backend: AnyBackend, package: &String) -> Vec<PathBuf> {
+    pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
         let mut result = Vec::new();
         for (group_file, raw_install_options) in self.0.iter() {
             if raw_install_options
@@ -34,16 +34,23 @@ impl Groups {
             BTreeMap::new();
 
         for (group_file, raw_install_options) in self.iter() {
-            for (backend, package_ids) in raw_install_options.to_raw_package_ids().iter() {
-                for package_id in package_ids {
-                    reoriented
-                        .entry((*backend, package_id.clone()))
-                        .or_default()
-                        .entry(group_file.clone())
-                        .or_default()
-                        .add_assign(1);
-                }
+            let raw_package_ids = raw_install_options.to_raw_package_ids();
+
+            macro_rules! x {
+                ($($backend:ident),*) => {
+                    $(
+                        for package_id in raw_package_ids.$backend {
+                            reoriented
+                                .entry((AnyBackend::$backend, package_id.clone()))
+                                .or_default()
+                                .entry(group_file.clone())
+                                .or_default()
+                                .add_assign(1);
+                        }
+                    )*
+                };
             }
+            apply_public_backends!(x);
         }
 
         //warn the user about duplicated packages and output a deduplicated InstallOptions
@@ -137,9 +144,9 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                         eyre!("the {} backend in the {group_file:?} group file has a non-array value", $backend)
                     )?;
 
-                    for package in packages {
+                    for package_id in packages {
                         let (package_id, package_install_options) =
-                            match package {
+                            match package_id {
                                 toml::Value::String(x) => (x.to_string(), Default::default()),
                                 toml::Value::Table(x) => (
                                     x.clone().try_into::<StringPackageStruct>()?.package,
