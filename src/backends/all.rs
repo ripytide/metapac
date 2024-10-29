@@ -34,7 +34,7 @@ macro_rules! to_package_ids {
 
 macro_rules! any {
     ($($backend:ident),*) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, derive_more::FromStr, derive_more::Display)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
         pub enum AnyBackend {
             $($backend,)*
         }
@@ -51,7 +51,7 @@ apply_public_backends!(any);
 
 macro_rules! raw_package_ids {
     ($($backend:ident),*) => {
-        #[derive(Debug, Clone, Default, Serialize)]
+        #[derive(Debug, Clone, Default)]
         #[allow(non_snake_case)]
         pub struct RawPackageIds {
             $(
@@ -75,6 +75,7 @@ macro_rules! package_ids {
         #[allow(non_snake_case)]
         pub struct PackageIds {
             $(
+                #[serde(skip_serializing_if = "BTreeSet::is_empty")]
                 pub $backend: BTreeSet<String>,
             )*
         }
