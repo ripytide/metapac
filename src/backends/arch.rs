@@ -85,8 +85,8 @@ impl Backend for Arch {
 
         let mut result = BTreeMap::new();
 
-        for package in explicit_packages.lines() {
-            result.insert(package.to_string(), ArchQueryInfo {});
+        for package_id in explicit_packages.lines() {
+            result.insert(package_id.to_string(), ArchQueryInfo {});
         }
 
         Ok(result)

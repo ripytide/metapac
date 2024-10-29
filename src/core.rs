@@ -180,16 +180,14 @@ fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> 
     let mut missing = managed.clone();
 
     macro_rules! x {
-                ($($backend:ident),*) => {
-                    $(
-                        if let Some(packages) = installed.get(&AnyBackend::$backend) {
-                            for package in packages {
-                                missing.$backend.remove(package);
-                            }
-                        }
-                    )*
-                };
-        }
+        ($($backend:ident),*) => {
+            $(
+                for package_id in installed.$backend {
+                    missing.$backend.remove(&package_id);
+                }
+            )*
+        };
+    }
     apply_public_backends!(x);
 
     Ok(missing)
