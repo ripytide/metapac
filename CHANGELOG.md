@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2024-10-29
+
+### 📚 Documentation
+
+- Update install command (#34)
+- Add author metadata
+- Add AUR build commands
+- Re-write CONTRIBUTING.md (#36)
+
+### Build
+
+- Add pkgbuild
+- Update pkgbuilds
+- Remove pkgbuilds into a their own repos
+
+## [0.2.0] - 2024-10-20
+
+### ⚙️ Miscellaneous Tasks
+
+- Release metapac version 0.2.0
+
 ## [0.1.0] - 2024-10-20
 
 ### 🚀 Features
