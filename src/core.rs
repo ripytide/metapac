@@ -136,7 +136,7 @@ impl SyncCommand {
             return Ok(());
         }
 
-        println!("{missing}");
+        println!("{}", missing.to_package_ids());
 
         println!("these packages will be installed\n");
 
@@ -152,9 +152,7 @@ impl SyncCommand {
             return Ok(());
         }
 
-        missing
-            .to_install_options()
-            .install_packages(self.no_confirm, config)
+        missing.install_packages(self.no_confirm, config)
     }
 }
 
@@ -176,8 +174,23 @@ fn unmanaged(managed: &InstallOptions, config: &Config) -> Result<PackageIds> {
     QueryInfos::query_installed_packages(config)
         .map(|x| x.to_package_ids().difference(&managed.to_package_ids()))
 }
-fn missing(managed: &InstallOptions, config: &Config) -> Result<PackageIds> {
-    Ok(managed
-        .to_package_ids()
-        .difference(&QueryInfos::query_installed_packages(config)?.to_package_ids()))
+fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> {
+    let installed = QueryInfos::query_installed_packages(config)?.to_package_ids();
+
+    let mut missing = managed.clone();
+
+    macro_rules! x {
+                ($($backend:ident),*) => {
+                    $(
+                        if let Some(packages) = installed.get(&AnyBackend::$backend) {
+                            for package in packages {
+                                missing.$backend.remove(package);
+                            }
+                        }
+                    )*
+                };
+        }
+    apply_public_backends!(x);
+
+    Ok(missing)
 }

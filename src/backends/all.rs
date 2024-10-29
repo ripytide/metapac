@@ -123,25 +123,6 @@ impl std::fmt::Display for PackageIds {
         Ok(())
     }
 }
-macro_rules! package_ids {
-    ($($backend:ident),*) => {
-        impl PackageIds {
-            pub fn to_install_options(self) -> InstallOptions {
-                InstallOptions {
-                    $(
-                        $backend: if let Some(packages) = self.get(&AnyBackend::$backend) {
-                            packages.iter().map(|x| (x.clone(), <$backend as Backend>::InstallOptions::default())).collect()
-                        } else {
-                            Default::default()
-                        },
-                    )*
-                }
-            }
-
-        }
-    }
-}
-apply_public_backends!(package_ids);
 
 macro_rules! query_infos {
     ($($backend:ident),*) => {
