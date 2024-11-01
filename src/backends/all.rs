@@ -22,11 +22,22 @@ macro_rules! is_empty {
         }
     };
 }
+
 macro_rules! to_package_ids {
     ($($backend:ident),*) => {
         pub fn to_package_ids(&self) -> PackageIds {
             PackageIds {
                 $( $backend: self.$backend.keys().cloned().collect() ),*
+            }
+        }
+    };
+}
+
+macro_rules! package_convert {
+    ($($backend:ident),*) => {
+        pub fn to_package_ids(&self) -> PackageIds {
+            PackageIds {
+                $( $backend: self.$backend.keys().map(|key| {<$backend as Backend>::include_implicit(key, self.$backend.get(key).unwrap())}).flat_map(Vec::into_iter).collect() ),*
             }
         }
     };
@@ -199,7 +210,7 @@ macro_rules! install_options {
         impl InstallOptions {
             append!($($backend),*);
             is_empty!($($backend),*);
-            to_package_ids!($($backend),*);
+            package_convert!($($backend),*);
 
             pub fn map_install_packages(mut self, config: &Config) -> Result<Self> {
                 $(
