@@ -33,16 +33,6 @@ macro_rules! to_package_ids {
     };
 }
 
-// macro_rules! package_convert {
-//     ($($backend:ident),*) => {
-//         pub fn to_package_ids(&self) -> PackageIds {
-//             PackageIds {
-//                 $( $backend: self.$backend.keys().map(|key| {<$backend as Backend>::include_implicit(key, self.$backend.get(key).unwrap())}).flat_map(Vec::into_iter).collect() ),*
-//             }
-//         }
-//     };
-// }
-
 macro_rules! any {
     ($($backend:ident),*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
