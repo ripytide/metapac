@@ -55,17 +55,40 @@ impl Backend for Arch {
                 )?;
 
                 for group_package in group_packages.lines() {
-                    let overridden =
-                        packages.insert(group_package.to_string(), install_options.clone());
+                    let overridden = packages
+                        .insert(group_package.to_string(), install_options.clone())
+                        .is_some();
 
-                    if overridden.is_some() {
+                    if overridden {
                         log::warn!("arch package {group_package} has been overridden by the {group} package group");
                     }
                 }
             }
         }
 
-        Ok(packages)
+        let mut final_packages = BTreeMap::new();
+
+        for (main_package, opts) in packages {
+            let overridden = final_packages
+                .insert(main_package.clone(), Self::InstallOptions::default())
+                .is_some();
+
+            if overridden {
+                log::warn!("Package {main_package} overwrote another entry");
+            }
+
+            for package in opts.optional_deps.iter() {
+                let overridden = final_packages
+                    .insert(package.clone(), Self::InstallOptions::default())
+                    .is_some();
+
+                if overridden {
+                    log::warn!("Dependency {package} of {main_package} overwrote another entry");
+                }
+            }
+        }
+
+        Ok(final_packages)
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
