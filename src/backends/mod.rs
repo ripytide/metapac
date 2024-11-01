@@ -30,10 +30,6 @@ pub trait Backend {
     type QueryInfo;
     type InstallOptions;
 
-    fn include_implicit(key: &str, _value: &Self::InstallOptions) -> Vec<String> {
-        vec![key.to_owned()]
-    }
-
     fn map_managed_packages(
         packages: BTreeMap<String, Self::InstallOptions>,
         config: &Config,

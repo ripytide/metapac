@@ -23,16 +23,6 @@ impl Backend for Arch {
     type QueryInfo = ArchQueryInfo;
     type InstallOptions = ArchInstallOptions;
 
-    fn include_implicit(key: &str, value: &Self::InstallOptions) -> Vec<String> {
-        let mut packages = vec![key.to_owned()];
-
-        for package in &value.optional_deps {
-            packages.push(package.clone());
-        }
-
-        packages
-    }
-
     fn map_managed_packages(
         mut packages: BTreeMap<String, Self::InstallOptions>,
         config: &Config,
@@ -65,23 +55,40 @@ impl Backend for Arch {
                 )?;
 
                 for group_package in group_packages.lines() {
-                    let mut overridden = packages
-                        .insert(group_package.to_string(), Self::InstallOptions::default())
+                    let overridden = packages
+                        .insert(group_package.to_string(), install_options.clone())
                         .is_some();
-                    for opts in &install_options.optional_deps {
-                        overridden |= packages
-                            .insert(opts.to_string(), Self::InstallOptions::default())
-                            .is_some();
-                    }
 
                     if overridden {
-                        log::warn!("arch package {group_package} or one of its dependencies has been overridden by the {group} package group");
+                        log::warn!("arch package {group_package} has been overridden by the {group} package group");
                     }
                 }
             }
         }
 
-        Ok(packages)
+        let mut final_packages = BTreeMap::new();
+
+        for (main_package, opts) in packages {
+            let overridden = final_packages
+                .insert(main_package.clone(), Self::InstallOptions::default())
+                .is_some();
+
+            if overridden {
+                log::warn!("Package {main_package} overwrote another entry");
+            }
+
+            for package in opts.optional_deps.iter() {
+                let overridden = final_packages
+                    .insert(package.clone(), Self::InstallOptions::default())
+                    .is_some();
+
+                if overridden {
+                    log::warn!("Dependency {package} of {main_package} overwrote another entry");
+                }
+            }
+        }
+
+        Ok(final_packages)
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
