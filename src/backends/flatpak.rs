@@ -148,7 +148,7 @@ impl Backend for Flatpak {
                 .into_iter()
                 .chain(Some("--assumeyes").filter(|_| no_confirm))
                 .chain(packages.keys().map(String::as_str)),
-                Perms::Sudo,
+                Perms::Same,
             )?;
         }
 
