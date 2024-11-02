@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{command_found, run_command, run_command_for_stdout};
@@ -33,7 +34,7 @@ impl Backend for Flatpak {
             return Ok(BTreeMap::new());
         }
 
-        let sys_explicit_btree = run_command_for_stdout(
+        let sys_explicit_out = run_command_for_stdout(
             [
                 "flatpak",
                 "list",
@@ -42,12 +43,12 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
-        )?
-        .lines()
-        .map(String::from)
-        .collect::<BTreeSet<_>>();
+        )?;
+        let sys_explicit = sys_explicit_out
+            .lines()
+            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: true }));
 
-        let user_explicit_btree = run_command_for_stdout(
+        let user_explicit_out = run_command_for_stdout(
             [
                 "flatpak",
                 "list",
@@ -56,19 +57,74 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
-        )?
-        .lines()
-        .map(String::from)
-        .collect::<BTreeSet<_>>();
+        )?;
+        let user_explicit = user_explicit_out
+            .lines()
+            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: false }));
 
-        let sys_explicit = sys_explicit_btree
-            .iter()
-            .map(|x| (x.clone(), FlatpakQueryInfo { systemwide: true }));
-        let user_explicit = user_explicit_btree
-            .iter()
-            .map(|x| (x.clone(), FlatpakQueryInfo { systemwide: false }));
+        let sys_explicit_runtimes_installed = run_command_for_stdout(
+            [
+                "flatpak",
+                "list",
+                "--system",
+                "--runtime",
+                "--columns=application",
+            ],
+            Perms::Same,
+        )?;
+        let sys_explicit_runtimes_out =
+            run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same)?;
+        let sys_explicit_runtimes = sys_explicit_runtimes_out
+            .lines()
+            .skip(1)
+            .map(|x| {
+                (
+                    x.trim().split('/').nth(1).unwrap().to_owned(),
+                    FlatpakQueryInfo { systemwide: true },
+                )
+            })
+            .filter(|(runtime, _)| {
+                sys_explicit_runtimes_installed
+                    .lines()
+                    .skip(1)
+                    .map(|x| x.trim())
+                    .contains(&runtime.as_str())
+            });
 
-        let all = sys_explicit.chain(user_explicit).collect();
+        let user_explicit_runtimes_installed = run_command_for_stdout(
+            [
+                "flatpak",
+                "list",
+                "--user",
+                "--runtime",
+                "--columns=application",
+            ],
+            Perms::Same,
+        )?;
+        let user_explicit_runtimes_out =
+            run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same)?;
+        let user_explicit_runtimes = user_explicit_runtimes_out
+            .lines()
+            .skip(1)
+            .map(|x| {
+                (
+                    x.trim().split('/').nth(1).unwrap().to_owned(),
+                    FlatpakQueryInfo { systemwide: false },
+                )
+            })
+            .filter(|(runtime, _)| {
+                user_explicit_runtimes_installed
+                    .lines()
+                    .skip(1)
+                    .map(|x| x.trim())
+                    .contains(&runtime.as_str())
+            });
+
+        let all = sys_explicit
+            .chain(user_explicit)
+            .chain(sys_explicit_runtimes)
+            .chain(user_explicit_runtimes)
+            .collect();
 
         Ok(all)
     }
@@ -92,7 +148,7 @@ impl Backend for Flatpak {
                 .into_iter()
                 .chain(Some("--assumeyes").filter(|_| no_confirm))
                 .chain(packages.keys().map(String::as_str)),
-                Perms::Sudo,
+                Perms::Same,
             )?;
         }
 
