@@ -62,6 +62,7 @@ additional backends are welcome!
 | ------------------------------ | ----------- | ------------------------------------- |
 | `pacman`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
 | `apt`                          | `[apt]`     |                                       |
+| `brew`                         | `[brew]`    |                                       |
 | `dnf`                          | `[dnf]`     |                                       |
 | `flatpak`                      | `[flatpak]` |                                       |
 | `pipx`                         | `[pipx]`    |                                       |
@@ -137,36 +138,40 @@ arch = [
 	# optional_deps: additional packages to install with this package, short-form syntax only
 	{ package = "metapac",  optional_deps = ["git"] }
 ]
-cargo = [
-	"metapac",
-	# see cargo docs for info on the options
-	{ package = "metapac", git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ] },
-]
-pipx = [
-	"metapac",
-	{ package = "metapac" }
-]
 apt = [
 	"metapac",
 	{ package = "metapac" }
 ]
-xbps = [
+brew = [
 	"metapac",
 	{ package = "metapac" }
 ]
-flatpak = [
+cargo = [
 	"metapac",
-	{ package = "metapac" }
+	# see cargo docs for info on the options
+	{ package = "metapac", git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ] },
 ]
 dnf = [
 	"metapac",
 	# see dnf docs for more info on these options
 	{ package = "metapac", repo = "/etc/yum.repos.d/fedora_extras.repo" },
 ]
+flatpak = [
+	"metapac",
+	{ package = "metapac" }
+]
+pipx = [
+	"metapac",
+	{ package = "metapac" }
+]
 rustup = [
 	"stable",
 	# components: extra non-default components to install with this toolchain
 	{ package = "stable", components = ["rust-analyzer"] }
+]
+xbps = [
+	"metapac",
+	{ package = "metapac" }
 ]
 ```
 

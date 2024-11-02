@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added the HomeBrew Package Manager (#41)
+
 ### Fixed
 
 - Fixed the optional dependencies Install Option in Arch packages being
