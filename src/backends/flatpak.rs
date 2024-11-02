@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{command_found, run_command, run_command_for_stdout};
@@ -61,23 +62,63 @@ impl Backend for Flatpak {
             .lines()
             .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: false }));
 
+        let sys_explicit_runtimes_installed = run_command_for_stdout(
+            [
+                "flatpak",
+                "list",
+                "--system",
+                "--runtime",
+                "--columns=application",
+            ],
+            Perms::Same,
+        )?;
         let sys_explicit_runtimes_out =
             run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same)?;
-        let sys_explicit_runtimes = sys_explicit_runtimes_out.lines().skip(1).map(|x| {
-            (
-                x.trim().split('/').nth(1).unwrap().to_owned(),
-                FlatpakQueryInfo { systemwide: true },
-            )
-        });
+        let sys_explicit_runtimes = sys_explicit_runtimes_out
+            .lines()
+            .skip(1)
+            .map(|x| {
+                (
+                    x.trim().split('/').nth(1).unwrap().to_owned(),
+                    FlatpakQueryInfo { systemwide: true },
+                )
+            })
+            .filter(|(runtime, _)| {
+                sys_explicit_runtimes_installed
+                    .lines()
+                    .skip(1)
+                    .map(|x| x.trim())
+                    .contains(&runtime.as_str())
+            });
 
+        let user_explicit_runtimes_installed = run_command_for_stdout(
+            [
+                "flatpak",
+                "list",
+                "--user",
+                "--runtime",
+                "--columns=application",
+            ],
+            Perms::Same,
+        )?;
         let user_explicit_runtimes_out =
             run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same)?;
-        let user_explicit_runtimes = user_explicit_runtimes_out.lines().skip(1).map(|x| {
-            (
-                x.trim().split('/').nth(1).unwrap().to_owned(),
-                FlatpakQueryInfo { systemwide: false },
-            )
-        });
+        let user_explicit_runtimes = user_explicit_runtimes_out
+            .lines()
+            .skip(1)
+            .map(|x| {
+                (
+                    x.trim().split('/').nth(1).unwrap().to_owned(),
+                    FlatpakQueryInfo { systemwide: false },
+                )
+            })
+            .filter(|(runtime, _)| {
+                user_explicit_runtimes_installed
+                    .lines()
+                    .skip(1)
+                    .map(|x| x.trim())
+                    .contains(&runtime.as_str())
+            });
 
         let all = sys_explicit
             .chain(user_explicit)
