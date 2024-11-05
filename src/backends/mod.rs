@@ -7,6 +7,7 @@ pub mod dnf;
 pub mod flatpak;
 pub mod pipx;
 pub mod rustup;
+pub mod winget;
 pub mod xbps;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -17,7 +18,7 @@ use serde::{Deserialize, Serialize};
 
 macro_rules! apply_public_backends {
     ($macro:ident) => {
-        $macro! { Arch, Apt, Brew, Cargo, Dnf, Flatpak, Pipx, Rustup, Xbps }
+        $macro! { Arch, Apt, Brew, Cargo, Dnf, Flatpak, Pipx, Rustup, WinGet, Xbps }
     };
 }
 pub(crate) use apply_public_backends;

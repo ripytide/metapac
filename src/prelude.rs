@@ -10,6 +10,7 @@ pub use crate::backends::dnf::{Dnf, DnfInstallOptions, DnfQueryInfo};
 pub use crate::backends::flatpak::{Flatpak, FlatpakInstallOptions, FlatpakQueryInfo};
 pub use crate::backends::pipx::{Pipx, PipxInstallOptions, PipxQueryOptions};
 pub use crate::backends::rustup::{Rustup, RustupInstallOptions, RustupQueryInfo};
+pub use crate::backends::winget::{WinGet, WinGetInstallOptions, WinGetQueryInfo};
 pub use crate::backends::xbps::{Xbps, XbpsInstallOptions, XbpsQueryInfo};
 pub use crate::backends::{Backend, StringPackageStruct};
 pub use crate::cli::{

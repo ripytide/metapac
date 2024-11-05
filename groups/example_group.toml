@@ -53,6 +53,10 @@ rustup = [
 	# components: extra non-default components to install with this toolchain
 	{ package = "stable", components = ["rust-analyzer"] }
 ]
+winget = [
+	"metapac",
+	{ package = "metapac" }
+]
 xbps = [
 	"metapac",
 	{ package = "metapac" }

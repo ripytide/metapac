@@ -68,6 +68,7 @@ additional backends are welcome!
 | `pipx`                         | `[pipx]`    |                                       |
 | `cargo`                        | `[cargo]`   |                                       |
 | `rustup`                       | `[rustup]`  |                                       |
+| `winget`                         | `[winget]`    |                                       |
 | `xbps`                         | `[xbps]`    |                                       |
 
 ## Config
@@ -168,6 +169,10 @@ rustup = [
 	"stable",
 	# components: extra non-default components to install with this toolchain
 	{ package = "stable", components = ["rust-analyzer"] }
+]
+winget = [
+	"metapac",
+	{ package = "metapac" }
 ]
 xbps = [
 	"metapac",

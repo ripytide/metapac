@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added the WinGet Package Manager (#44)
 - Added the HomeBrew Package Manager (#41)
 
 ### Fixed
