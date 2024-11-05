@@ -10,14 +10,14 @@ multi-backend declarative package manager
 cargo install metapac
 ```
 
-### AUR
+### Arch User Repository
 
 ```shell
-pacman -S metapac
+paru -S metapac
 ```
 
 ```shell
-pacman -S metapac-bin
+paru -S metapac-bin
 ```
 
 ## Use-case
