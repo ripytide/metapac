@@ -26,19 +26,15 @@ where
     S: Into<String>,
     I: IntoIterator<Item = S>,
 {
-    let we_are_root = {
-        let uid = unsafe { libc::geteuid() };
-        uid == 0
-    };
-
     let args: Vec<String> = args.into_iter().map(Into::into).collect::<Vec<_>>();
 
     if args.is_empty() {
         return Err(eyre!("cannot run an empty command"));
     }
 
+    let use_sudo = use_sudo(perms)?;
     let args = Some("sudo".to_string())
-        .filter(|_| matches!(perms, Perms::Sudo) && !we_are_root)
+        .filter(|_| use_sudo)
         .into_iter()
         .chain(args)
         .collect::<Vec<_>>();
@@ -65,19 +61,15 @@ where
     S: Into<String>,
     I: IntoIterator<Item = S>,
 {
-    let we_are_root = {
-        let uid = unsafe { libc::geteuid() };
-        uid == 0
-    };
-
     let args: Vec<String> = args.into_iter().map(Into::into).collect::<Vec<_>>();
 
     if args.is_empty() {
         return Err(eyre!("cannot run an empty command"));
     }
 
+    let use_sudo = use_sudo(perms)?;
     let args = Some("sudo".to_string())
-        .filter(|_| matches!(perms, Perms::Sudo) && !we_are_root)
+        .filter(|_| use_sudo)
         .into_iter()
         .chain(args)
         .collect::<Vec<_>>();
@@ -97,4 +89,17 @@ where
     } else {
         Err(eyre!("command failed: {:?}", args.into_iter().join(" ")))
     }
+}
+
+fn use_sudo(perms: Perms) -> Result<bool> {
+    #[cfg(unix)]
+    return Ok(matches!(perms, Perms::Sudo) && unsafe { libc::geteuid() } != 0);
+    #[cfg(windows)]
+    if matches!(perms, Perms::Sudo) {
+        return Err(eyre!(
+            "sudo for privilege escalation is not supported on windows"
+        ));
+    }
+    #[cfg(windows)]
+    return Ok(false);
 }
