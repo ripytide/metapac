@@ -115,7 +115,7 @@ server = ["example_group"]
 
 ```toml
 # Group files (like this one) should be placed in the
-# XDG_CONFIG_HOME/metapac directory (usually ~/.config/metapac/config.toml)
+# XDG_CONFIG_HOME/metapac/groups directory (usually ~/.config/metapac/groups)
 # unless using the --config-dir cli option.
 #
 # The packages for each backend in group files can come in two formats, short-form
