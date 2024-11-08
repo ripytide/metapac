@@ -68,15 +68,19 @@ additional backends are welcome!
 | `pipx`                         | `[pipx]`    |                                       |
 | `cargo`                        | `[cargo]`   |                                       |
 | `rustup`                       | `[rustup]`  |                                       |
-| `winget`                         | `[winget]`    |                                       |
+| `winget`                       | `[winget]`  |                                       |
 | `xbps`                         | `[xbps]`    |                                       |
 
 ## Config
 
 ```toml
-# The metapac config.toml file is expected in the
-# XDG_CONFIG_HOME/metapac directory (usually ~/.config/metapac/config.toml)
-# unless using the --config-dir cli option.
+# metapac's config.toml file (like this one) should be placed in the following location
+# dependent on the operating system as specified in the `dirs` crate:
+# | Platform | Value                                                 | Example                                                      |
+# | -------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+# | Linux    | $XDG_CONFIG_HOME or $HOME/.config/metapac/config.toml | /home/alice/.config/metapac/config.toml                      |
+# | macOS    | $HOME/Library/Application Support/metapac/config.toml | /Users/Alice/Library/Application Support/metapac/config.toml |
+# | Windows  | {FOLDERID_RoamingAppData}\metapac\config.toml         | C:\Users\Alice\AppData\Roaming\metapac\config.toml           |
 
 # To decide which group files are relevant for the current machine
 # metapac uses the machine's hostname in the hostname_groups table in
@@ -115,9 +119,13 @@ server = ["example_group"]
 ## Group Files
 
 ```toml
-# Group files (like this one) should be placed in the
-# XDG_CONFIG_HOME/metapac directory (usually ~/.config/metapac/config.toml)
-# unless using the --config-dir cli option.
+# metapac's group files (like this one) should be placed in the following location
+# dependent on the operating system as specified in the `dirs` crate:
+# | Platform | Value                                     | Example                                                  |
+# | -------- | ----------------------------------------- | -------------------------------------------------------- |
+# | Linux    | $XDG_CONFIG_HOME or $HOME/.config/groups/ | /home/alice/.config/metapac/groups/                      |
+# | macOS    | $HOME/Library/Application Support/groups/ | /Users/Alice/Library/Application Support/metapac/groups/ |
+# | Windows  | {FOLDERID_RoamingAppData}\groups\         | C:\Users\Alice\AppData\Roaming\metapac\groups\           |
 #
 # The packages for each backend in group files can come in two formats, short-form
 # and long-form:
