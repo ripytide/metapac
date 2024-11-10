@@ -42,4 +42,7 @@ fn unmanaged() {
     let mut cmd = Command::cargo_bin("metapac").unwrap();
     cmd.args(["--hostname", "pc", "--config-dir", ".", "unmanaged"]);
     cmd.assert().success();
+
+    std::fs::remove_dir_all("groups").unwrap();
+    std::fs::remove_file("config.toml").unwrap();
 }
