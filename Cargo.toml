@@ -24,6 +24,12 @@ include = [
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[package.metadata.wix]
+upgrade-guid = "3DC3E657-A799-4AB9-9D12-8E1A62D1D583"
+path-guid = "CA73C74A-26B9-4E23-9277-FACA0F7765D1"
+license = false
+eula = false
+
 [dependencies]
 color-eyre = "0.6.3"
 clap = { version = "4.5.20", features = ["derive"] }
