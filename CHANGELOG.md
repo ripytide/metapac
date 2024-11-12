@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.2.2] - 2024-11-10
+
 ### Added
 
 - Fixed build Errors and Commands not being found on Windows (#44)

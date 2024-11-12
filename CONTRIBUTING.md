@@ -14,3 +14,13 @@ guidelines to avoid problems:
 - Discussion is always welcome on issues since there are usually multiple
   ways to fix/implement every bug/feature and discussion is the best and
   easiest way to select the best solution.
+
+## Release Process
+
+In order to release a new version of pacdef:
+
+- Update the `CHANGELOG.md` file with the changes
+- Run `cargo release x.y.z --execute`
+- In the AUR package repos, run `updpkgsums` and `makepkg
+--printsrcinfo > .SRCINFO`, then commit and push the changes. (Discard
+  the tar file though from `updpkgsums` though)
