@@ -17,10 +17,13 @@ guidelines to avoid problems:
 
 ## Release Process
 
-In order to release a new version of pacdef:
+In order to release a new version of `metapac`:
 
-- Update the `CHANGELOG.md` file with the changes
-- Run `cargo release x.y.z --execute`
-- In the AUR package repos, run `updpkgsums` and `makepkg
-  --printsrcinfo > .SRCINFO`, then commit and push the changes.
-  (Discard the tar file though from `updpkgsums` though)
+- update the `CHANGELOG.md` file with the changes
+- run `cargo release x.y.z --execute`
+- update the AUR packages (`metapac` and `metapac-bin`):
+  - update the version numbers in the `PKGBUILD` files
+  - run `updpkgsums`
+  - run `makepkg --printsrcinfo > .SRCINFO`
+  - discard the tar file though made when running `updpkgsums`
+  - commit and push the changes
