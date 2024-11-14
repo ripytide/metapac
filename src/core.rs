@@ -50,7 +50,7 @@ impl CleanCommand {
         let unmanaged = unmanaged(managed, config)?;
 
         if unmanaged.is_empty() {
-            log::info!("nothing to do since there are no unmanaged packages");
+            eprintln!("nothing to clean since there are no unmanaged packages");
             return Ok(());
         }
 
