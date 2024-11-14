@@ -1,7 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::io::Read;
 
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::cmd::{command_found, run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -31,11 +33,34 @@ impl Backend for WinGet {
             return Ok(BTreeMap::new());
         }
 
-        let explicit = run_command_for_stdout(["winget", "list", "--id"], Perms::Same)?;
+        //TODO: refactor if https://github.com/microsoft/winget-cli/issues/184 or https://github.com/microsoft/winget-cli/issues/4267 are ever fixed
+        let mut tempfile = tempfile::NamedTempFile::new()?;
+        let _ = run_command_for_stdout(
+            [
+                "winget",
+                "export",
+                "--nowarn",
+                tempfile.path().to_str().unwrap(),
+            ],
+            Perms::Same,
+        )?;
 
-        Ok(explicit
-            .lines()
-            .map(|x| (x.to_string(), WinGetQueryInfo {}))
+        let mut export = String::new();
+        tempfile.read_to_string(&mut export)?;
+
+        let export: Value = serde_json::from_str(&export)?;
+
+        Ok(export["Sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .flat_map(|x| x["Packages"].as_array().unwrap())
+            .map(|x| {
+                (
+                    x["PackageIdentifier"].as_str().unwrap().to_string(),
+                    WinGetQueryInfo {},
+                )
+            })
             .collect())
     }
 
@@ -46,7 +71,7 @@ impl Backend for WinGet {
     ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                ["winget", "install", "--id", "--exact"]
+                ["winget", "install"]
                     .into_iter()
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Same,
@@ -59,7 +84,7 @@ impl Backend for WinGet {
     fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                ["winget", "uninstall", "--id", "--exact"]
+                ["winget", "uninstall"]
                     .into_iter()
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Same,
