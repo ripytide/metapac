@@ -22,5 +22,5 @@ In order to release a new version of pacdef:
 - Update the `CHANGELOG.md` file with the changes
 - Run `cargo release x.y.z --execute`
 - In the AUR package repos, run `updpkgsums` and `makepkg
---printsrcinfo > .SRCINFO`, then commit and push the changes. (Discard
-  the tar file though from `updpkgsums` though)
+  --printsrcinfo > .SRCINFO`, then commit and push the changes.
+  (Discard the tar file though from `updpkgsums` though)
