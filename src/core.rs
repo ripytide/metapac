@@ -180,10 +180,10 @@ fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> 
     let mut missing = managed.clone();
 
     macro_rules! x {
-        ($($backend:ident),*) => {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for package_id in installed.$backend {
-                    missing.$backend.remove(&package_id);
+                for package_id in installed.$lower_backend {
+                    missing.$lower_backend.remove(&package_id);
                 }
             )*
         };

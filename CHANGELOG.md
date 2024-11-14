@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Fixed WinGet Command not working (#49)
+- Fixed WinGet commands not working (#49)
 - Fixed `metapac unmanaged` output backend names in lowercase (#49)
 
 ## [0.2.2] - 2024-11-10

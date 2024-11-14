@@ -18,7 +18,17 @@ use serde::{Deserialize, Serialize};
 
 macro_rules! apply_public_backends {
     ($macro:ident) => {
-        $macro! { Arch, Apt, Brew, Cargo, Dnf, Flatpak, Pipx, Rustup, WinGet, Xbps }
+        $macro! {
+        (Arch, arch),
+        (Apt, apt),
+        (Brew, brew),
+        (Cargo, cargo),
+        (Dnf, dnf),
+        (Flatpak, flatpak),
+        (Pipx, pipx),
+        (Rustup, rustup),
+        (WinGet, winget),
+        (Xbps, xbps) }
     };
 }
 pub(crate) use apply_public_backends;
