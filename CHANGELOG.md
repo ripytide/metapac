@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.2.3] - 2024-11-14
+
+### Fixed
+
+- Fixed WinGet Command not working (#49)
+
 ## [0.2.2] - 2024-11-10
 
 ### Added
 
-- Fixed build Errors and Commands not being found on Windows (#44)
 - Added the WinGet Package Manager (#44)
 - Added the HomeBrew Package Manager (#41)
 - Added new test to de-duplicate the codebase by pulling the example config and
@@ -16,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed build Errors and Commands not being found on Windows (#44)
 - Fixed the optional dependencies Install Option in Arch packages being
   ignored (#39)
 - Fixed Flatpak package runtimes not being detected (#40)
