@@ -37,11 +37,11 @@ impl Groups {
             let raw_package_ids = raw_install_options.to_raw_package_ids();
 
             macro_rules! x {
-                ($($backend:ident),*) => {
+                ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                     $(
-                        for package_id in raw_package_ids.$backend {
+                        for package_id in raw_package_ids.$lower_backend {
                             reoriented
-                                .entry((AnyBackend::$backend, package_id.clone()))
+                                .entry((AnyBackend::$upper_backend, package_id.clone()))
                                 .or_default()
                                 .entry(group_file.clone())
                                 .or_default()
@@ -68,11 +68,11 @@ impl Groups {
 
         let mut install_options = InstallOptions::default();
         macro_rules! x {
-                ($($backend:ident),*) => {
-                    $(
-                        install_options.$backend = merged_raw_install_options.$backend.into_iter().collect();
-                    )*
-                };
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    install_options.$lower_backend = merged_raw_install_options.$lower_backend.into_iter().collect();
+                )*
+            };
         }
         apply_public_backends!(x);
 
@@ -135,13 +135,13 @@ fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawInstallOptio
 
 fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<RawInstallOptions> {
     macro_rules! x {
-        ($($backend:ident),*) => {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                if key.to_lowercase() == $backend.to_string().to_lowercase() {
+                if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
                     let mut raw_install_options = RawInstallOptions::default();
 
                     let packages = value.as_array().ok_or(
-                        eyre!("the {} backend in the {group_file:?} group file has a non-array value", $backend)
+                        eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
                     )?;
 
                     for package_id in packages {
@@ -152,10 +152,10 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                                     x.clone().try_into::<StringPackageStruct>()?.package,
                                     x.clone().try_into()?,
                                 ),
-                                _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $backend)),
+                                _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                             };
 
-                        raw_install_options.$backend.push((package_id, package_install_options));
+                        raw_install_options.$lower_backend.push((package_id, package_install_options));
                     }
 
                     return Ok(raw_install_options);

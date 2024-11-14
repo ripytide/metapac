@@ -5,44 +5,44 @@ use crate::prelude::*;
 use color_eyre::Result;
 
 macro_rules! append {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         pub fn append(&mut self, other: &mut Self) {
             $(
-                self.$backend.append(&mut other.$backend);
+                self.$lower_backend.append(&mut other.$lower_backend);
             )*
         }
     };
 }
 macro_rules! is_empty {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         pub fn is_empty(&self) -> bool {
             $(
-                self.$backend.is_empty() &&
+                self.$lower_backend.is_empty() &&
             )* true
         }
     };
 }
 
 macro_rules! to_package_ids {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         pub fn to_package_ids(&self) -> PackageIds {
             PackageIds {
-                $( $backend: self.$backend.keys().cloned().collect() ),*
+                $( $lower_backend: self.$lower_backend.keys().cloned().collect() ),*
             }
         }
     };
 }
 
 macro_rules! any {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
         pub enum AnyBackend {
-            $($backend,)*
+            $($upper_backend,)*
         }
         impl AnyBackend {
             pub fn remove_packages(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$backend => $backend::remove_packages(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::remove_packages(packages, no_confirm, config), )*
                 }
             }
         }
@@ -51,18 +51,17 @@ macro_rules! any {
 apply_public_backends!(any);
 
 macro_rules! raw_package_ids {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        #[allow(non_snake_case)]
         pub struct RawPackageIds {
             $(
-                pub $backend: Vec<String>,
+                pub $lower_backend: Vec<String>,
             )*
         }
         impl RawPackageIds {
             pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
                 match backend {
-                    $( AnyBackend::$backend => self.$backend.iter().any(|p| p == package) ),*
+                    $( AnyBackend::$upper_backend => self.$lower_backend.iter().any(|p| p == package) ),*
                 }
             }
         }
@@ -71,28 +70,27 @@ macro_rules! raw_package_ids {
 apply_public_backends!(raw_package_ids);
 
 macro_rules! package_ids {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default, Serialize)]
-        #[allow(non_snake_case)]
         pub struct PackageIds {
             $(
                 #[serde(skip_serializing_if = "BTreeSet::is_empty")]
-                pub $backend: BTreeSet<String>,
+                pub $lower_backend: BTreeSet<String>,
             )*
         }
         impl PackageIds {
-            append!($($backend),*);
-            is_empty!($($backend),*);
+            append!($(($upper_backend, $lower_backend)),*);
+            is_empty!($(($upper_backend, $lower_backend)),*);
 
             pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
                 match backend {
-                    $( AnyBackend::$backend => self.$backend.contains(package) ),*
+                    $( AnyBackend::$upper_backend => self.$lower_backend.contains(package) ),*
                 }
             }
 
             pub fn remove(&mut self, backend: AnyBackend, package: &str) -> bool {
                 match backend {
-                    $( AnyBackend::$backend => self.$backend.remove(package) ),*
+                    $( AnyBackend::$upper_backend => self.$lower_backend.remove(package) ),*
                 }
             }
 
@@ -100,7 +98,7 @@ macro_rules! package_ids {
                 let mut output = Self::default();
 
                 $(
-                    output.$backend = self.$backend.difference(&other.$backend).cloned().collect();
+                    output.$lower_backend = self.$lower_backend.difference(&other.$lower_backend).cloned().collect();
                 )*
 
                 output
@@ -108,8 +106,8 @@ macro_rules! package_ids {
 
             pub fn remove_packages(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    if is_enabled(AnyBackend::$backend, config) {
-                        AnyBackend::$backend.remove_packages(&self.$backend, no_confirm, config)?;
+                    if is_enabled(AnyBackend::$upper_backend, config) {
+                        AnyBackend::$upper_backend.remove_packages(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
 
@@ -119,9 +117,9 @@ macro_rules! package_ids {
         impl std::fmt::Display for PackageIds {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 $(
-                    if !self.$backend.is_empty() {
-                        writeln!(f, "[{}]", AnyBackend::$backend)?;
-                        for package_id in self.$backend.iter() {
+                    if !self.$lower_backend.is_empty() {
+                        writeln!(f, "[{}]", AnyBackend::$upper_backend)?;
+                        for package_id in self.$lower_backend.iter() {
                             writeln!(f, "{package_id}")?;
                         }
                         writeln!(f)?;
@@ -136,25 +134,24 @@ macro_rules! package_ids {
 apply_public_backends!(package_ids);
 
 macro_rules! query_infos {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        #[allow(non_snake_case)]
         pub struct QueryInfos {
             $(
-                pub $backend: BTreeMap<String, <$backend as Backend>::QueryInfo>,
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::QueryInfo>,
             )*
         }
         impl QueryInfos {
-            append!($($backend),*);
-            is_empty!($($backend),*);
-            to_package_ids!($($backend),*);
+            append!($(($upper_backend, $lower_backend)),*);
+            is_empty!($(($upper_backend, $lower_backend)),*);
+            to_package_ids!($(($upper_backend, $lower_backend)),*);
 
             pub fn query_installed_packages(config: &Config) -> Result<Self> {
                 Ok(Self {
                     $(
-                        $backend:
-                            if is_enabled(AnyBackend::$backend, config) {
-                                $backend::query_installed_packages(config)?
+                        $lower_backend:
+                            if is_enabled(AnyBackend::$upper_backend, config) {
+                                $upper_backend::query_installed_packages(config)?
                             } else {
                                 Default::default()
                             },
@@ -167,20 +164,19 @@ macro_rules! query_infos {
 apply_public_backends!(query_infos);
 
 macro_rules! raw_install_options {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        #[allow(non_snake_case)]
         pub struct RawInstallOptions {
             $(
-                pub $backend: Vec<(String, <$backend as Backend>::InstallOptions)>,
+                pub $lower_backend: Vec<(String, <$upper_backend as Backend>::InstallOptions)>,
             )*
         }
         impl RawInstallOptions {
-            append!($($backend),*);
+            append!($(($upper_backend, $lower_backend)),*);
 
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
                 RawPackageIds {
-                    $( $backend: self.$backend.iter().map(|(x, _)| x).cloned().collect() ),*
+                    $( $lower_backend: self.$lower_backend.iter().map(|(x, _)| x).cloned().collect() ),*
                 }
             }
         }
@@ -189,23 +185,23 @@ macro_rules! raw_install_options {
 apply_public_backends!(raw_install_options);
 
 macro_rules! install_options {
-    ($($backend:ident),*) => {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
         #[allow(non_snake_case)]
         pub struct InstallOptions {
             $(
-                pub $backend: BTreeMap<String, <$backend as Backend>::InstallOptions>,
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::InstallOptions>,
             )*
         }
         impl InstallOptions {
-            append!($($backend),*);
-            is_empty!($($backend),*);
-            to_package_ids!($($backend),*);
+            append!($(($upper_backend, $lower_backend)),*);
+            is_empty!($(($upper_backend, $lower_backend)),*);
+            to_package_ids!($(($upper_backend, $lower_backend)),*);
 
             pub fn map_install_packages(mut self, config: &Config) -> Result<Self> {
                 $(
-                    if is_enabled(AnyBackend::$backend, config) {
-                        self.$backend = $backend::map_managed_packages(self.$backend, config)?;
+                    if is_enabled(AnyBackend::$upper_backend, config) {
+                        self.$lower_backend = $upper_backend::map_managed_packages(self.$lower_backend, config)?;
                     }
                 )*
 
@@ -214,8 +210,8 @@ macro_rules! install_options {
 
             pub fn install_packages(self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    if is_enabled(AnyBackend::$backend, config) {
-                        $backend::install_packages(&self.$backend, no_confirm, config)?;
+                    if is_enabled(AnyBackend::$upper_backend, config) {
+                        $upper_backend::install_packages(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
 
