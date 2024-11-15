@@ -6,6 +6,8 @@ use color_eyre::Result;
 use dialoguer::Confirm;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
+use crate::backends::all::backend_versions;
+use crate::cli::BackendsCommand;
 use crate::prelude::*;
 use crate::review::review;
 
@@ -41,6 +43,7 @@ impl MainArguments {
             MainSubcommand::Review(review) => review.run(&managed, &config),
             MainSubcommand::Sync(sync) => sync.run(&managed, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&managed, &config),
+            MainSubcommand::Backends(found_backends) => found_backends.run(&config),
         }
     }
 }
@@ -166,6 +169,16 @@ impl UnmanagedCommand {
             println!("{}", toml::to_string_pretty(&unmanaged)?);
         }
 
+        Ok(())
+    }
+}
+
+impl BackendsCommand {
+    fn run(self, config: &Config) -> Result<()> {
+        for (backend, version) in backend_versions(config) {
+            println!("{backend}:");
+            println!("{version}");
+        }
         Ok(())
     }
 }

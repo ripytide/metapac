@@ -187,4 +187,15 @@ impl Backend for Arch {
 
         Ok(())
     }
+
+    fn version(config: &Config) -> Result<String> {
+        if !command_found(config.arch_package_manager.as_command()) {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(
+                [config.arch_package_manager.as_command(), "--version"],
+                Perms::Same,
+            )
+        }
+    }
 }

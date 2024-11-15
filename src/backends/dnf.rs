@@ -105,6 +105,14 @@ impl Backend for Dnf {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("dnf") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["dnf", "--version"], Perms::Same)
+        }
+    }
 }
 
 fn parse_package(package: &str) -> String {

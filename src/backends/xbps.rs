@@ -90,4 +90,12 @@ impl Backend for Xbps {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("xbps-query") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["xbps-query", "--version"], Perms::Same)
+        }
+    }
 }

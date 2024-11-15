@@ -40,6 +40,11 @@ macro_rules! any {
             $($upper_backend,)*
         }
         impl AnyBackend {
+            pub fn version(&self, config: &Config) -> Result<String> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
+                }
+            }
             pub fn remove_packages(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::remove_packages(packages, no_confirm, config), )*
@@ -48,7 +53,23 @@ macro_rules! any {
         }
     };
 }
+
+macro_rules! versions {
+    ($(($upper_backend:ident, $lower_backend:ident)), *) => {
+        pub fn backend_versions(config: &Config) -> BTreeMap<String, String> {
+            let mut results = BTreeMap::new();
+            $(
+            results.insert(stringify!($upper_backend).to_string(), AnyBackend::version(&AnyBackend::$upper_backend, config).unwrap());
+            )*
+
+            results
+        }
+    }
+}
+
 apply_public_backends!(any);
+
+apply_public_backends!(versions);
 
 macro_rules! raw_package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {

@@ -120,4 +120,12 @@ impl Backend for Rustup {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("rustup") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["rustup", "--version"], Perms::Same)
+        }
+    }
 }

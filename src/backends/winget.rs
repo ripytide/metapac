@@ -93,4 +93,12 @@ impl Backend for WinGet {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("winget") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["winget", "--version"], Perms::Same)
+        }
+    }
 }

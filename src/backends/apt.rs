@@ -76,4 +76,12 @@ impl Backend for Apt {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("apt") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["apt", "--version"], Perms::Same)
+        }
+    }
 }

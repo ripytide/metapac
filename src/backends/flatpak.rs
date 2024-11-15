@@ -180,4 +180,12 @@ impl Backend for Flatpak {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("flatpak") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["flatpak", "--version"], Perms::Same)
+        }
+    }
 }

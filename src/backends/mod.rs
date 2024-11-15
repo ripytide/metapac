@@ -60,4 +60,6 @@ pub trait Backend {
         no_confirm: bool,
         config: &Config,
     ) -> Result<()>;
+
+    fn version(config: &Config) -> Result<String>;
 }

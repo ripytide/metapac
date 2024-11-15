@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
-use crate::cmd::{command_found, run_command};
+use crate::cmd::{command_found, run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -112,6 +112,14 @@ impl Backend for Cargo {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("cargo") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["cargo", "--version"], Perms::Same)
+        }
     }
 }
 

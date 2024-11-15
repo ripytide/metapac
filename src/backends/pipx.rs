@@ -77,6 +77,14 @@ impl Backend for Pipx {
 
         Ok(())
     }
+
+    fn version(_: &Config) -> Result<String> {
+        if !command_found("pipx") {
+            Ok(String::from("Not found\n"))
+        } else {
+            run_command_for_stdout(["pipx", "--version"], Perms::Same)
+        }
+    }
 }
 
 fn extract_package_names(stdout: String) -> Result<BTreeSet<String>> {

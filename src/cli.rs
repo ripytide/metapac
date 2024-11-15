@@ -30,6 +30,7 @@ pub enum MainSubcommand {
     Review(ReviewCommand),
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
+    Backends(BackendsCommand),
 }
 
 #[derive(Args)]
@@ -76,3 +77,8 @@ pub struct SyncCommand {
 #[command(visible_alias("u"))]
 /// show explicitly installed packages not managed by metapac
 pub struct UnmanagedCommand {}
+
+#[derive(Args)]
+#[command(visible_alias("b"))]
+/// show the backends found by metapac
+pub struct BackendsCommand {}
