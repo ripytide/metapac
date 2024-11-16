@@ -5,7 +5,7 @@ use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -28,8 +28,8 @@ impl Backend for WinGet {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("winget") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_ok() {
             return Ok(BTreeMap::new());
         }
 
@@ -43,6 +43,7 @@ impl Backend for WinGet {
                 tempfile.path().to_str().unwrap(),
             ],
             Perms::Same,
+            false,
         )?;
 
         let mut export = String::new();
@@ -95,10 +96,6 @@ impl Backend for WinGet {
     }
 
     fn version(_: &Config) -> Result<String> {
-        if !command_found("winget") {
-            Ok(String::from("Not found\n"))
-        } else {
-            run_command_for_stdout(["winget", "--version"], Perms::Same)
-        }
+        run_command_for_stdout(["winget", "--version"], Perms::Same, false)
     }
 }

@@ -35,7 +35,7 @@ macro_rules! to_package_ids {
 
 macro_rules! any {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter)]
         pub enum AnyBackend {
             $($upper_backend,)*
         }
@@ -54,22 +54,7 @@ macro_rules! any {
     };
 }
 
-macro_rules! versions {
-    ($(($upper_backend:ident, $lower_backend:ident)), *) => {
-        pub fn backend_versions(config: &Config) -> BTreeMap<String, String> {
-            let mut results = BTreeMap::new();
-            $(
-            results.insert(stringify!($upper_backend).to_string(), AnyBackend::version(&AnyBackend::$upper_backend, config).unwrap());
-            )*
-
-            results
-        }
-    }
-}
-
 apply_public_backends!(any);
-
-apply_public_backends!(versions);
 
 macro_rules! raw_package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {

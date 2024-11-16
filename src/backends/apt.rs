@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -26,8 +26,8 @@ impl Backend for Apt {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("apt-mark") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_ok() {
             return Ok(BTreeMap::new());
         }
 
@@ -37,7 +37,7 @@ impl Backend for Apt {
         // designed with this use-case in mind so there are lots and
         // lots of different methods all of which seem to have
         // caveats.
-        let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same)?;
+        let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, false)?;
 
         Ok(explicit
             .lines()
@@ -78,10 +78,6 @@ impl Backend for Apt {
     }
 
     fn version(_: &Config) -> Result<String> {
-        if !command_found("apt") {
-            Ok(String::from("Not found\n"))
-        } else {
-            run_command_for_stdout(["apt", "--version"], Perms::Same)
-        }
+        run_command_for_stdout(["apt", "--version"], Perms::Same, false)
     }
 }

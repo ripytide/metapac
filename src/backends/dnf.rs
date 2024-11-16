@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -30,8 +30,8 @@ impl Backend for Dnf {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("dnf") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_ok() {
             return Ok(BTreeMap::new());
         }
 
@@ -44,6 +44,7 @@ impl Backend for Dnf {
                 "%{from_repo}/%{name}",
             ],
             Perms::Same,
+            false,
         )?;
         let system_packages = system_packages.lines().map(parse_package);
 
@@ -56,6 +57,7 @@ impl Backend for Dnf {
                 "%{from_repo}/%{name}",
             ],
             Perms::Same,
+            false,
         )?;
         let user_packages = user_packages.lines().map(parse_package);
 
@@ -107,11 +109,7 @@ impl Backend for Dnf {
     }
 
     fn version(_: &Config) -> Result<String> {
-        if !command_found("dnf") {
-            Ok(String::from("Not found\n"))
-        } else {
-            run_command_for_stdout(["dnf", "--version"], Perms::Same)
-        }
+        run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
     }
 }
 

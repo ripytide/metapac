@@ -4,9 +4,9 @@ use std::path::Path;
 use color_eyre::eyre::{eyre, Context, ContextCompat};
 use color_eyre::Result;
 use dialoguer::Confirm;
+use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
-use crate::backends::all::backend_versions;
 use crate::cli::BackendsCommand;
 use crate::prelude::*;
 use crate::review::review;
@@ -175,10 +175,17 @@ impl UnmanagedCommand {
 
 impl BackendsCommand {
     fn run(self, config: &Config) -> Result<()> {
-        for (backend, version) in backend_versions(config) {
-            println!("{backend}:");
-            println!("{version}");
+        for backend in AnyBackend::iter() {
+            println!(
+                "{backend}: {}",
+                backend
+                    .version(config)
+                    .as_deref()
+                    .unwrap_or("Not Found")
+                    .trim()
+            );
         }
+
         Ok(())
     }
 }

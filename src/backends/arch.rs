@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -27,7 +27,7 @@ impl Backend for Arch {
         mut packages: BTreeMap<String, Self::InstallOptions>,
         config: &Config,
     ) -> Result<BTreeMap<String, Self::InstallOptions>> {
-        if !command_found(config.arch_package_manager.as_command()) {
+        if Self::version(config).is_ok() {
             return Ok(BTreeMap::new());
         }
 
@@ -39,6 +39,7 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
+            false,
         )?;
 
         for group in groups.lines() {
@@ -52,6 +53,7 @@ impl Backend for Arch {
                         group,
                     ],
                     Perms::Same,
+                    false,
                 )?;
 
                 for group_package in group_packages.lines() {
@@ -92,7 +94,7 @@ impl Backend for Arch {
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found(config.arch_package_manager.as_command()) {
+        if Self::version(config).is_ok() {
             return Ok(BTreeMap::new());
         }
 
@@ -104,6 +106,7 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
+            false,
         )?;
 
         let mut result = BTreeMap::new();
@@ -168,6 +171,7 @@ impl Backend for Arch {
                     "--quiet",
                 ],
                 Perms::Same,
+                false,
             )?;
             let orphans = orphans_output.lines();
 
@@ -189,13 +193,10 @@ impl Backend for Arch {
     }
 
     fn version(config: &Config) -> Result<String> {
-        if !command_found(config.arch_package_manager.as_command()) {
-            Ok(String::from("Not found\n"))
-        } else {
-            run_command_for_stdout(
-                [config.arch_package_manager.as_command(), "--version"],
-                Perms::Same,
-            )
-        }
+        run_command_for_stdout(
+            [config.arch_package_manager.as_command(), "--version"],
+            Perms::Same,
+            false,
+        )
     }
 }
