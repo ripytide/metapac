@@ -68,29 +68,67 @@ impl Backend for Arch {
             }
         }
 
-        let mut final_packages = BTreeMap::new();
+        let mut packages = {
+            let mut final_packages = BTreeMap::new();
 
-        for (main_package, opts) in packages {
-            let overridden = final_packages
-                .insert(main_package.clone(), Self::InstallOptions::default())
-                .is_some();
-
-            if overridden {
-                log::warn!("Package {main_package} overwrote another entry");
-            }
-
-            for package in opts.optional_deps.iter() {
+            for (package, install_options) in packages {
                 let overridden = final_packages
                     .insert(package.clone(), Self::InstallOptions::default())
                     .is_some();
 
                 if overridden {
-                    log::warn!("Dependency {package} of {main_package} overwrote another entry");
+                    log::warn!("Package {package} overwrote another entry");
                 }
+
+                for dependency in install_options.optional_deps.iter() {
+                    let overridden = final_packages
+                        .insert(dependency.clone(), Self::InstallOptions::default())
+                        .is_some();
+
+                    if overridden {
+                        log::warn!("arch package {dependency} has been overridden by a dependency of the {package} package");
+                    }
+                }
+            }
+
+            final_packages
+        };
+
+        let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
+
+        for package in packages_cloned {
+            let is_real_package = run_command(
+                [
+                    config.arch_package_manager.as_command(),
+                    "--sync",
+                    "--info",
+                    &package,
+                ],
+                Perms::Same,
+            )
+            .is_ok();
+
+            if !is_real_package {
+                packages.remove(&package);
+
+                log::warn!(
+                    "{}",
+                    indoc::formatdoc! {"
+                        arch package {package} was not found as an available package and so was ignored, it may be due to one of the following issues:
+                            - the package name has a typo as written in your group files
+                            - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
+                              and so is ambiguous. You can run `pacman -S {package}` to list non-virtual packages which
+                              which supply the virtual package
+                            - the package was removed from the repositories
+                            - the package was renamed to a different name
+                            - the local package database is out of date and so doesn't yet contain the package:
+                              update it with `sudo pacman -Sy`
+                    "}
+                );
             }
         }
 
-        Ok(final_packages)
+        Ok(packages)
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
