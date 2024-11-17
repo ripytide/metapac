@@ -27,7 +27,7 @@ impl Backend for Arch {
         mut packages: BTreeMap<String, Self::InstallOptions>,
         config: &Config,
     ) -> Result<BTreeMap<String, Self::InstallOptions>> {
-        if Self::version(config).is_ok() {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
@@ -94,7 +94,7 @@ impl Backend for Arch {
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if Self::version(config).is_ok() {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 

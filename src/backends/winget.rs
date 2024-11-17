@@ -29,7 +29,7 @@ impl Backend for WinGet {
     }
 
     fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if Self::version(config).is_ok() {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
