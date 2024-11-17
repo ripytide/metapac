@@ -39,7 +39,7 @@ impl Backend for Pipx {
         let names = extract_package_names(run_command_for_stdout(
             ["pipx", "list", "--json"],
             Perms::Same,
-            false,
+            true,
         )?)?;
 
         Ok(names
