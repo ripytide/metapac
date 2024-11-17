@@ -125,8 +125,8 @@ macro_rules! package_ids {
                 $(
                     if !self.$lower_backend.is_empty() {
                         writeln!(f, "[{}]", AnyBackend::$upper_backend)?;
-                        for package_id in self.$lower_backend.iter() {
-                            writeln!(f, "{package_id}")?;
+                        for package in self.$lower_backend.iter() {
+                            writeln!(f, "{package}")?;
                         }
                         writeln!(f)?;
                     }

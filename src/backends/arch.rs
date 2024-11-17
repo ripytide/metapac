@@ -62,7 +62,7 @@ impl Backend for Arch {
                         .is_some();
 
                     if overridden {
-                        log::warn!("arch package {group_package} has been overridden by the {group} package group");
+                        log::warn!("arch package {group_package:?} has been overridden by the {group:?} package group");
                     }
                 }
             }
@@ -77,7 +77,7 @@ impl Backend for Arch {
                     .is_some();
 
                 if overridden {
-                    log::warn!("Package {package} overwrote another entry");
+                    log::warn!("Package {package:?} overwrote another entry");
                 }
 
                 for dependency in install_options.optional_deps.iter() {
@@ -86,7 +86,7 @@ impl Backend for Arch {
                         .is_some();
 
                     if overridden {
-                        log::warn!("arch package {dependency} has been overridden by a dependency of the {package} package");
+                        log::warn!("arch package {dependency:?} has been overridden by a dependency of the {package:?} package");
                     }
                 }
             }
@@ -96,17 +96,22 @@ impl Backend for Arch {
 
         let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
 
+        let all_packages: BTreeSet<String> = run_command_for_stdout(
+            [
+                config.arch_package_manager.as_command(),
+                "--sync",
+                "--list",
+                "--quiet",
+            ],
+            Perms::Same,
+            false,
+        )?
+        .lines()
+        .map(String::from)
+        .collect();
+
         for package in packages_cloned {
-            let is_real_package = run_command(
-                [
-                    config.arch_package_manager.as_command(),
-                    "--sync",
-                    "--info",
-                    &package,
-                ],
-                Perms::Same,
-            )
-            .is_ok();
+            let is_real_package = all_packages.contains(&package);
 
             if !is_real_package {
                 packages.remove(&package);
@@ -114,15 +119,18 @@ impl Backend for Arch {
                 log::warn!(
                     "{}",
                     indoc::formatdoc! {"
-                        arch package {package} was not found as an available package and so was ignored, it may be due to one of the following issues:
+                        arch package {package:?} was not found as an available package and so was ignored (you can test
+                        if the package exists via `pacman -Si {package:?}` or similar command using your chosen AUR helper)
+
+                        it may be due to one of the following issues:
                             - the package name has a typo as written in your group files
                             - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
-                              and so is ambiguous. You can run `pacman -S {package}` to list non-virtual packages which
-                              which supply the virtual package
+                              and so is ambiguous. You can run `pacman -Ss {package:?}` to list non-virtual packages which
+                              which provide the virtual package
                             - the package was removed from the repositories
                             - the package was renamed to a different name
                             - the local package database is out of date and so doesn't yet contain the package:
-                              update it with `sudo pacman -Sy`
+                              update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
                     "}
                 );
             }
@@ -149,8 +157,8 @@ impl Backend for Arch {
 
         let mut result = BTreeMap::new();
 
-        for package_id in explicit_packages.lines() {
-            result.insert(package_id.to_string(), ArchQueryInfo {});
+        for package in explicit_packages.lines() {
+            result.insert(package.to_string(), ArchQueryInfo {});
         }
 
         Ok(result)

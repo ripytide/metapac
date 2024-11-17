@@ -202,8 +202,8 @@ fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for package_id in installed.$lower_backend {
-                    missing.$lower_backend.remove(&package_id);
+                for package in installed.$lower_backend {
+                    missing.$lower_backend.remove(&package);
                 }
             )*
         };
