@@ -82,9 +82,9 @@ impl Backend for Dnf {
                     .chain(
                         packages
                             .iter()
-                            .flat_map(|(package_id, options)| match &options.repo {
-                                Some(repo) => vec![package_id, "--repo", repo.as_str()],
-                                None => vec![package_id.as_str()],
+                            .flat_map(|(package, options)| match &options.repo {
+                                Some(repo) => vec![package, "--repo", repo.as_str()],
+                                None => vec![package.as_str()],
                             }),
                     ),
                 Perms::Sudo,

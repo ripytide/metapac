@@ -39,9 +39,9 @@ impl Groups {
             macro_rules! x {
                 ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                     $(
-                        for package_id in raw_package_ids.$lower_backend {
+                        for package in raw_package_ids.$lower_backend {
                             reoriented
-                                .entry((AnyBackend::$upper_backend, package_id.clone()))
+                                .entry((AnyBackend::$upper_backend, package.clone()))
                                 .or_default()
                                 .entry(group_file.clone())
                                 .or_default()
@@ -54,9 +54,9 @@ impl Groups {
         }
 
         //warn the user about duplicated packages and output a deduplicated InstallOptions
-        for ((backend, package_id), group_files) in reoriented.iter() {
+        for ((backend, package), group_files) in reoriented.iter() {
             if group_files.len() > 1 {
-                log::warn!("duplicate {package_id:?} package in group files: {group_files:?} for the {backend} backend");
+                log::warn!("duplicate {package:?} package in group files: {group_files:?} for the {backend} backend");
                 log::warn!("only one of the duplicated will be used which could may cause unintended behaviour if the duplicates have different install options");
             }
         }
@@ -144,9 +144,9 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                         eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
                     )?;
 
-                    for package_id in packages {
-                        let (package_id, package_install_options) =
-                            match package_id {
+                    for package in packages {
+                        let (package, package_install_options) =
+                            match package {
                                 toml::Value::String(x) => (x.to_string(), Default::default()),
                                 toml::Value::Table(x) => (
                                     x.clone().try_into::<StringPackageStruct>()?.package,
@@ -155,7 +155,7 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                                 _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                             };
 
-                        raw_install_options.$lower_backend.push((package_id, package_install_options));
+                        raw_install_options.$lower_backend.push((package, package_install_options));
                     }
 
                     return Ok(raw_install_options);
