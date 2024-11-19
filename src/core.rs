@@ -4,8 +4,10 @@ use std::path::Path;
 use color_eyre::eyre::{eyre, Context, ContextCompat};
 use color_eyre::Result;
 use dialoguer::Confirm;
+use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
+use crate::cli::BackendsCommand;
 use crate::prelude::*;
 use crate::review::review;
 
@@ -41,6 +43,7 @@ impl MainArguments {
             MainSubcommand::Review(review) => review.run(&managed, &config),
             MainSubcommand::Sync(sync) => sync.run(&managed, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&managed, &config),
+            MainSubcommand::Backends(found_backends) => found_backends.run(&config),
         }
     }
 }
@@ -164,6 +167,23 @@ impl UnmanagedCommand {
             eprintln!("no unmanaged packages");
         } else {
             println!("{}", toml::to_string_pretty(&unmanaged)?);
+        }
+
+        Ok(())
+    }
+}
+
+impl BackendsCommand {
+    fn run(self, config: &Config) -> Result<()> {
+        for backend in AnyBackend::iter() {
+            println!(
+                "{backend}: {}",
+                backend
+                    .version(config)
+                    .as_deref()
+                    .unwrap_or("Not Found")
+                    .trim()
+            );
         }
 
         Ok(())

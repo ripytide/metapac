@@ -3,17 +3,13 @@ use std::process::{Command, Stdio};
 use color_eyre::{eyre::eyre, Result};
 use itertools::Itertools;
 
-pub fn command_found(command: &str) -> bool {
-    which::which(command).is_ok()
-}
-
 #[derive(Debug, Clone, Copy)]
 pub enum Perms {
     Sudo,
     Same,
 }
 
-pub fn run_command_for_stdout<I, S>(args: I, perms: Perms) -> Result<String>
+pub fn run_command_for_stdout<I, S>(args: I, perms: Perms, hide_stderr: bool) -> Result<String>
 where
     S: Into<String>,
     I: IntoIterator<Item = S>,
@@ -34,15 +30,19 @@ where
     let (first_arg, remaining_args) = args.split_first().unwrap();
 
     let mut command = Command::new(first_arg);
-    let status = command
+    let output = command
         .args(remaining_args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
+        .stderr(if !hide_stderr {
+            Stdio::inherit()
+        } else {
+            Stdio::null()
+        })
         .output()?;
 
-    if status.status.success() {
-        Ok(String::from_utf8(status.stdout)?)
+    if output.status.success() {
+        Ok(String::from_utf8(output.stdout)?)
     } else {
         Err(eyre!("command failed: {:?}", args.into_iter().join(" ")))
     }

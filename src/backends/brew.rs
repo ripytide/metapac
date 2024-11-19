@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -26,14 +26,15 @@ impl Backend for Brew {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("brew") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let explicit = run_command_for_stdout(
             ["brew", "list", "-1", "--quiet", "--installed-on-request"],
             Perms::Same,
+            false,
         )?;
 
         Ok(explicit
@@ -70,5 +71,9 @@ impl Backend for Brew {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        run_command_for_stdout(["brew", "--version"], Perms::Same, false)
     }
 }

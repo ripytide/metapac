@@ -7,7 +7,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::cmd::command_found;
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
 use crate::prelude::*;
@@ -32,14 +31,15 @@ impl Backend for Pipx {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("pipx") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let names = extract_package_names(run_command_for_stdout(
             ["pipx", "list", "--json"],
             Perms::Same,
+            true,
         )?)?;
 
         Ok(names
@@ -76,6 +76,10 @@ impl Backend for Pipx {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        run_command_for_stdout(["pipx", "--version"], Perms::Same, false)
     }
 }
 

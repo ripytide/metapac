@@ -4,7 +4,7 @@ use color_eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -29,8 +29,8 @@ impl Backend for Flatpak {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("flatpak") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
@@ -43,6 +43,7 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
+            false,
         )?;
         let sys_explicit = sys_explicit_out
             .lines()
@@ -57,6 +58,7 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
+            false,
         )?;
         let user_explicit = user_explicit_out
             .lines()
@@ -71,9 +73,10 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
+            false,
         )?;
         let sys_explicit_runtimes_out =
-            run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same)?;
+            run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same, false)?;
         let sys_explicit_runtimes = sys_explicit_runtimes_out
             .lines()
             .skip(1)
@@ -100,9 +103,10 @@ impl Backend for Flatpak {
                 "--columns=application",
             ],
             Perms::Same,
+            false,
         )?;
         let user_explicit_runtimes_out =
-            run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same)?;
+            run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same, false)?;
         let user_explicit_runtimes = user_explicit_runtimes_out
             .lines()
             .skip(1)
@@ -179,5 +183,9 @@ impl Backend for Flatpak {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
     }
 }

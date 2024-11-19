@@ -1,4 +1,3 @@
-use crate::cmd::command_found;
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
 use crate::prelude::*;
@@ -35,15 +34,15 @@ impl Backend for Rustup {
         Ok(packages)
     }
 
-    fn query_installed_packages(_: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("rustup") {
+    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let mut packages = BTreeMap::new();
 
         let toolchains_stdout =
-            run_command_for_stdout(["rustup", "toolchain", "list"], Perms::Same)?;
+            run_command_for_stdout(["rustup", "toolchain", "list"], Perms::Same, false)?;
         let toolchains = toolchains_stdout.lines().map(|x| {
             x.split(' ')
                 .next()
@@ -65,6 +64,7 @@ impl Backend for Rustup {
                     toolchain.as_str(),
                 ],
                 Perms::Same,
+                false,
             ) {
                 packages.insert(
                     toolchain,
@@ -119,5 +119,9 @@ impl Backend for Rustup {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        run_command_for_stdout(["rustup", "--version"], Perms::Same, true)
     }
 }

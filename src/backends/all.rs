@@ -35,11 +35,16 @@ macro_rules! to_package_ids {
 
 macro_rules! any {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter)]
         pub enum AnyBackend {
             $($upper_backend,)*
         }
         impl AnyBackend {
+            pub fn version(&self, config: &Config) -> Result<String> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
+                }
+            }
             pub fn remove_packages(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::remove_packages(packages, no_confirm, config), )*
@@ -48,6 +53,7 @@ macro_rules! any {
         }
     };
 }
+
 apply_public_backends!(any);
 
 macro_rules! raw_package_ids {

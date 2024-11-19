@@ -5,7 +5,7 @@ use color_eyre::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::{command_found, run_command, run_command_for_stdout};
+use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -29,15 +29,15 @@ impl Backend for Xbps {
     }
 
     fn query_installed_packages(
-        _: &Config,
+        config: &Config,
     ) -> Result<std::collections::BTreeMap<String, Self::QueryInfo>> {
-        if !command_found("xbps-query") {
+        if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let mut cmd = Command::new("xbps-query");
         cmd.args(["-l"]);
-        let stdout = run_command_for_stdout(["xbps-query", "-l"], Perms::Same)?;
+        let stdout = run_command_for_stdout(["xbps-query", "-l"], Perms::Same, false)?;
 
         // Removes the package status and description from output
         let re1 = Regex::new(r"^ii |^uu |^hr |^\?\? | .*")?;
@@ -89,5 +89,9 @@ impl Backend for Xbps {
         }
 
         Ok(())
+    }
+
+    fn version(_: &Config) -> Result<String> {
+        run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
     }
 }
