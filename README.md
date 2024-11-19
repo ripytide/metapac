@@ -159,7 +159,7 @@ dnf = [
 ]
 flatpak = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac", remote = "flathub" }
 ]
 pipx = [
  "metapac",

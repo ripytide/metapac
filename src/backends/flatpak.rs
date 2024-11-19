@@ -16,7 +16,9 @@ pub struct FlatpakQueryInfo {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct FlatpakInstallOptions {}
+pub struct FlatpakInstallOptions {
+    pub remote: String,
+}
 
 impl Backend for Flatpak {
     type QueryInfo = FlatpakQueryInfo;
@@ -138,7 +140,17 @@ impl Backend for Flatpak {
         no_confirm: bool,
         config: &Config,
     ) -> Result<()> {
-        if !packages.is_empty() {
+        let mut no_remotes = Vec::new();
+        let mut remote_packages = BTreeMap::new();
+        for (package, remote) in packages {
+            if remote.remote.is_empty() {
+                no_remotes.push(package);
+            } else {
+                remote_packages.insert(package, remote);
+            }
+        }
+
+        if !no_remotes.is_empty() {
             run_command(
                 [
                     "flatpak",
@@ -151,7 +163,26 @@ impl Backend for Flatpak {
                 ]
                 .into_iter()
                 .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(packages.keys().map(String::as_str)),
+                .chain(no_remotes.into_iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        for (package, remote) in remote_packages {
+            run_command(
+                [
+                    "flatpak",
+                    "install",
+                    if config.flatpak_systemwide {
+                        "--system"
+                    } else {
+                        "--user"
+                    },
+                ]
+                .into_iter()
+                .chain(Some("--assumeyes").filter(|_| no_confirm))
+                .chain([remote.remote.as_str()])
+                .chain([package.as_str()]),
                 Perms::Same,
             )?;
         }
