@@ -2,30 +2,69 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.4] - 2024-11-21
+
+### Added
+
+- New subcommand `metapac backends`! (#50)
+
+  A new subcommand `metapac backends` has been added which shows you which
+  backends `metapac` can find on your system and also their version
+  numbers!
+
+- `flatpak` packages now support a `remote` config value to allow you to
+  specify which remote you want to install each package from (#53)
+
+### Fixed
+
+- `metapac` now gives out a hefty warning when you have arch packages in
+  your group files which don't match real arch packages in the `arch` package
+  repositories (#52). Here is an example of the warning:
+
+  ```
+  WARN  metapac::backends::arch > arch package "mesa-vdpau" was not found as an available package and so was ignored (you can test
+  if the package exists via `pacman -Si "mesa-vdpau"` or similar command using your chosen AUR helper)
+
+  it may be due to one of the following issues:
+    - the package name has a typo as written in your group files
+    - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
+      and so is ambiguous. You can run `pacman -Ss "mesa-vdpau"` to list non-virtual packages which
+      which provide the virtual package
+    - the package was removed from the repositories
+    - the package was renamed to a different name
+    - the local package database is out of date and so doesn't yet contain the package:
+      update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
+  ```
+
+### Documentation
+
+- Added release process to `CONTRIBUTING.md`
 
 ## [0.2.3] - 2024-11-14
 
 ### Fixed
 
-- Fixed WinGet commands not working (#49)
+- Fixed `winget` commands not working (#49)
 - Fixed `metapac unmanaged` output backend names in lowercase (#49)
 
 ## [0.2.2] - 2024-11-10
 
 ### Added
 
-- Added the WinGet Package Manager (#44)
-- Added the HomeBrew Package Manager (#41)
+- Added the `winget` Package Manager (#44)
+- Added the `brew` Package Manager (#41)
 - Added new test to de-duplicate the codebase by pulling the example config and
   group files directly from the README.md
 
 ### Fixed
 
-- Fixed build Errors and Commands not being found on Windows (#44)
-- Fixed the optional dependencies Install Option in Arch packages being
+- Fixed build errors and commands not being found on Windows (#44)
+- Fixed the optional dependencies install option in `arch` packages being
   ignored (#39)
-- Fixed Flatpak package runtimes not being detected (#40)
+- Fixed `flatpak` package runtimes not being detected (#40)
 
 ### Documentation
 
@@ -35,13 +74,13 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
-- Update cargo install command to the README.md
-- Add AUR build install command README.md
-- Rewrote CONTRIBUTING.md (#36)
+- Update `cargo install` command to the README.md
+- Added AUR build install command to README.md
+- Rewrote `CONTRIBUTING.md` (#36)
 
 ### Added
 
-- Added `pikaur` as another optional arch backend
+- Added `pikaur` as another optional `arch` backend
 
 ### Fixed
 
@@ -57,4 +96,4 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Initial Release
+- Initial release
