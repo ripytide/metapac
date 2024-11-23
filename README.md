@@ -60,6 +60,7 @@ support for additional backends are welcome!
 | `pipx`                         | `[pipx]`    |                                       |
 | `cargo`                        | `[cargo]`   |                                       |
 | `rustup`                       | `[rustup]`  |                                       |
+| `snap`                         | `[snap]`    |                                       |
 | `winget`                       | `[winget]`  |                                       |
 | `xbps`                         | `[xbps]`    |                                       |
 
@@ -169,6 +170,10 @@ rustup = [
  "stable",
  # components: extra non-default components to install with this toolchain
  { package = "stable", components = ["rust-analyzer"] }
+]
+snap = [
+ "metapac",
+ { package = "metapac" }
 ]
 winget = [
  "metapac",
