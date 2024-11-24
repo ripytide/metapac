@@ -51,7 +51,6 @@ impl Backend for Snap {
             run_command(
                 ["snap", "install"]
                     .into_iter()
-                    .chain(Some("--assume-yes").filter(|_| no_confirm))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -65,7 +64,6 @@ impl Backend for Snap {
             run_command(
                 ["snap", "remove"]
                     .into_iter()
-                    .chain(Some("--assume-yes").filter(|_| no_confirm))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
