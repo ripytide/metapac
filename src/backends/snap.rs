@@ -44,7 +44,7 @@ impl Backend for Snap {
 
     fn install_packages(
         packages: &BTreeMap<String, Self::InstallOptions>,
-        no_confirm: bool,
+        _no_confirm: bool,
         _: &Config,
     ) -> Result<()> {
         if !packages.is_empty() {
@@ -59,7 +59,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn remove_packages(packages: &BTreeSet<String>, _no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
