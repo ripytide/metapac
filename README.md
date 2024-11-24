@@ -55,10 +55,10 @@ support for additional backends are welcome!
 | `pacman`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
 | `apt`                          | `[apt]`     |                                       |
 | `brew`                         | `[brew]`    |                                       |
+| `cargo`                        | `[cargo]`   |                                       |
 | `dnf`                          | `[dnf]`     |                                       |
 | `flatpak`                      | `[flatpak]` |                                       |
 | `pipx`                         | `[pipx]`    |                                       |
-| `cargo`                        | `[cargo]`   |                                       |
 | `rustup`                       | `[rustup]`  |                                       |
 | `snap`                         | `[snap]`    |                                       |
 | `winget`                       | `[winget]`  |                                       |

@@ -32,7 +32,7 @@ impl Backend for Snap {
         }
 
         let output = run_command_for_stdout(["snap", "list"], Perms::Same, false)?;
-        
+
         // Skip the first line which is the header
         Ok(output
             .lines()
@@ -44,7 +44,7 @@ impl Backend for Snap {
 
     fn install_packages(
         packages: &BTreeMap<String, Self::InstallOptions>,
-        _no_confirm: bool,
+        _: bool,
         _: &Config,
     ) -> Result<()> {
         if !packages.is_empty() {
@@ -59,7 +59,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, _no_confirm: bool, _: &Config) -> Result<()> {
+    fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
@@ -73,15 +73,14 @@ impl Backend for Snap {
     }
 
     fn version(_: &Config) -> Result<String> {
-        run_command_for_stdout(["snap", "--version"], Perms::Same, false)
-            .map(|output| {
-                output
-                    .lines()
-                    .next()
-                    .unwrap_or_default()
-                    .split_whitespace()
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            })
+        run_command_for_stdout(["snap", "--version"], Perms::Same, false).map(|output| {
+            output
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
     }
 }
