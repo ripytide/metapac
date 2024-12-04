@@ -7,7 +7,7 @@ use dialoguer::Confirm;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
-use crate::cli::BackendsCommand;
+use crate::cli::{BackendsCommand, CacheCommand};
 use crate::prelude::*;
 use crate::review::review;
 
@@ -44,6 +44,7 @@ impl MainArguments {
             MainSubcommand::Sync(sync) => sync.run(&managed, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&managed, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
+            MainSubcommand::Cache(backends) => backends.run(&config),
         }
     }
 }
@@ -186,6 +187,17 @@ impl BackendsCommand {
             );
         }
 
+        Ok(())
+    }
+}
+
+impl CacheCommand {
+    fn run(&self, config: &Config) -> Result<()> {
+        for backend in AnyBackend::iter() {
+            println!("Cleaning cache for {backend}\n\n");
+            backend.clean_cache(config)?
+        }
+        println!("\n\nCleaned all available backends");
         Ok(())
     }
 }

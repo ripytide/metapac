@@ -40,6 +40,11 @@ macro_rules! any {
             $($upper_backend,)*
         }
         impl AnyBackend {
+	    pub fn clean_cache(&self, config: &Config) -> Result<()> {
+		match self {
+		    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
+		}
+	    }
             pub fn version(&self, config: &Config) -> Result<String> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*

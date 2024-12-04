@@ -31,6 +31,7 @@ pub enum MainSubcommand {
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
+    Cache(CacheCommand),
 }
 
 #[derive(Args)]
@@ -86,3 +87,10 @@ pub struct UnmanagedCommand {}
 #[command(visible_alias("b"))]
 /// show the backends found by metapac
 pub struct BackendsCommand {}
+
+#[derive(Args)]
+/// Clean the cache of all the backends, or the ones specified
+pub struct CacheCommand {
+    #[arg(short, long)]
+    pub backends: Option<Vec<String>>,
+}
