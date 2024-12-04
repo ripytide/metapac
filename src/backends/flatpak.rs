@@ -216,6 +216,12 @@ impl Backend for Flatpak {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(["flatpak", "remove", "--unused"], Perms::Same)
+        })
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
     }

@@ -91,6 +91,10 @@ impl Backend for Xbps {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| run_command(["xbps-remove", "-Oo"], Perms::Sudo))
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
     }

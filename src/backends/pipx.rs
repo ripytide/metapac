@@ -78,6 +78,10 @@ impl Backend for Pipx {
         Ok(())
     }
 
+    fn clean_cache(_: &Config) -> Result<()> {
+        Ok(())
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["pipx", "--version"], Perms::Same, false)
     }

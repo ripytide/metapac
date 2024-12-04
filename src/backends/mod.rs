@@ -63,5 +63,7 @@ pub trait Backend {
         config: &Config,
     ) -> Result<()>;
 
+    fn clean_cache(config: &Config) -> Result<()>;
+
     fn version(config: &Config) -> Result<String>;
 }

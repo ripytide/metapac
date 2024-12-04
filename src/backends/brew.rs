@@ -73,6 +73,12 @@ impl Backend for Brew {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(["brew", "cleanup", "--prune-prefix"], Perms::Same)
+        })
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["brew", "--version"], Perms::Same, false)
     }

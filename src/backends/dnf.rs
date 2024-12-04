@@ -108,6 +108,12 @@ impl Backend for Dnf {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(["dnf", "clean", "all"], Perms::Same)
+        })
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
     }
