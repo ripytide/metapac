@@ -72,6 +72,12 @@ impl Backend for Snap {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(["rm", "-rf", "/var/lib/snapd/cache/*"], Perms::Sudo)
+        })
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["snap", "--version"], Perms::Same, false).map(|output| {
             output

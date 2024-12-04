@@ -114,6 +114,12 @@ impl Backend for Cargo {
         Ok(())
     }
 
+    fn clean_cache(_: &Config) -> Result<()> {
+        run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
+            run_command(["cargo", "cache", "-a"], Perms::Same)
+        })
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
     }

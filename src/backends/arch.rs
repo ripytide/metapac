@@ -238,6 +238,15 @@ impl Backend for Arch {
         Ok(())
     }
 
+    fn clean_cache(config: &Config) -> Result<()> {
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(
+                [config.arch_package_manager.as_command(), "-Sc"],
+                Perms::Same,
+            )
+        })
+    }
+
     fn version(config: &Config) -> Result<String> {
         run_command_for_stdout(
             [config.arch_package_manager.as_command(), "--version"],

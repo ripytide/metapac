@@ -121,6 +121,10 @@ impl Backend for Rustup {
         Ok(())
     }
 
+    fn clean_cache(_: &Config) -> Result<()> {
+        Ok(())
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["rustup", "--version"], Perms::Same, true)
     }

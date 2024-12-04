@@ -95,6 +95,12 @@ impl Backend for WinGet {
         Ok(())
     }
 
+    // currently there is no way to do it for winget, see
+    // https://github.com/microsoft/winget-cli/issues/343
+    fn clean_cache(_: &Config) -> Result<()> {
+        Ok(())
+    }
+
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["winget", "--version"], Perms::Same, false)
     }
