@@ -1,5 +1,6 @@
 use std::fs::{self, read_to_string, File};
 use std::path::Path;
+use std::str::FromStr;
 
 use color_eyre::eyre::{eyre, Context, ContextCompat};
 use color_eyre::Result;
@@ -7,7 +8,7 @@ use dialoguer::Confirm;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
-use crate::cli::{BackendsCommand, CacheCommand};
+use crate::cli::{BackendsCommand, CleanCacheCommand};
 use crate::prelude::*;
 use crate::review::review;
 
@@ -44,7 +45,7 @@ impl MainArguments {
             MainSubcommand::Sync(sync) => sync.run(&managed, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&managed, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
-            MainSubcommand::Cache(backends) => backends.run(&config),
+            MainSubcommand::CleanCache(backends) => backends.run(&config),
         }
     }
 }
@@ -191,13 +192,27 @@ impl BackendsCommand {
     }
 }
 
-impl CacheCommand {
+impl CleanCacheCommand {
     fn run(&self, config: &Config) -> Result<()> {
-        for backend in AnyBackend::iter() {
-            println!("Cleaning cache for {backend}\n\n");
+        let backends = match &self.backends {
+            Some(backends) => {
+                let result = backends.iter().map(|x|
+                    AnyBackend::from_str(x)
+                        .or(Err(eyre!("{x:?} is not a valid backend, run `metapac backends` to see a list of valid backends")))
+                ).collect::<Result<Vec<AnyBackend>, _>>();
+                result?
+            }
+            None => AnyBackend::iter().collect(),
+        };
+
+        for backend in backends.iter() {
+            log::info!("cleaning cache for {backend} backend");
+
             backend.clean_cache(config)?
         }
-        println!("\n\nCleaned all available backends");
+
+        log::info!("cleaned caches of backends: {backends:?}");
+
         Ok(())
     }
 }
