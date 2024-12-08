@@ -31,7 +31,7 @@ pub enum MainSubcommand {
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
-    Cache(CacheCommand),
+    CleanCache(CleanCacheCommand),
 }
 
 #[derive(Args)]
@@ -89,8 +89,8 @@ pub struct UnmanagedCommand {}
 pub struct BackendsCommand {}
 
 #[derive(Args)]
-/// Clean the cache of all the backends, or the ones specified
-pub struct CacheCommand {
-    #[arg(short, long)]
+#[command(visible_alias("e"))]
+/// clean the caches of all the backends, or the just those specified
+pub struct CleanCacheCommand {
     pub backends: Option<Vec<String>>,
 }
