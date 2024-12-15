@@ -66,4 +66,6 @@ pub trait Backend {
     fn clean_cache(config: &Config) -> Result<()>;
 
     fn version(config: &Config) -> Result<String>;
+
+    fn missing(managed: Self::InstallOptions, installed: Option<Self::QueryInfo>) -> Option<Self::InstallOptions>;
 }
