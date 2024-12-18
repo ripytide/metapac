@@ -222,15 +222,19 @@ fn unmanaged(managed: &InstallOptions, config: &Config) -> Result<PackageIds> {
         .map(|x| x.to_package_ids().difference(&managed.to_package_ids()))
 }
 fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> {
-    let installed = QueryInfos::query_installed_packages(config)?.to_package_ids();
+    let installed = QueryInfos::query_installed_packages(config)?;
 
-    let mut missing = managed.clone();
+    let mut missing = InstallOptions::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for package in installed.$lower_backend {
-                    missing.$lower_backend.remove(&package);
+                for (package_id, managed_install_options) in managed.$lower_backend.iter() {
+                    if let Some(missing_install_options) =
+                        $upper_backend::missing(managed_install_options.clone(), installed.$lower_backend.get(package_id).cloned())
+                    {
+                        missing.$lower_backend.insert(package_id.clone(), missing_install_options);
+                    }
                 }
             )*
         };
