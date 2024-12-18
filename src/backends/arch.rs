@@ -124,6 +124,8 @@ impl Backend for Arch {
 
                         it may be due to one of the following issues:
                             - the package name has a typo as written in your group files
+                            - the package is in a repository that you don't have enabled in
+                              /etc/pacman.conf (such as multilib)
                             - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
                               and so is ambiguous. You can run `pacman -Ss {package:?}` to list non-virtual packages which
                               which provide the virtual package
@@ -253,5 +255,15 @@ impl Backend for Arch {
             Perms::Same,
             false,
         )
+    }
+
+    fn missing(
+        managed: Self::InstallOptions,
+        installed: Option<Self::QueryInfo>,
+    ) -> Option<Self::InstallOptions> {
+        match installed {
+            Some(_) => None,
+            None => Some(managed),
+        }
     }
 }
