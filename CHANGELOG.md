@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.6] - ?
+## [0.2.6] - 2024-12-23
 
 ### Added
 
@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Allows you to clear the caches for all or selective backends.
   `metapac clean-cache arch apt` to clean just the `arch` and `apt`
   backends and just `metapac clear-cache` to clear all backends.
+
+### Fixed
+
+- The `flatpak` backend no longer mistakenly uses `sudo` when removing packages. (#57)
 
 ## [0.2.5] - 2024-11-24
 
