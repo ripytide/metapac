@@ -17,7 +17,7 @@ pub struct XbpsOptions {}
 impl Backend for Xbps {
     type Options = XbpsOptions;
 
-    fn map_managed_packages(
+    fn map_required(
         packages: BTreeMap<String, Self::Options>,
         _: &Config,
     ) -> Result<BTreeMap<String, Self::Options>> {
@@ -96,12 +96,12 @@ impl Backend for Xbps {
     }
 
     fn missing(
-        managed: Self::Options,
+        required: Self::Options,
         installed: Option<Self::Options>,
     ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
-            None => Some(managed),
+            None => Some(required),
         }
     }
 }
