@@ -23,6 +23,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Allows you to clear the caches for all or selective backends.
   `metapac clean-cache arch apt` to clean just the `arch` and `apt`
   backends and just `metapac clear-cache` to clear all backends.
+- A new per-package `systemwide` setting for `flatpak` packages. (#62)
+
+### Fixed
+
+- The `flatpak` backend no longer mistakenly uses `sudo` when removing packages. (#57)
+
+### Changed
+
+- The `flatpak_systemwide` has been renamed to
+  `flatpak_default_systemwide` to allow for a new `systemwide`
+  per-package setting for `flatpak` packages (#62)
+
+### Removed
+
+- The `optional_deps` options on `arch` packages has been removed
+  since it not a feature of the `arch` backend package managers and
+  was handled by `metapac`, in the interest of simplicity this odd bit
+  of logic has been removed (this also it makes the
+  code nicer). Instead if you have multiple packages
+  which you want installed only if another package is installed
+  consider using a comment and whitespace to separate them
+  visually in your group files so that it is obvious when reading or
+  modififying them that they are linked. You could even separate the
+  packages out into another group file and include or uninclude the
+  entire group via symlinking or the `hostname_groups` config feature. (#62)
 
 ### Fixed
 
