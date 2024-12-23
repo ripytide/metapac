@@ -10,28 +10,23 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
 
-#[derive(Debug, Clone)]
-pub struct FlatpakQueryInfo {
-    pub systemwide: bool,
-}
-
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct FlatpakInstallOptions {
+pub struct FlatpakOptions {
+    pub systemwide: bool,
     pub remote: String,
 }
 
 impl Backend for Flatpak {
-    type QueryInfo = FlatpakQueryInfo;
-    type InstallOptions = FlatpakInstallOptions;
+    type Options = FlatpakOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -49,7 +44,7 @@ impl Backend for Flatpak {
         )?;
         let sys_explicit = sys_explicit_out
             .lines()
-            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: true }));
+            .map(|x| (x.trim().to_owned(), Self::Options { systemwide: true }));
 
         let user_explicit_out = run_command_for_stdout(
             [
@@ -64,7 +59,7 @@ impl Backend for Flatpak {
         )?;
         let user_explicit = user_explicit_out
             .lines()
-            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: false }));
+            .map(|x| (x.trim().to_owned(), Self::Options { systemwide: false }));
 
         let sys_explicit_runtimes_installed = run_command_for_stdout(
             [
@@ -84,7 +79,7 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    FlatpakQueryInfo { systemwide: true },
+                    Self::Options { systemwide: true },
                 )
             })
             .filter(|(runtime, _)| {
@@ -112,7 +107,7 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    FlatpakQueryInfo { systemwide: false },
+                    Self::Options { systemwide: false },
                 )
             })
             .filter(|(runtime, _)| {
@@ -131,8 +126,8 @@ impl Backend for Flatpak {
         Ok(all)
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         config: &Config,
     ) -> Result<()> {
@@ -186,7 +181,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove_packages(
+    fn remove(
         packages: &BTreeSet<String>,
         no_confirm: bool,
         config: &Config,
@@ -223,9 +218,9 @@ impl Backend for Flatpak {
     }
 
     fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+        managed: Self::Options,
+        installed: Option<Self::Options>,
+    ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),

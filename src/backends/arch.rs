@@ -9,24 +9,17 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Arch;
 
-#[derive(Debug, Clone)]
-pub struct ArchQueryInfo {}
-
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct ArchInstallOptions {
-    #[serde_inline_default(ArchInstallOptions::default().optional_deps)]
-    pub optional_deps: Vec<String>,
-}
+pub struct ArchOptions {}
 
 impl Backend for Arch {
-    type QueryInfo = ArchQueryInfo;
-    type InstallOptions = ArchInstallOptions;
+    type Options = ArchOptions;
 
     fn map_managed_packages(
-        mut packages: BTreeMap<String, Self::InstallOptions>,
+        mut packages: BTreeMap<String, Self::Options>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -43,7 +36,7 @@ impl Backend for Arch {
         )?;
 
         for group in groups.lines() {
-            if let Some(install_options) = packages.remove(group) {
+            if let Some(options) = packages.remove(group) {
                 let group_packages = run_command_for_stdout(
                     [
                         config.arch_package_manager.as_command(),
@@ -58,7 +51,7 @@ impl Backend for Arch {
 
                 for group_package in group_packages.lines() {
                     let overridden = packages
-                        .insert(group_package.to_string(), install_options.clone())
+                        .insert(group_package.to_string(), options.clone())
                         .is_some();
 
                     if overridden {
@@ -71,23 +64,13 @@ impl Backend for Arch {
         let mut packages = {
             let mut final_packages = BTreeMap::new();
 
-            for (package, install_options) in packages {
+            for (package, _) in packages {
                 let overridden = final_packages
-                    .insert(package.clone(), Self::InstallOptions::default())
+                    .insert(package.clone(), Self::Options::default())
                     .is_some();
 
                 if overridden {
                     log::warn!("Package {package:?} overwrote another entry");
-                }
-
-                for dependency in install_options.optional_deps.iter() {
-                    let overridden = final_packages
-                        .insert(dependency.clone(), Self::InstallOptions::default())
-                        .is_some();
-
-                    if overridden {
-                        log::warn!("arch package {dependency:?} has been overridden by a dependency of the {package:?} package");
-                    }
                 }
             }
 
@@ -141,7 +124,7 @@ impl Backend for Arch {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -160,14 +143,14 @@ impl Backend for Arch {
         let mut result = BTreeMap::new();
 
         for package in explicit_packages.lines() {
-            result.insert(package.to_string(), ArchQueryInfo {});
+            result.insert(package.to_string(), Self::Options {});
         }
 
         Ok(result)
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         config: &Config,
     ) -> Result<()> {
@@ -180,12 +163,7 @@ impl Backend for Arch {
                 ]
                 .into_iter()
                 .chain(Some("--no_confirm").filter(|_| no_confirm))
-                .chain(packages.keys().map(String::as_str))
-                .chain(
-                    packages.values().flat_map(|dependencies| {
-                        dependencies.optional_deps.iter().map(String::as_str)
-                    }),
-                ),
+                .chain(packages.keys().map(String::as_str)),
                 config.arch_package_manager.change_perms(),
             )?;
         }
@@ -193,7 +171,7 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn remove_packages(
+    fn remove(
         packages: &BTreeSet<String>,
         no_confirm: bool,
         config: &Config,
@@ -257,10 +235,7 @@ impl Backend for Arch {
         )
     }
 
-    fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),

@@ -9,28 +9,23 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Dnf;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DnfQueryInfo {
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct DnfOptions {
+    pub repo: Option<String>,
     pub user: bool,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct DnfInstallOptions {
-    repo: Option<String>,
-}
-
 impl Backend for Dnf {
-    type QueryInfo = DnfQueryInfo;
-    type InstallOptions = DnfInstallOptions;
+    type Options = DnfOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -62,13 +57,13 @@ impl Backend for Dnf {
         let user_packages = user_packages.lines().map(parse_package);
 
         Ok(system_packages
-            .map(|x| (x, DnfQueryInfo { user: false }))
-            .chain(user_packages.map(|x| (x, DnfQueryInfo { user: true })))
+            .map(|x| (x, Self::Options { user: false }))
+            .chain(user_packages.map(|x| (x, Self::Options { user: true })))
             .collect())
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         _: &Config,
     ) -> Result<()> {
@@ -94,7 +89,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["dnf", "remove"]
@@ -119,9 +114,9 @@ impl Backend for Dnf {
     }
 
     fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+        managed: Self::Options,
+        installed: Option<Self::Options>,
+    ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),

@@ -9,24 +9,20 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Snap;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SnapQueryInfo {}
-
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct SnapInstallOptions {}
+pub struct SnapOptions {}
 
 impl Backend for Snap {
-    type QueryInfo = SnapQueryInfo;
-    type InstallOptions = SnapInstallOptions;
+    type Options = SnapOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -38,12 +34,12 @@ impl Backend for Snap {
             .lines()
             .skip(1)
             .filter_map(|line| line.split_whitespace().next())
-            .map(|name| (name.to_string(), SnapQueryInfo {}))
+            .map(|name| (name.to_string(), Self::Options {}))
             .collect())
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         _: bool,
         _: &Config,
     ) -> Result<()> {
@@ -59,7 +55,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
@@ -90,10 +86,7 @@ impl Backend for Snap {
         })
     }
 
-    fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),

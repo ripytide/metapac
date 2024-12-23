@@ -50,9 +50,9 @@ macro_rules! any {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
                 }
             }
-            pub fn remove_packages(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn remove(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::remove_packages(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::remove(packages, no_confirm, config), )*
                 }
             }
         }
@@ -99,12 +99,6 @@ macro_rules! package_ids {
                 }
             }
 
-            pub fn remove(&mut self, backend: AnyBackend, package: &str) -> bool {
-                match backend {
-                    $( AnyBackend::$upper_backend => self.$lower_backend.remove(package) ),*
-                }
-            }
-
             pub fn difference(&self, other: &Self) -> Self {
                 let mut output = Self::default();
 
@@ -115,10 +109,10 @@ macro_rules! package_ids {
                 output
             }
 
-            pub fn remove_packages(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn remove(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
                     if is_enabled(AnyBackend::$upper_backend, config) {
-                        AnyBackend::$upper_backend.remove_packages(&self.$lower_backend, no_confirm, config)?;
+                        AnyBackend::$upper_backend.remove(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
 
@@ -144,45 +138,15 @@ macro_rules! package_ids {
 }
 apply_public_backends!(package_ids);
 
-macro_rules! query_infos {
+macro_rules! raw_options {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        pub struct QueryInfos {
+        pub struct RawOptions {
             $(
-                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::QueryInfo>,
+                pub $lower_backend: Vec<(String, <$upper_backend as Backend>::Options)>,
             )*
         }
-        impl QueryInfos {
-            append!($(($upper_backend, $lower_backend)),*);
-            is_empty!($(($upper_backend, $lower_backend)),*);
-            to_package_ids!($(($upper_backend, $lower_backend)),*);
-
-            pub fn query_installed_packages(config: &Config) -> Result<Self> {
-                Ok(Self {
-                    $(
-                        $lower_backend:
-                            if is_enabled(AnyBackend::$upper_backend, config) {
-                                $upper_backend::query_installed_packages(config)?
-                            } else {
-                                Default::default()
-                            },
-                    )*
-                })
-            }
-        }
-    }
-}
-apply_public_backends!(query_infos);
-
-macro_rules! raw_install_options {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Clone, Default)]
-        pub struct RawInstallOptions {
-            $(
-                pub $lower_backend: Vec<(String, <$upper_backend as Backend>::InstallOptions)>,
-            )*
-        }
-        impl RawInstallOptions {
+        impl RawOptions {
             append!($(($upper_backend, $lower_backend)),*);
 
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
@@ -193,23 +157,23 @@ macro_rules! raw_install_options {
         }
     }
 }
-apply_public_backends!(raw_install_options);
+apply_public_backends!(raw_options);
 
-macro_rules! install_options {
+macro_rules! options {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
         #[allow(non_snake_case)]
-        pub struct InstallOptions {
+        pub struct Options {
             $(
-                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::InstallOptions>,
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::Options>,
             )*
         }
-        impl InstallOptions {
+        impl Options {
             append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
             to_package_ids!($(($upper_backend, $lower_backend)),*);
 
-            pub fn map_install_packages(mut self, config: &Config) -> Result<Self> {
+            pub fn map_managed_packages(mut self, config: &Config) -> Result<Self> {
                 $(
                     if is_enabled(AnyBackend::$upper_backend, config) {
                         self.$lower_backend = $upper_backend::map_managed_packages(self.$lower_backend, config)?;
@@ -219,19 +183,32 @@ macro_rules! install_options {
                 Ok(self)
             }
 
-            pub fn install_packages(self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn install(self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
                     if is_enabled(AnyBackend::$upper_backend, config) {
-                        $upper_backend::install_packages(&self.$lower_backend, no_confirm, config)?;
+                        $upper_backend::install(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
 
                 Ok(())
             }
+
+            pub fn query(config: &Config) -> Result<Self> {
+                Ok(Self {
+                    $(
+                        $lower_backend:
+                            if is_enabled(AnyBackend::$upper_backend, config) {
+                                $upper_backend::query(config)?
+                            } else {
+                                Default::default()
+                            },
+                    )*
+                })
+            }
         }
     }
 }
-apply_public_backends!(install_options);
+apply_public_backends!(options);
 
 fn is_enabled(backend: AnyBackend, config: &Config) -> bool {
     !config
