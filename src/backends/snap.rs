@@ -89,4 +89,14 @@ impl Backend for Snap {
                 .join(" ")
         })
     }
+
+    fn missing(
+        managed: Self::InstallOptions,
+        installed: Option<Self::QueryInfo>,
+    ) -> Option<Self::InstallOptions> {
+        match installed {
+            Some(_) => None,
+            None => Some(managed),
+        }
+    }
 }

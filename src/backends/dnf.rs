@@ -117,6 +117,16 @@ impl Backend for Dnf {
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
     }
+
+    fn missing(
+        managed: Self::InstallOptions,
+        installed: Option<Self::QueryInfo>,
+    ) -> Option<Self::InstallOptions> {
+        match installed {
+            Some(_) => None,
+            None => Some(managed),
+        }
+    }
 }
 
 fn parse_package(package: &str) -> String {
