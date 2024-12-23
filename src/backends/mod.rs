@@ -41,29 +41,26 @@ pub struct StringPackageStruct {
 }
 
 pub trait Backend {
-    type QueryInfo;
-    type InstallOptions;
+    type Options;
 
-    fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+    fn map_required(
+        packages: BTreeMap<String, Self::Options>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>>;
+    ) -> Result<BTreeMap<String, Self::Options>>;
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>>;
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>>;
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         config: &Config,
     ) -> Result<()>;
 
-    fn remove_packages(
-        packages: &BTreeSet<String>,
-        no_confirm: bool,
-        config: &Config,
-    ) -> Result<()>;
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()>;
 
     fn clean_cache(config: &Config) -> Result<()>;
 
     fn version(config: &Config) -> Result<String>;
+
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options>;
 }

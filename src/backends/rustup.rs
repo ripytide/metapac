@@ -11,30 +11,24 @@ use std::collections::BTreeSet;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Rustup;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RustupQueryInfo {
-    pub components: Vec<String>,
-}
-
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
-pub struct RustupInstallOptions {
-    #[serde_inline_default(RustupInstallOptions::default().components)]
-    pub components: Vec<String>,
+pub struct RustupOptions {
+    #[serde_inline_default(RustupOptions::default().components)]
+    pub components: BTreeSet<String>,
 }
 
 impl Backend for Rustup {
-    type QueryInfo = RustupQueryInfo;
-    type InstallOptions = RustupInstallOptions;
+    type Options = RustupOptions;
 
-    fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+    fn map_required(
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -68,7 +62,7 @@ impl Backend for Rustup {
             ) {
                 packages.insert(
                     toolchain,
-                    RustupQueryInfo {
+                    Self::Options {
                         components: components_stdout.lines().map(|x| x.to_string()).collect(),
                     },
                 );
@@ -78,18 +72,14 @@ impl Backend for Rustup {
         Ok(packages)
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
-        for (toolchain, rustup_install_options) in packages.iter() {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+        for (toolchain, rustup_options) in packages.iter() {
             run_command(
                 ["rustup", "toolchain", "install", toolchain.as_str()],
                 Perms::Same,
             )?;
 
-            if !rustup_install_options.components.is_empty() {
+            if !rustup_options.components.is_empty() {
                 run_command(
                     [
                         "rustup",
@@ -99,7 +89,7 @@ impl Backend for Rustup {
                         toolchain.as_str(),
                     ]
                     .into_iter()
-                    .chain(rustup_install_options.components.iter().map(String::as_str)),
+                    .chain(rustup_options.components.iter().map(String::as_str)),
                     Perms::Same,
                 )?;
             }
@@ -108,7 +98,7 @@ impl Backend for Rustup {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             for toolchain in packages.iter() {
                 run_command(
@@ -127,5 +117,25 @@ impl Backend for Rustup {
 
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["rustup", "--version"], Perms::Same, true)
+    }
+
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+        match installed {
+            Some(installed) => {
+                let missing = required
+                    .components
+                    .difference(&installed.components)
+                    .cloned()
+                    .collect::<BTreeSet<_>>();
+                if missing.is_empty() {
+                    None
+                } else {
+                    Some(Self::Options {
+                        components: missing,
+                    })
+                }
+            }
+            None => Some(required),
+        }
     }
 }
