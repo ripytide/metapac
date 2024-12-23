@@ -13,39 +13,32 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct CargoQueryInfo {
-    version: String,
-    git: Option<String>,
-    all_features: bool,
-    no_default_features: bool,
-    features: Vec<String>,
-}
-
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct CargoInstallOptions {
+pub struct CargoOptions {
+    #[serde_inline_default(CargoOptions::default().version)]
+    version: Option<String>,
+    #[serde_inline_default(CargoOptions::default().git)]
     git: Option<String>,
-    #[serde_inline_default(CargoInstallOptions::default().all_features)]
+    #[serde_inline_default(CargoOptions::default().all_features)]
     all_features: bool,
-    #[serde_inline_default(CargoInstallOptions::default().no_default_features)]
+    #[serde_inline_default(CargoOptions::default().no_default_features)]
     no_default_features: bool,
-    #[serde_inline_default(CargoInstallOptions::default().features)]
+    #[serde_inline_default(CargoOptions::default().features)]
     features: Vec<String>,
 }
 
 impl Backend for Cargo {
-    type QueryInfo = CargoQueryInfo;
-    type InstallOptions = CargoInstallOptions;
+    type Options = CargoOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -66,8 +59,8 @@ impl Backend for Cargo {
         extract_packages(&contents).wrap_err("extracting packages from crates file")
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         _: bool,
         _: &Config,
     ) -> Result<()> {
@@ -101,7 +94,7 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["cargo", "uninstall"]
@@ -124,10 +117,7 @@ impl Backend for Cargo {
         run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),
@@ -135,10 +125,10 @@ impl Backend for Cargo {
     }
 }
 
-fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoQueryInfo>> {
+fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
     let json: Value = serde_json::from_str(contents).wrap_err("parsing JSON from crates file")?;
 
-    let result: BTreeMap<String, CargoQueryInfo> = json
+    let result: BTreeMap<String, CargoOptions> = json
         .get("installs")
         .ok_or(eyre!("get 'installs' field from json"))?
         .as_object()
@@ -175,8 +165,8 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoQueryInfo>> 
 
             (
                 name.to_string(),
-                CargoQueryInfo {
-                    version: version.to_string(),
+                CargoOptions {
+                    version: Some(version.to_string()),
                     git,
                     all_features,
                     no_default_features,

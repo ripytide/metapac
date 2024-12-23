@@ -13,13 +13,13 @@ use std::{
 };
 
 #[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
-pub struct Groups(BTreeMap<PathBuf, RawInstallOptions>);
+pub struct Groups(BTreeMap<PathBuf, RawOptions>);
 
 impl Groups {
     pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
         let mut result = Vec::new();
-        for (group_file, raw_install_options) in self.0.iter() {
-            if raw_install_options
+        for (group_file, raw_options) in self.0.iter() {
+            if raw_options
                 .to_raw_package_ids()
                 .contains(backend, package)
             {
@@ -29,12 +29,12 @@ impl Groups {
         result
     }
 
-    pub fn to_install_options(&self) -> InstallOptions {
+    pub fn to_options(&self) -> Options {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
-        for (group_file, raw_install_options) in self.iter() {
-            let raw_package_ids = raw_install_options.to_raw_package_ids();
+        for (group_file, raw_options) in self.iter() {
+            let raw_package_ids = raw_options.to_raw_package_ids();
 
             macro_rules! x {
                 ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -61,22 +61,22 @@ impl Groups {
             }
         }
 
-        let mut merged_raw_install_options = RawInstallOptions::default();
-        for mut raw_install_options in self.values().cloned() {
-            merged_raw_install_options.append(&mut raw_install_options);
+        let mut merged_raw_options = RawOptions::default();
+        for mut raw_options in self.values().cloned() {
+            merged_raw_options.append(&mut raw_options);
         }
 
-        let mut install_options = InstallOptions::default();
+        let mut options = Options::default();
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    install_options.$lower_backend = merged_raw_install_options.$lower_backend.into_iter().collect();
+                    options.$lower_backend = merged_raw_options.$lower_backend.into_iter().collect();
                 )*
             };
         }
         apply_public_backends!(x);
 
-        install_options
+        options
     }
 
     pub fn load(group_dir: &Path, hostname: &str, config: &Config) -> Result<Groups> {
@@ -111,41 +111,41 @@ impl Groups {
             let file_contents =
                 read_to_string(&group_file).wrap_err(eyre!("reading group file {group_file:?}"))?;
 
-            let raw_install_options = parse_group_file(&group_file, &file_contents)
+            let raw_options = parse_group_file(&group_file, &file_contents)
                 .wrap_err(eyre!("parsing group file {group_file:?}"))?;
 
-            groups.insert(group_file, raw_install_options);
+            groups.insert(group_file, raw_options);
         }
 
         Ok(groups)
     }
 }
 
-fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawInstallOptions> {
-    let mut raw_install_options = RawInstallOptions::default();
+fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawOptions> {
+    let mut raw_options = RawOptions::default();
 
     let toml = toml::from_str::<Table>(contents)?;
 
     for (key, value) in toml.iter() {
-        raw_install_options.append(&mut parse_toml_key_value(group_file, key, value)?);
+        raw_options.append(&mut parse_toml_key_value(group_file, key, value)?);
     }
 
-    Ok(raw_install_options)
+    Ok(raw_options)
 }
 
-fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<RawInstallOptions> {
+fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<RawOptions> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
                 if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
-                    let mut raw_install_options = RawInstallOptions::default();
+                    let mut raw_options = RawOptions::default();
 
                     let packages = value.as_array().ok_or(
                         eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
                     )?;
 
                     for package in packages {
-                        let (package, package_install_options) =
+                        let (package, package_options) =
                             match package {
                                 toml::Value::String(x) => (x.to_string(), Default::default()),
                                 toml::Value::Table(x) => (
@@ -155,10 +155,10 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                                 _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                             };
 
-                        raw_install_options.$lower_backend.push((package, package_install_options));
+                        raw_options.$lower_backend.push((package, package_options));
                     }
 
-                    return Ok(raw_install_options);
+                    return Ok(raw_options);
                 }
             )*
         };
@@ -167,5 +167,5 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
 
     log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
 
-    Ok(RawInstallOptions::default())
+    Ok(RawOptions::default())
 }

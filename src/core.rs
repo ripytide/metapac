@@ -36,7 +36,7 @@ impl MainArguments {
         let groups = Groups::load(&group_dir, &hostname, &config)
             .wrap_err("failed to load package install options from groups")?;
 
-        let managed = groups.to_install_options().map_install_packages(&config)?;
+        let managed = groups.to_options().map_managed_packages(&config)?;
 
         match self.subcommand {
             MainSubcommand::Clean(clean) => clean.run(&managed, &config),
@@ -51,7 +51,7 @@ impl MainArguments {
 }
 
 impl CleanCommand {
-    fn run(self, managed: &InstallOptions, config: &Config) -> Result<()> {
+    fn run(self, managed: &Options, config: &Config) -> Result<()> {
         let unmanaged = unmanaged(managed, config)?;
 
         if unmanaged.is_empty() {
@@ -62,7 +62,7 @@ impl CleanCommand {
         if self.no_confirm {
             log::info!("proceeding without confirmation");
 
-            unmanaged.remove_packages(self.no_confirm, config)
+            unmanaged.remove(self.no_confirm, config)
         } else {
             println!("{unmanaged}");
 
@@ -75,7 +75,7 @@ impl CleanCommand {
                 .interact()
                 .wrap_err("getting user confirmation")?
             {
-                unmanaged.remove_packages(self.no_confirm, config)
+                unmanaged.remove(self.no_confirm, config)
             } else {
                 Ok(())
             }
@@ -127,13 +127,13 @@ impl AddCommand {
 }
 
 impl ReviewCommand {
-    fn run(self, _: &InstallOptions, _: &Config) -> Result<()> {
+    fn run(self, _: &Options, _: &Config) -> Result<()> {
         review()
     }
 }
 
 impl SyncCommand {
-    fn run(self, managed: &InstallOptions, config: &Config) -> Result<()> {
+    fn run(self, managed: &Options, config: &Config) -> Result<()> {
         let missing = missing(managed, config)?;
 
         if missing.is_empty() {
@@ -157,12 +157,12 @@ impl SyncCommand {
             return Ok(());
         }
 
-        missing.install_packages(self.no_confirm, config)
+        missing.install(self.no_confirm, config)
     }
 }
 
 impl UnmanagedCommand {
-    fn run(self, managed: &InstallOptions, config: &Config) -> Result<()> {
+    fn run(self, managed: &Options, config: &Config) -> Result<()> {
         let unmanaged = unmanaged(managed, config)?;
 
         if unmanaged.is_empty() {
@@ -217,23 +217,23 @@ impl CleanCacheCommand {
     }
 }
 
-fn unmanaged(managed: &InstallOptions, config: &Config) -> Result<PackageIds> {
-    QueryInfos::query_installed_packages(config)
+fn unmanaged(managed: &Options, config: &Config) -> Result<PackageIds> {
+    Options::query(config)
         .map(|x| x.to_package_ids().difference(&managed.to_package_ids()))
 }
-fn missing(managed: &InstallOptions, config: &Config) -> Result<InstallOptions> {
-    let installed = QueryInfos::query_installed_packages(config)?;
+fn missing(managed: &Options, config: &Config) -> Result<Options> {
+    let installed = Options::query(config)?;
 
-    let mut missing = InstallOptions::default();
+    let mut missing = Options::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, managed_install_options) in managed.$lower_backend.iter() {
-                    if let Some(missing_install_options) =
-                        $upper_backend::missing(managed_install_options.clone(), installed.$lower_backend.get(package_id).cloned())
+                for (package_id, managed_options) in managed.$lower_backend.iter() {
+                    if let Some(missing_options) =
+                        $upper_backend::missing(managed_options.clone(), installed.$lower_backend.get(package_id).cloned())
                     {
-                        missing.$lower_backend.insert(package_id.clone(), missing_install_options);
+                        missing.$lower_backend.insert(package_id.clone(), missing_options);
                     }
                 }
             )*

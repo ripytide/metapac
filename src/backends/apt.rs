@@ -9,24 +9,20 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Apt;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AptQueryInfo {}
-
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct AptInstallOptions {}
+pub struct AptOptions {}
 
 impl Backend for Apt {
-    type QueryInfo = AptQueryInfo;
-    type InstallOptions = AptInstallOptions;
+    type Options = AptOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -41,12 +37,12 @@ impl Backend for Apt {
 
         Ok(explicit
             .lines()
-            .map(|x| (x.to_string(), AptQueryInfo {}))
+            .map(|x| (x.to_string(), Self::Options {}))
             .collect())
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         _: &Config,
     ) -> Result<()> {
@@ -63,7 +59,7 @@ impl Backend for Apt {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["apt-get", "remove"]
@@ -88,9 +84,9 @@ impl Backend for Apt {
     }
 
     fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+        managed: Self::Options,
+        installed: Option<Self::Options>,
+    ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),
