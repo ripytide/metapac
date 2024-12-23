@@ -57,8 +57,24 @@ impl Backend for Dnf {
         let user_packages = user_packages.lines().map(parse_package);
 
         Ok(system_packages
-            .map(|x| (x, Self::Options { user: false }))
-            .chain(user_packages.map(|x| (x, Self::Options { user: true })))
+            .map(|x| {
+                (
+                    x,
+                    Self::Options {
+                        user: false,
+                        repo: None,
+                    },
+                )
+            })
+            .chain(user_packages.map(|x| {
+                (
+                    x,
+                    Self::Options {
+                        user: true,
+                        repo: None,
+                    },
+                )
+            }))
             .collect())
     }
 
@@ -113,10 +129,7 @@ impl Backend for Dnf {
         run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        managed: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),
