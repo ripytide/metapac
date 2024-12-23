@@ -86,9 +86,10 @@ support for additional backends are welcome!
 # Default: "pacman"
 arch_package_manager = "paru"
 
-# Whether to install flatpak packages systemwide or for the current user.
+# Whether to default to installing flatpak packages systemwide or for the current user.
+# This setting can be overridden on a per-package basis using { systemwide = false|true }.
 # Default: true
-flatpak_systemwide = true
+flatpak_default_systemwide = true
 
 # Backends to disable from all metapac behavior. See the README.md for
 # the list of backend names
