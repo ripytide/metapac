@@ -12,7 +12,7 @@ pub struct Dnf;
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct DnfOptions {
     pub repo: Option<String>,
-    pub user: bool,
+    pub user: Option<bool>,
 }
 
 impl Backend for Dnf {
@@ -61,7 +61,7 @@ impl Backend for Dnf {
                 (
                     x,
                     Self::Options {
-                        user: false,
+                        user: Some(false),
                         repo: None,
                     },
                 )
@@ -70,7 +70,7 @@ impl Backend for Dnf {
                 (
                     x,
                     Self::Options {
-                        user: true,
+                        user: Some(true),
                         repo: None,
                     },
                 )

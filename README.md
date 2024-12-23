@@ -199,8 +199,7 @@ server = ["example_group"]
 
 arch = [
  "metapac",
- # optional_deps: additional packages to install with this package, short-form syntax only
- { package = "metapac",  optional_deps = ["git"] }
+ { package = "metapac" }
 ]
 apt = [
  "metapac",
@@ -222,7 +221,7 @@ dnf = [
 ]
 flatpak = [
  "metapac",
- { package = "metapac", remote = "flathub" }
+ { package = "metapac", remote = "flathub", systemwide = false }
 ]
 pipx = [
  "metapac",
