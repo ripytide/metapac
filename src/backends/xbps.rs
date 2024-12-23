@@ -12,25 +12,21 @@ use crate::prelude::*;
 pub struct Xbps;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct XbpsQueryInfo {}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct XbpsInstallOptions {}
+pub struct XbpsOptions {}
 
 impl Backend for Xbps {
-    type QueryInfo = XbpsQueryInfo;
-    type InstallOptions = XbpsInstallOptions;
+    type Options = XbpsOptions;
 
     fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(
+    fn query(
         config: &Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::QueryInfo>> {
+    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -51,7 +47,7 @@ impl Backend for Xbps {
 
                 (
                     re2.replace_all(&mid_result, "").to_string(),
-                    XbpsQueryInfo {},
+                    Self::Options {},
                 )
             })
             .collect();
@@ -59,8 +55,8 @@ impl Backend for Xbps {
         Ok(packages)
     }
 
-    fn install_packages(
-        packages: &std::collections::BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &std::collections::BTreeMap<String, Self::Options>,
         no_confirm: bool,
         _: &Config,
     ) -> Result<()> {
@@ -77,7 +73,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-remove", "-R"]
@@ -100,9 +96,9 @@ impl Backend for Xbps {
     }
 
     fn missing(
-        managed: Self::InstallOptions,
-        installed: Option<Self::QueryInfo>,
-    ) -> Option<Self::InstallOptions> {
+        managed: Self::Options,
+        installed: Option<Self::Options>,
+    ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),
