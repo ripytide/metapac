@@ -21,7 +21,7 @@ pub struct RustupOptions {
 impl Backend for Rustup {
     type Options = RustupOptions;
 
-    fn map_managed_packages(
+    fn map_required(
         packages: BTreeMap<String, Self::Options>,
         _: &Config,
     ) -> Result<BTreeMap<String, Self::Options>> {
@@ -123,10 +123,10 @@ impl Backend for Rustup {
         run_command_for_stdout(["rustup", "--version"], Perms::Same, true)
     }
 
-    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(installed) => {
-                let missing = managed
+                let missing = required
                     .components
                     .difference(&installed.components)
                     .cloned()
@@ -139,7 +139,7 @@ impl Backend for Rustup {
                     })
                 }
             }
-            None => Some(managed),
+            None => Some(required),
         }
     }
 }

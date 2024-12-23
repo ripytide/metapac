@@ -43,7 +43,7 @@ pub struct StringPackageStruct {
 pub trait Backend {
     type Options;
 
-    fn map_managed_packages(
+    fn map_required(
         packages: BTreeMap<String, Self::Options>,
         config: &Config,
     ) -> Result<BTreeMap<String, Self::Options>>;
@@ -66,5 +66,5 @@ pub trait Backend {
 
     fn version(config: &Config) -> Result<String>;
 
-    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options>;
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options>;
 }

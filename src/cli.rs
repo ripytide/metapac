@@ -76,7 +76,7 @@ pub struct SyncCommand {
 
 #[derive(Args)]
 #[command(visible_alias("u"))]
-/// show explicitly installed packages not managed by metapac
+/// show explicitly installed packages not required by metapac
 ///
 /// the output is in valid toml group file format to allow writing
 /// the output to a file which can help in importing packages

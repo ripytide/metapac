@@ -15,7 +15,7 @@ pub struct SnapOptions {}
 impl Backend for Snap {
     type Options = SnapOptions;
 
-    fn map_managed_packages(
+    fn map_required(
         packages: BTreeMap<String, Self::Options>,
         _: &Config,
     ) -> Result<BTreeMap<String, Self::Options>> {
@@ -86,10 +86,10 @@ impl Backend for Snap {
         })
     }
 
-    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
-            None => Some(managed),
+            None => Some(required),
         }
     }
 }

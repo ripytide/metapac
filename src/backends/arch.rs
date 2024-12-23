@@ -16,7 +16,7 @@ pub struct ArchOptions {}
 impl Backend for Arch {
     type Options = ArchOptions;
 
-    fn map_managed_packages(
+    fn map_required(
         mut packages: BTreeMap<String, Self::Options>,
         config: &Config,
     ) -> Result<BTreeMap<String, Self::Options>> {
@@ -235,10 +235,10 @@ impl Backend for Arch {
         )
     }
 
-    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
-            None => Some(managed),
+            None => Some(required),
         }
     }
 }

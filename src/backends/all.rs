@@ -173,10 +173,10 @@ macro_rules! options {
             is_empty!($(($upper_backend, $lower_backend)),*);
             to_package_ids!($(($upper_backend, $lower_backend)),*);
 
-            pub fn map_managed_packages(mut self, config: &Config) -> Result<Self> {
+            pub fn map_required(mut self, config: &Config) -> Result<Self> {
                 $(
                     if is_enabled(AnyBackend::$upper_backend, config) {
-                        self.$lower_backend = $upper_backend::map_managed_packages(self.$lower_backend, config)?;
+                        self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
                     }
                 )*
 

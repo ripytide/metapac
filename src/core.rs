@@ -36,14 +36,14 @@ impl MainArguments {
         let groups = Groups::load(&group_dir, &hostname, &config)
             .wrap_err("failed to load package install options from groups")?;
 
-        let managed = groups.to_options().map_managed_packages(&config)?;
+        let required = groups.to_options().map_required(&config)?;
 
         match self.subcommand {
-            MainSubcommand::Clean(clean) => clean.run(&managed, &config),
+            MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Add(add) => add.run(&group_dir, &groups),
-            MainSubcommand::Review(review) => review.run(&managed, &config),
-            MainSubcommand::Sync(sync) => sync.run(&managed, &config),
-            MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&managed, &config),
+            MainSubcommand::Review(review) => review.run(&required, &config),
+            MainSubcommand::Sync(sync) => sync.run(&required, &config),
+            MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
             MainSubcommand::CleanCache(backends) => backends.run(&config),
         }
@@ -51,8 +51,8 @@ impl MainArguments {
 }
 
 impl CleanCommand {
-    fn run(self, managed: &Options, config: &Config) -> Result<()> {
-        let unmanaged = unmanaged(managed, config)?;
+    fn run(self, required: &Options, config: &Config) -> Result<()> {
+        let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
             eprintln!("nothing to clean since there are no unmanaged packages");
@@ -133,8 +133,8 @@ impl ReviewCommand {
 }
 
 impl SyncCommand {
-    fn run(self, managed: &Options, config: &Config) -> Result<()> {
-        let missing = missing(managed, config)?;
+    fn run(self, required: &Options, config: &Config) -> Result<()> {
+        let missing = missing(required, config)?;
 
         if missing.is_empty() {
             log::info!("nothing to do as there are no missing packages");
@@ -162,8 +162,8 @@ impl SyncCommand {
 }
 
 impl UnmanagedCommand {
-    fn run(self, managed: &Options, config: &Config) -> Result<()> {
-        let unmanaged = unmanaged(managed, config)?;
+    fn run(self, required: &Options, config: &Config) -> Result<()> {
+        let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
             eprintln!("no unmanaged packages");
@@ -217,11 +217,11 @@ impl CleanCacheCommand {
     }
 }
 
-fn unmanaged(managed: &Options, config: &Config) -> Result<PackageIds> {
+fn unmanaged(required: &Options, config: &Config) -> Result<PackageIds> {
     Options::query(config)
-        .map(|x| x.to_package_ids().difference(&managed.to_package_ids()))
+        .map(|x| x.to_package_ids().difference(&required.to_package_ids()))
 }
-fn missing(managed: &Options, config: &Config) -> Result<Options> {
+fn missing(required: &Options, config: &Config) -> Result<Options> {
     let installed = Options::query(config)?;
 
     let mut missing = Options::default();
@@ -229,9 +229,9 @@ fn missing(managed: &Options, config: &Config) -> Result<Options> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, managed_options) in managed.$lower_backend.iter() {
+                for (package_id, required_options) in required.$lower_backend.iter() {
                     if let Some(missing_options) =
-                        $upper_backend::missing(managed_options.clone(), installed.$lower_backend.get(package_id).cloned())
+                        $upper_backend::missing(required_options.clone(), installed.$lower_backend.get(package_id).cloned())
                     {
                         missing.$lower_backend.insert(package_id.clone(), missing_options);
                     }

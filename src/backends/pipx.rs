@@ -20,7 +20,7 @@ pub struct PipxOptions {}
 impl Backend for Pipx {
     type Options = PipxOptions;
 
-    fn map_managed_packages(
+    fn map_required(
         packages: BTreeMap<String, Self::Options>,
         _: &Config,
     ) -> Result<BTreeMap<String, Self::Options>> {
@@ -83,12 +83,12 @@ impl Backend for Pipx {
     }
 
     fn missing(
-        managed: Self::Options,
+        required: Self::Options,
         installed: Option<Self::Options>,
     ) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
-            None => Some(managed),
+            None => Some(required),
         }
     }
 }
