@@ -218,8 +218,7 @@ impl CleanCacheCommand {
 }
 
 fn unmanaged(required: &Options, config: &Config) -> Result<PackageIds> {
-    Options::query(config)
-        .map(|x| x.to_package_ids().difference(&required.to_package_ids()))
+    Options::query(config).map(|x| x.to_package_ids().difference(&required.to_package_ids()))
 }
 fn missing(required: &Options, config: &Config) -> Result<Options> {
     let installed = Options::query(config)?;

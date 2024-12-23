@@ -39,11 +39,7 @@ impl Backend for Brew {
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["brew", "install"]
@@ -79,10 +75,7 @@ impl Backend for Brew {
         run_command_for_stdout(["brew", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        required: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(required),

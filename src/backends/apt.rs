@@ -83,10 +83,7 @@ impl Backend for Apt {
         run_command_for_stdout(["apt", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        required: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(required),

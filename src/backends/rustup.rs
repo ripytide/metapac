@@ -72,11 +72,7 @@ impl Backend for Rustup {
         Ok(packages)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         for (toolchain, rustup_options) in packages.iter() {
             run_command(
                 ["rustup", "toolchain", "install", toolchain.as_str()],
