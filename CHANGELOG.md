@@ -18,16 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New subcommand `metapac clean-cache`! (#61)
-  
-  Allows you to clear the caches for all or selective backends.
-  `metapac clean-cache arch apt` to clean just the `arch` and `apt`
-  backends and just `metapac clear-cache` to clear all backends.
 - A new per-package `systemwide` setting for `flatpak` packages. (#62)
-
-### Fixed
-
-- The `flatpak` backend no longer mistakenly uses `sudo` when removing packages. (#57)
 
 ### Changed
 
