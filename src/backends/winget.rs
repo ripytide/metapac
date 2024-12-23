@@ -61,11 +61,7 @@ impl Backend for WinGet {
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["winget", "install"]
@@ -101,10 +97,7 @@ impl Backend for WinGet {
         run_command_for_stdout(["winget", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        required: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(required),

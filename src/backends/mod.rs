@@ -56,11 +56,7 @@ pub trait Backend {
         config: &Config,
     ) -> Result<()>;
 
-    fn remove(
-        packages: &BTreeSet<String>,
-        no_confirm: bool,
-        config: &Config,
-    ) -> Result<()>;
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()>;
 
     fn clean_cache(config: &Config) -> Result<()>;
 

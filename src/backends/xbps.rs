@@ -24,9 +24,7 @@ impl Backend for Xbps {
         Ok(packages)
     }
 
-    fn query(
-        config: &Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    fn query(config: &Config) -> Result<std::collections::BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -95,10 +93,7 @@ impl Backend for Xbps {
         run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        required: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(required),
