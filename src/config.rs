@@ -12,8 +12,8 @@ use crate::prelude::*;
 pub struct Config {
     #[serde_inline_default(Config::default().arch_package_manager)]
     pub arch_package_manager: ArchPackageManager,
-    #[serde_inline_default(Config::default().flatpak_systemwide)]
-    pub flatpak_systemwide: bool,
+    #[serde_inline_default(Config::default().flatpak_default_systemwide)]
+    pub flatpak_default_systemwide: bool,
     #[serde_inline_default(Config::default().disabled_backends)]
     pub disabled_backends: Vec<String>,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
@@ -25,7 +25,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             arch_package_manager: ArchPackageManager::default(),
-            flatpak_systemwide: true,
+            flatpak_default_systemwide: true,
             disabled_backends: Vec::new(),
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),

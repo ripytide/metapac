@@ -12,8 +12,8 @@ pub struct Flatpak;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct FlatpakOptions {
-    pub systemwide: bool,
-    pub remote: String,
+    pub systemwide: Option<bool>,
+    pub remote: Option<String>,
 }
 
 impl Backend for Flatpak {
@@ -42,9 +42,15 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let sys_explicit = sys_explicit_out
-            .lines()
-            .map(|x| (x.trim().to_owned(), Self::Options { systemwide: true }));
+        let sys_explicit = sys_explicit_out.lines().map(|x| {
+            (
+                x.trim().to_owned(),
+                Self::Options {
+                    systemwide: Some(true),
+                    remote: None,
+                },
+            )
+        });
 
         let user_explicit_out = run_command_for_stdout(
             [
@@ -57,9 +63,15 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let user_explicit = user_explicit_out
-            .lines()
-            .map(|x| (x.trim().to_owned(), Self::Options { systemwide: false }));
+        let user_explicit = user_explicit_out.lines().map(|x| {
+            (
+                x.trim().to_owned(),
+                Self::Options {
+                    systemwide: Some(false),
+                    remote: None,
+                },
+            )
+        });
 
         let sys_explicit_runtimes_installed = run_command_for_stdout(
             [
@@ -79,7 +91,10 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    Self::Options { systemwide: true },
+                    Self::Options {
+                        systemwide: Some(true),
+                        remote: None,
+                    },
                 )
             })
             .filter(|(runtime, _)| {
@@ -107,7 +122,10 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    Self::Options { systemwide: false },
+                    Self::Options {
+                        systemwide: Some(false),
+                        remote: None,
+                    },
                 )
             })
             .filter(|(runtime, _)| {
@@ -131,22 +149,15 @@ impl Backend for Flatpak {
         no_confirm: bool,
         config: &Config,
     ) -> Result<()> {
-        let mut no_remotes = Vec::new();
-        let mut remote_packages = BTreeMap::new();
-        for (package, remote) in packages {
-            if remote.remote.is_empty() {
-                no_remotes.push(package);
-            } else {
-                remote_packages.insert(package, remote);
-            }
-        }
-
-        if !no_remotes.is_empty() {
+        for (package, options) in packages {
             run_command(
                 [
                     "flatpak",
                     "install",
-                    if config.flatpak_systemwide {
+                    if options
+                        .systemwide
+                        .unwrap_or(config.flatpak_default_systemwide)
+                    {
                         "--system"
                     } else {
                         "--user"
@@ -154,25 +165,7 @@ impl Backend for Flatpak {
                 ]
                 .into_iter()
                 .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(no_remotes.into_iter().map(String::as_str)),
-                Perms::Same,
-            )?;
-        }
-
-        for (package, remote) in remote_packages {
-            run_command(
-                [
-                    "flatpak",
-                    "install",
-                    if config.flatpak_systemwide {
-                        "--system"
-                    } else {
-                        "--user"
-                    },
-                ]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain([remote.remote.as_str()])
+                .chain(options.remote.as_deref())
                 .chain([package.as_str()]),
                 Perms::Same,
             )?;
@@ -181,25 +174,13 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove(
-        packages: &BTreeSet<String>,
-        no_confirm: bool,
-        config: &Config,
-    ) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                [
-                    "flatpak",
-                    "uninstall",
-                    if config.flatpak_systemwide {
-                        "--system"
-                    } else {
-                        "--user"
-                    },
-                ]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(packages.iter().map(String::as_str)),
+                ["flatpak", "uninstall"]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(packages.iter().map(String::as_str)),
                 Perms::Same,
             )?;
         }
@@ -217,10 +198,7 @@ impl Backend for Flatpak {
         run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
     }
 
-    fn missing(
-        managed: Self::Options,
-        installed: Option<Self::Options>,
-    ) -> Option<Self::Options> {
+    fn missing(managed: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
         match installed {
             Some(_) => None,
             None => Some(managed),
