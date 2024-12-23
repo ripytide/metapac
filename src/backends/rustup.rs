@@ -13,14 +13,14 @@ pub struct Rustup;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RustupQueryInfo {
-    pub components: Vec<String>,
+    pub components: BTreeSet<String>,
 }
 
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct RustupInstallOptions {
     #[serde_inline_default(RustupInstallOptions::default().components)]
-    pub components: Vec<String>,
+    pub components: BTreeSet<String>,
 }
 
 impl Backend for Rustup {
@@ -127,5 +127,28 @@ impl Backend for Rustup {
 
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["rustup", "--version"], Perms::Same, true)
+    }
+
+    fn missing(
+        managed: Self::InstallOptions,
+        installed: Option<Self::QueryInfo>,
+    ) -> Option<Self::InstallOptions> {
+        match installed {
+            Some(installed) => {
+                let missing = managed
+                    .components
+                    .difference(&installed.components)
+                    .cloned()
+                    .collect::<BTreeSet<_>>();
+                if missing.is_empty() {
+                    None
+                } else {
+                    Some(RustupInstallOptions {
+                        components: missing,
+                    })
+                }
+            }
+            None => Some(managed),
+        }
     }
 }

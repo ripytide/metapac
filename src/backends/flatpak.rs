@@ -221,4 +221,14 @@ impl Backend for Flatpak {
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
     }
+
+    fn missing(
+        managed: Self::InstallOptions,
+        installed: Option<Self::QueryInfo>,
+    ) -> Option<Self::InstallOptions> {
+        match installed {
+            Some(_) => None,
+            None => Some(managed),
+        }
+    }
 }
