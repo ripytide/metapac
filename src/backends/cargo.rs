@@ -59,11 +59,7 @@ impl Backend for Cargo {
         extract_packages(&contents).wrap_err("extracting packages from crates file")
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         for (package, options) in packages {
             run_command(
                 ["cargo", "install"]

@@ -19,10 +19,7 @@ impl Groups {
     pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
         let mut result = Vec::new();
         for (group_file, raw_options) in self.0.iter() {
-            if raw_options
-                .to_raw_package_ids()
-                .contains(backend, package)
-            {
+            if raw_options.to_raw_package_ids().contains(backend, package) {
                 result.push(group_file.clone());
             }
         }

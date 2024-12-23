@@ -38,11 +38,7 @@ impl Backend for Snap {
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "install"]
