@@ -81,7 +81,6 @@ impl Backend for Flatpak {
             run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same, false)?;
         let sys_explicit_runtimes = sys_explicit_runtimes_out
             .lines()
-            .skip(1)
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
@@ -111,7 +110,6 @@ impl Backend for Flatpak {
             run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same, false)?;
         let user_explicit_runtimes = user_explicit_runtimes_out
             .lines()
-            .skip(1)
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
