@@ -90,7 +90,6 @@ impl Backend for Flatpak {
             .filter(|(runtime, _)| {
                 sys_explicit_runtimes_installed
                     .lines()
-                    .skip(1)
                     .map(|x| x.trim())
                     .contains(&runtime.as_str())
             });
@@ -119,7 +118,6 @@ impl Backend for Flatpak {
             .filter(|(runtime, _)| {
                 user_explicit_runtimes_installed
                     .lines()
-                    .skip(1)
                     .map(|x| x.trim())
                     .contains(&runtime.as_str())
             });
