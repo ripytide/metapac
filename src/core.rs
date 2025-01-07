@@ -119,8 +119,8 @@ impl AddCommand {
             ))?
             .push(self.package);
 
-        fs::write(group_file, doc.to_string())
-            .wrap_err("writing back modified group file {group_file:?}")?;
+        fs::write(group_file.clone(), doc.to_string())
+            .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
 
         Ok(())
     }
