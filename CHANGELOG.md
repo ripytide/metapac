@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- `flatpak` backend now doesn't skip the first listed package (#65) thanks
+  @latin-1!
+- `flatpak` backend now queries installed packages using the correct format
+  (it was missing a newline between packages) (#66) thanks @latin-t!
+
 ## [0.2.6] - 2024-12-23
 
 ### Added
