@@ -168,7 +168,10 @@ pipx = [
 ]
 rustup = [
  "stable",
- # components: extra non-default components to install with this toolchain
+ # components: extra non-default components to install for this toolchain
+
+ # see https://rust-lang.github.io/rustup/concepts/components.html
+ # for more details
  { package = "stable", components = ["rust-analyzer"] }
 ]
 snap = [
