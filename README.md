@@ -50,13 +50,15 @@ and so can be tracked with version control.
 ### Migrating a default system into `metapac`
 
 Run `metapac unmanaged` and save the output into a group file in
-`metapac`'s' `groups/` folder, see the [`Group Files`](#group-files)
-section for the exact location on your operating system.
+`metapac`'s `groups/` folder, see the [`Group Files`](#group-files)
+section for the exact location of this folder on your operating system.
 
 For example, on linux this would mean:
 
-`mkdir -p ~/.config/metapac/groups`
-`metapac unmanaged > ~/.config/metapac/groups/all.toml`
+```console
+mkdir -p ~/.config/metapac/groups
+metapac unmanaged > ~/.config/metapac/groups/all.toml
+```
 
 Now `metapac` won't try to remove any of your explicitly installed packages
 when you run `metapac clean`.
@@ -100,6 +102,11 @@ sync` to install the newly added package.
 > packages from your group files, but even if there were a `metapac remove`
 > command, using a text editor would still be the recommended method for the
 > same reasons as for adding a package.
+
+### Advanced usage
+
+For more advanced usage read through the remaining sections, especially
+the [`Config`](#config) section.
 
 ## Supported Backends
 
