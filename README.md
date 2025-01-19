@@ -142,9 +142,10 @@ support for additional backends are welcome!
 # Default: "pacman"
 arch_package_manager = "paru"
 
-# Whether to install flatpak packages systemwide or for the current user.
+# Whether to default to installing flatpak packages systemwide or for the current user.
+# This setting can be overridden on a per-package basis using { systemwide = false|true }.
 # Default: true
-flatpak_systemwide = true
+flatpak_default_systemwide = true
 
 # Backends to disable from all metapac behavior. See the README.md for
 # the list of backend names
@@ -193,8 +194,7 @@ server = ["example_group"]
 
 arch = [
  "metapac",
- # optional_deps: additional packages to install with this package, short-form syntax only
- { package = "metapac",  optional_deps = ["git"] }
+ { package = "metapac" }
 ]
 apt = [
  "metapac",
@@ -216,7 +216,7 @@ dnf = [
 ]
 flatpak = [
  "metapac",
- { package = "metapac", remote = "flathub" }
+ { package = "metapac", remote = "flathub", systemwide = false }
 ]
 pipx = [
  "metapac",
@@ -224,7 +224,10 @@ pipx = [
 ]
 rustup = [
  "stable",
- # components: extra non-default components to install with this toolchain
+ # components: extra non-default components to install for this toolchain
+
+ # see https://rust-lang.github.io/rustup/concepts/components.html
+ # for more details
  { package = "stable", components = ["rust-analyzer"] }
 ]
 snap = [

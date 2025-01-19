@@ -15,23 +15,19 @@ use crate::prelude::*;
 pub struct Pipx;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct PipxQueryOptions {}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct PipxInstallOptions {}
+pub struct PipxOptions {}
 
 impl Backend for Pipx {
-    type QueryInfo = PipxQueryOptions;
-    type InstallOptions = PipxInstallOptions;
+    type Options = PipxOptions;
 
-    fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+    fn map_required(
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -42,17 +38,10 @@ impl Backend for Pipx {
             true,
         )?)?;
 
-        Ok(names
-            .into_iter()
-            .map(|x| (x, PipxQueryOptions {}))
-            .collect())
+        Ok(names.into_iter().map(|x| (x, Self::Options {})).collect())
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["pipx", "install"]
@@ -65,7 +54,7 @@ impl Backend for Pipx {
         Ok(())
     }
 
-    fn remove_packages(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["pipx", "uninstall"]
@@ -84,6 +73,13 @@ impl Backend for Pipx {
 
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["pipx", "--version"], Perms::Same, false)
+    }
+
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+        match installed {
+            Some(_) => None,
+            None => Some(required),
+        }
     }
 }
 

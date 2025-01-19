@@ -10,28 +10,23 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
 
-#[derive(Debug, Clone)]
-pub struct FlatpakQueryInfo {
-    pub systemwide: bool,
-}
-
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct FlatpakInstallOptions {
-    pub remote: String,
+pub struct FlatpakOptions {
+    pub systemwide: Option<bool>,
+    pub remote: Option<String>,
 }
 
 impl Backend for Flatpak {
-    type QueryInfo = FlatpakQueryInfo;
-    type InstallOptions = FlatpakInstallOptions;
+    type Options = FlatpakOptions;
 
-    fn map_managed_packages(
-        packages: BTreeMap<String, Self::InstallOptions>,
+    fn map_required(
+        packages: BTreeMap<String, Self::Options>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::InstallOptions>> {
+    ) -> Result<BTreeMap<String, Self::Options>> {
         Ok(packages)
     }
 
-    fn query_installed_packages(config: &Config) -> Result<BTreeMap<String, Self::QueryInfo>> {
+    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -47,9 +42,15 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let sys_explicit = sys_explicit_out
-            .lines()
-            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: true }));
+        let sys_explicit = sys_explicit_out.lines().map(|x| {
+            (
+                x.trim().to_owned(),
+                Self::Options {
+                    systemwide: Some(true),
+                    remote: None,
+                },
+            )
+        });
 
         let user_explicit_out = run_command_for_stdout(
             [
@@ -62,9 +63,15 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let user_explicit = user_explicit_out
-            .lines()
-            .map(|x| (x.trim().to_owned(), FlatpakQueryInfo { systemwide: false }));
+        let user_explicit = user_explicit_out.lines().map(|x| {
+            (
+                x.trim().to_owned(),
+                Self::Options {
+                    systemwide: Some(false),
+                    remote: None,
+                },
+            )
+        });
 
         let sys_explicit_runtimes_installed = run_command_for_stdout(
             [
@@ -84,7 +91,10 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    FlatpakQueryInfo { systemwide: true },
+                    Self::Options {
+                        systemwide: Some(true),
+                        remote: None,
+                    },
                 )
             })
             .filter(|(runtime, _)| {
@@ -112,7 +122,10 @@ impl Backend for Flatpak {
             .map(|x| {
                 (
                     x.trim().split('/').nth(1).unwrap().to_owned(),
-                    FlatpakQueryInfo { systemwide: false },
+                    Self::Options {
+                        systemwide: Some(false),
+                        remote: None,
+                    },
                 )
             })
             .filter(|(runtime, _)| {
@@ -131,27 +144,20 @@ impl Backend for Flatpak {
         Ok(all)
     }
 
-    fn install_packages(
-        packages: &BTreeMap<String, Self::InstallOptions>,
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
         config: &Config,
     ) -> Result<()> {
-        let mut no_remotes = Vec::new();
-        let mut remote_packages = BTreeMap::new();
-        for (package, remote) in packages {
-            if remote.remote.is_empty() {
-                no_remotes.push(package);
-            } else {
-                remote_packages.insert(package, remote);
-            }
-        }
-
-        if !no_remotes.is_empty() {
+        for (package, options) in packages {
             run_command(
                 [
                     "flatpak",
                     "install",
-                    if config.flatpak_systemwide {
+                    if options
+                        .systemwide
+                        .unwrap_or(config.flatpak_default_systemwide)
+                    {
                         "--system"
                     } else {
                         "--user"
@@ -159,25 +165,7 @@ impl Backend for Flatpak {
                 ]
                 .into_iter()
                 .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(no_remotes.into_iter().map(String::as_str)),
-                Perms::Same,
-            )?;
-        }
-
-        for (package, remote) in remote_packages {
-            run_command(
-                [
-                    "flatpak",
-                    "install",
-                    if config.flatpak_systemwide {
-                        "--system"
-                    } else {
-                        "--user"
-                    },
-                ]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain([remote.remote.as_str()])
+                .chain(options.remote.as_deref())
                 .chain([package.as_str()]),
                 Perms::Same,
             )?;
@@ -186,25 +174,13 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove_packages(
-        packages: &BTreeSet<String>,
-        no_confirm: bool,
-        config: &Config,
-    ) -> Result<()> {
+    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                [
-                    "flatpak",
-                    "uninstall",
-                    if config.flatpak_systemwide {
-                        "--system"
-                    } else {
-                        "--user"
-                    },
-                ]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(packages.iter().map(String::as_str)),
+                ["flatpak", "uninstall"]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(packages.iter().map(String::as_str)),
                 Perms::Same,
             )?;
         }
@@ -220,5 +196,12 @@ impl Backend for Flatpak {
 
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
+    }
+
+    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
+        match installed {
+            Some(_) => None,
+            None => Some(required),
+        }
     }
 }

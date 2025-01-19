@@ -1,18 +1,16 @@
-pub use crate::backends::all::{
-    AnyBackend, InstallOptions, PackageIds, QueryInfos, RawInstallOptions, RawPackageIds,
-};
+pub use crate::backends::all::{AnyBackend, Options, PackageIds, RawOptions, RawPackageIds};
 pub(crate) use crate::backends::apply_public_backends;
-pub use crate::backends::apt::{Apt, AptInstallOptions, AptQueryInfo};
-pub use crate::backends::arch::{Arch, ArchInstallOptions, ArchQueryInfo};
-pub use crate::backends::brew::{Brew, BrewInstallOptions, BrewQueryInfo};
-pub use crate::backends::cargo::{Cargo, CargoInstallOptions, CargoQueryInfo};
-pub use crate::backends::dnf::{Dnf, DnfInstallOptions, DnfQueryInfo};
-pub use crate::backends::flatpak::{Flatpak, FlatpakInstallOptions, FlatpakQueryInfo};
-pub use crate::backends::pipx::{Pipx, PipxInstallOptions, PipxQueryOptions};
-pub use crate::backends::rustup::{Rustup, RustupInstallOptions, RustupQueryInfo};
-pub use crate::backends::snap::{Snap, SnapInstallOptions, SnapQueryInfo};
-pub use crate::backends::winget::{WinGet, WinGetInstallOptions, WinGetQueryInfo};
-pub use crate::backends::xbps::{Xbps, XbpsInstallOptions, XbpsQueryInfo};
+pub use crate::backends::apt::{Apt, AptOptions};
+pub use crate::backends::arch::{Arch, ArchOptions};
+pub use crate::backends::brew::{Brew, BrewOptions};
+pub use crate::backends::cargo::{Cargo, CargoOptions};
+pub use crate::backends::dnf::{Dnf, DnfOptions};
+pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
+pub use crate::backends::pipx::{Pipx, PipxOptions};
+pub use crate::backends::rustup::{Rustup, RustupOptions};
+pub use crate::backends::snap::{Snap, SnapOptions};
+pub use crate::backends::winget::{WinGet, WinGetOptions};
+pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::{Backend, StringPackageStruct};
 pub use crate::cli::{
     AddCommand, CleanCommand, MainArguments, MainSubcommand, ReviewCommand, SyncCommand,
