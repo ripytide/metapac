@@ -2,9 +2,7 @@
 
 multi-backend declarative package manager
 
-`metapac` allows you maintain consistent packages among multiple machines
-and make setting up a new system with your preferred packages from your
-preferred package managers much easier.
+`metapac` allows you to maintain a consistent set of packages across multiple machines. It also makes setting up a new system with your preferred packages from your preferred package managers much easier.
 
 ## Installation
 
