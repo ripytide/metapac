@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.7] - 2025-02-08
+
 ### Fixed
 
 - `flatpak` backend now doesn't skip the first listed package (#65) thanks
   @latin-1!
 - `dnf` backend now queries installed packages using the correct format
   (it was missing a newline between packages) (#66) thanks @latin-t!
+
+### Changed
+
+- There is quite a large code refactor for each of the backends in this
+  release, there shouldn't be any functional differences from the last
+  version but there is a higher likelihood for new bugs to be introduced.
 
 ## [0.2.6] - 2024-12-23
 
