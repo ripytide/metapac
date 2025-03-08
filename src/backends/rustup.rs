@@ -98,7 +98,7 @@ impl Backend for Rustup {
         Ok(())
     }
 
-    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             for toolchain in packages.iter() {
                 run_command(

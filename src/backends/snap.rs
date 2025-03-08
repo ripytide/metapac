@@ -51,7 +51,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn remove(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
