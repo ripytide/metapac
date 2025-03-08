@@ -59,7 +59,7 @@ impl Backend for Apt {
         Ok(())
     }
 
-    fn remove(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["apt-get", "remove"]

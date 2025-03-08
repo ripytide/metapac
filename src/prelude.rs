@@ -13,8 +13,8 @@ pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::{Backend, StringPackageStruct};
 pub use crate::cli::{
-    AddCommand, CleanCommand, MainArguments, MainSubcommand, SyncCommand,
-    UnmanagedCommand,
+    AddCommand, CleanCommand, InstallCommand, MainArguments, MainSubcommand, RemoveCommand,
+    SyncCommand, UninstallCommand, UnmanagedCommand,
 };
 pub use crate::cmd::Perms;
 pub use crate::config::{ArchPackageManager, Config};

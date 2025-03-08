@@ -171,7 +171,7 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn remove(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 [

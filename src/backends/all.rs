@@ -40,19 +40,19 @@ macro_rules! any {
             $($upper_backend,)*
         }
         impl AnyBackend {
-	    pub fn clean_cache(&self, config: &Config) -> Result<()> {
-		match self {
-		    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
-		}
-	    }
+            pub fn clean_cache(&self, config: &Config) -> Result<()> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
+                }
+            }
             pub fn version(&self, config: &Config) -> Result<String> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
                 }
             }
-            pub fn remove(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn uninstall(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::remove(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::uninstall(packages, no_confirm, config), )*
                 }
             }
         }
@@ -109,10 +109,10 @@ macro_rules! package_ids {
                 output
             }
 
-            pub fn remove(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
                     if is_enabled(AnyBackend::$upper_backend, config) {
-                        AnyBackend::$upper_backend.remove(&self.$lower_backend, no_confirm, config)?;
+                        AnyBackend::$upper_backend.uninstall(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
 
