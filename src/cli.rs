@@ -26,6 +26,9 @@ pub struct MainArguments {
 #[derive(Subcommand)]
 pub enum MainSubcommand {
     Add(AddCommand),
+    Remove(RemoveCommand),
+    Install(InstallCommand),
+    Uninstall(UninstallCommand),
     Clean(CleanCommand),
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
@@ -35,7 +38,7 @@ pub enum MainSubcommand {
 
 #[derive(Args)]
 #[command(visible_alias("c"))]
-/// remove unmanaged packages
+/// uninstall unmanaged packages
 pub struct CleanCommand {
     #[arg(short, long)]
     /// do not ask for any confirmation
@@ -46,7 +49,7 @@ pub struct CleanCommand {
 #[command(visible_alias("a"))]
 /// add a package for the given backend and group file
 ///
-/// if the group file does not exist a new one will be created
+/// if the group file does not exist it will be created
 pub struct AddCommand {
     #[arg(short, long)]
     /// the backend for the package
@@ -57,6 +60,47 @@ pub struct AddCommand {
     #[arg(short, long, default_value = "default")]
     /// the group name
     pub group: String,
+}
+
+#[derive(Args)]
+#[command(visible_alias("r"))]
+/// remove a package for the given backend from all active group files
+pub struct RemoveCommand {
+    #[arg(short, long)]
+    /// the backend for the package
+    pub backend: AnyBackend,
+    #[arg(short, long)]
+    /// the package name
+    pub package: String,
+}
+
+#[derive(Args)]
+#[command(visible_alias("i"))]
+/// install a package for the given backend and add it to the given group file
+///
+/// if the group file does not exist it will be created
+pub struct InstallCommand {
+    #[arg(short, long)]
+    /// the backend for the package
+    pub backend: AnyBackend,
+    #[arg(short, long)]
+    /// the package name
+    pub package: String,
+    #[arg(short, long, default_value = "default")]
+    /// the group name
+    pub group: String,
+}
+
+#[derive(Args)]
+#[command(visible_alias("n"))]
+/// uninstall a package for the given backend and remove it from all active group files
+pub struct UninstallCommand {
+    #[arg(short, long)]
+    /// the backend for the package
+    pub backend: AnyBackend,
+    #[arg(short, long)]
+    /// the package name
+    pub package: String,
 }
 
 #[derive(Args)]

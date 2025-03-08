@@ -2,7 +2,7 @@ use std::fs::{self, read_to_string, File};
 use std::path::Path;
 use std::str::FromStr;
 
-use color_eyre::eyre::{eyre, Context, ContextCompat};
+use color_eyre::eyre::{eyre, Context, ContextCompat, Ok};
 use color_eyre::Result;
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
@@ -38,8 +38,11 @@ impl MainArguments {
         let required = groups.to_options().map_required(&config)?;
 
         match self.subcommand {
-            MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Add(add) => add.run(&group_dir, &groups),
+            MainSubcommand::Remove(remove) => remove.run(&groups),
+            MainSubcommand::Install(install) => install.run(&group_dir, &groups),
+            MainSubcommand::Uninstall(uninstall) => uninstall.run(&group_dir, &groups),
+            MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Sync(sync) => sync.run(&required, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
@@ -48,49 +51,16 @@ impl MainArguments {
     }
 }
 
-impl CleanCommand {
-    fn run(self, required: &Options, config: &Config) -> Result<()> {
-        let unmanaged = unmanaged(required, config)?;
-
-        if unmanaged.is_empty() {
-            eprintln!("nothing to clean since there are no unmanaged packages");
-            return Ok(());
-        }
-
-        if self.no_confirm {
-            log::info!("proceeding without confirmation");
-
-            unmanaged.remove(self.no_confirm, config)
-        } else {
-            println!("{unmanaged}");
-
-            println!("these packages will be removed\n");
-
-            if Confirm::new()
-                .with_prompt("do you want to continue?")
-                .default(true)
-                .show_default(true)
-                .interact()
-                .wrap_err("getting user confirmation")?
-            {
-                unmanaged.remove(self.no_confirm, config)
-            } else {
-                Ok(())
-            }
-        }
-    }
-}
-
 impl AddCommand {
     fn run(self, group_dir: &Path, groups: &Groups) -> Result<()> {
         let containing_group_files = groups.contains(self.backend, &self.package);
         if !containing_group_files.is_empty() {
-            log::info!("the {} package for the {} backend is already installed in the {containing_group_files:?} group files", self.package, self.backend);
+            log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files", self.package, self.backend);
+
+            return Ok(());
         }
 
         let group_file = group_dir.join(&self.group).with_extension("toml");
-
-        log::info!("parsing group file: {}@{group_file:?}", &self.group);
 
         if !group_file.is_file() {
             File::create_new(&group_file).wrap_err(eyre!(
@@ -121,6 +91,88 @@ impl AddCommand {
             .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
 
         Ok(())
+    }
+}
+
+impl RemoveCommand {
+    fn run(self, groups: &Groups) -> Result<()> {
+        let containing_group_files = groups.contains(self.backend, &self.package);
+        if !containing_group_files.is_empty() {
+            for group_file in containing_group_files {
+                let file_contents = read_to_string(&group_file)
+                    .wrap_err(eyre!("reading group file {group_file:?}"))?;
+
+                let mut doc = file_contents
+                    .parse::<DocumentMut>()
+                    .wrap_err(eyre!("parsing group file {group_file:?}"))?;
+
+                let packages = doc
+                    .get_mut(&self.backend.to_string().to_lowercase())
+                    .unwrap()
+                    .as_array_mut()
+                    .wrap_err(eyre!(
+                        "the {} backend in the {group_file:?} group file has a non-array value",
+                        self.backend
+                    ))?;
+
+                packages.retain(|x| match x {
+                    Value::String(formatted) => self.package != formatted.clone().into_value(),
+                    Value::InlineTable(inline_table) => {
+                        let package = inline_table.get("package").unwrap().as_str().unwrap();
+
+                        self.package != package
+                    }
+                    _ => unreachable!(),
+                });
+
+                fs::write(group_file.clone(), doc.to_string())
+                    .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
+            }
+        } else {
+            log::warn!(
+                "the {} package for the {} backend is not in the active group files",
+                self.package,
+                self.backend
+            );
+        }
+
+        self.backend.clean_cache(config);
+        
+
+        Ok(())
+    }
+}
+
+impl CleanCommand {
+    fn run(self, required: &Options, config: &Config) -> Result<()> {
+        let unmanaged = unmanaged(required, config)?;
+
+        if unmanaged.is_empty() {
+            eprintln!("nothing to clean since there are no unmanaged packages");
+            return Ok(());
+        }
+
+        if self.no_confirm {
+            log::info!("proceeding without confirmation");
+
+            unmanaged.uninstall(self.no_confirm, config)
+        } else {
+            println!("{unmanaged}");
+
+            println!("these packages will be uninstalled\n");
+
+            if Confirm::new()
+                .with_prompt("do you want to continue?")
+                .default(true)
+                .show_default(true)
+                .interact()
+                .wrap_err("getting user confirmation")?
+            {
+                unmanaged.uninstall(self.no_confirm, config)
+            } else {
+                Ok(())
+            }
+        }
     }
 }
 
