@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Removed
+
+- The `metapac review` command has been removed since it hasn't had an
+  implementation and has been replaced by editing the output of the
+  `metapac unmanaged` command using a text editor as outlined in the usage
+  section of the `README.md`.
+
 ## [0.2.7] - 2025-02-08
 
 ### Fixed

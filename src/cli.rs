@@ -25,9 +25,8 @@ pub struct MainArguments {
 
 #[derive(Subcommand)]
 pub enum MainSubcommand {
-    Clean(CleanCommand),
     Add(AddCommand),
-    Review(ReviewCommand),
+    Clean(CleanCommand),
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
@@ -59,11 +58,6 @@ pub struct AddCommand {
     /// the group name
     pub group: String,
 }
-
-#[derive(Args)]
-#[command(visible_alias("r"))]
-/// review unmanaged packages
-pub struct ReviewCommand {}
 
 #[derive(Args)]
 #[command(visible_alias("s"))]

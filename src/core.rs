@@ -10,7 +10,6 @@ use toml_edit::{Array, DocumentMut, Item, Value};
 
 use crate::cli::{BackendsCommand, CleanCacheCommand};
 use crate::prelude::*;
-use crate::review::review;
 
 impl MainArguments {
     pub fn run(self) -> Result<()> {
@@ -41,7 +40,6 @@ impl MainArguments {
         match self.subcommand {
             MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Add(add) => add.run(&group_dir, &groups),
-            MainSubcommand::Review(review) => review.run(&required, &config),
             MainSubcommand::Sync(sync) => sync.run(&required, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
@@ -123,12 +121,6 @@ impl AddCommand {
             .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
 
         Ok(())
-    }
-}
-
-impl ReviewCommand {
-    fn run(self, _: &Options, _: &Config) -> Result<()> {
-        review()
     }
 }
 

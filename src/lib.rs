@@ -7,6 +7,5 @@ mod config;
 mod core;
 mod groups;
 mod prelude;
-mod review;
 
 pub use prelude::*;
