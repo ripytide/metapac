@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.8] - 2025-03-08
+
+### Added
+
+- New commands (#71):
+  - `metapac remove` which is the opposite of `metapac add`
+  - `metapac install` which does `metapac add` plus immediately installs
+    the requested package
+  - `metapac uninstall` which does the opposite of `metapac install`
+
 ### Removed
 
 - The `metapac review` command has been removed since it hasn't had an
