@@ -89,6 +89,9 @@ pub struct InstallCommand {
     #[arg(short, long, default_value = "default")]
     /// the group name
     pub group: String,
+    #[arg(short, long)]
+    /// do not ask for any confirmation
+    pub no_confirm: bool,
 }
 
 #[derive(Args)]
@@ -101,6 +104,9 @@ pub struct UninstallCommand {
     #[arg(short, long)]
     /// the package name
     pub package: String,
+    #[arg(short, long)]
+    /// do not ask for any confirmation
+    pub no_confirm: bool,
 }
 
 #[derive(Args)]

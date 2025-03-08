@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, read_to_string, File};
 use std::path::Path;
 use std::str::FromStr;
@@ -40,8 +41,8 @@ impl MainArguments {
         match self.subcommand {
             MainSubcommand::Add(add) => add.run(&group_dir, &groups),
             MainSubcommand::Remove(remove) => remove.run(&groups),
-            MainSubcommand::Install(install) => install.run(&group_dir, &groups),
-            MainSubcommand::Uninstall(uninstall) => uninstall.run(&group_dir, &groups),
+            MainSubcommand::Install(install) => install.run(&group_dir, &groups, &config),
+            MainSubcommand::Uninstall(uninstall) => uninstall.run(&groups, &config),
             MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Sync(sync) => sync.run(&required, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
@@ -136,8 +137,46 @@ impl RemoveCommand {
             );
         }
 
-        self.backend.clean_cache(config);
-        
+        Ok(())
+    }
+}
+
+impl InstallCommand {
+    fn run(self, group_dir: &Path, groups: &Groups, config: &Config) -> Result<()> {
+        AddCommand {
+            backend: self.backend,
+            package: self.package.clone(),
+            group: self.group,
+        }
+        .run(group_dir, groups)?;
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                match self.backend {
+                    $(
+                        AnyBackend::$upper_backend => {
+                            $upper_backend::install(&BTreeMap::from([(self.package.clone(), Default::default())]), self.no_confirm, config)?;
+                        },
+                    )*
+                }
+            };
+        }
+        apply_public_backends!(x);
+
+        Ok(())
+    }
+}
+
+impl UninstallCommand {
+    fn run(self, groups: &Groups, config: &Config) -> Result<()> {
+        RemoveCommand {
+            backend: self.backend,
+            package: self.package.clone(),
+        }
+        .run(groups)?;
+
+        self.backend
+            .uninstall(&BTreeSet::from([self.package]), self.no_confirm, config)?;
 
         Ok(())
     }
