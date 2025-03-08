@@ -70,41 +70,37 @@ when you run `metapac clean`.
 > and ask for confirmation, so make sure to double check that the expected
 > packages are being removed before confirming.
 
-### Adding a package to your group files
+### Adding a new package
 
 1. Edit your group files with a text editor to add the package to an
    existing group file or create a new group file and add the package to
    it. See the [`Group Files`](#group-files) section for the group file
    syntax
 2. Run the `metapac add` command, see `metapac add --help` for arguments
+3. Run the `metapac install` command, see `metapac install --help` for
+   arguments
 
-After adding the package to your group files you can then run `metapac
-sync` to install the newly added package.
+After the first two options you will then need to run `metapac sync` for
+the newly added package to be installed, whereas for `metapac install` it
+also installs the package while adding it to a group file.
 
 > [!TIP]
 > The first option is recommended since then you can group or organize the
 > order of packages in your group files in a way that is meaningful to you
-> and even add comments in the toml.
+> and even add comments using the `toml` format.
 
-### Removing a package from your group files
+### Removing a package
 
-Edit the group file which contains the package you want to remove and
-delete the package from in the group file. You could even delete the entire
-group file but that would remove all packages that are in the group file.
-
-After removing the package from your group files you can then run `metapac
-sync` to install the newly added package.
-
-> [!TIP]
-> There is not yet a equivalent to the `metapac add` command for removing
-> packages from your group files, but even if there were a `metapac remove`
-> command, using a text editor would still be the recommended method for the
-> same reasons as for adding a package.
+Do the opposite of [`Adding a new package`](#adding-a-new-package). The
+opposite of `metapac add` is `metapac remove`, the opposite of `metapac
+install` is `metapac uninstall` and the opposite of `metapac sync` is
+`metapac clean`.
 
 ### Advanced usage
 
-For more advanced usage read through the remaining sections, especially
-the [`Config`](#config) section.
+For more advanced usage read through the remaining sections, especially the
+[`Config`](#config) section. You can also run `metapac --help` to get a
+list of all of the available commands.
 
 ## Supported Backends
 
