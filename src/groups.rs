@@ -6,7 +6,7 @@ use color_eyre::{
 use toml::{Table, Value};
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs::read_to_string,
     ops::AddAssign,
     path::{Path, PathBuf},
@@ -50,11 +50,10 @@ impl Groups {
             apply_public_backends!(x);
         }
 
-        //warn the user about duplicated packages and output a deduplicated InstallOptions
+        //warn the user about duplicated packages and output a deduplicated Options
         for ((backend, package), group_files) in reoriented.iter() {
             if group_files.len() > 1 {
-                log::warn!("duplicate {package:?} package in group files: {group_files:?} for the {backend} backend");
-                log::warn!("only one of the duplicated will be used which could may cause unintended behaviour if the duplicates have different install options");
+                log::warn!("duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different install options");
             }
         }
 
@@ -76,45 +75,51 @@ impl Groups {
         options
     }
 
-    pub fn load(group_dir: &Path, hostname: &str, config: &Config) -> Result<Groups> {
+    pub fn load(group_files: &BTreeSet<PathBuf>) -> Result<Groups> {
+        let mut groups = Self::default();
+
+        for group_file in group_files {
+            let file_contents =
+                read_to_string(group_file).wrap_err(eyre!("reading group file {group_file:?}"))?;
+
+            let raw_options = parse_group_file(group_file, &file_contents)
+                .wrap_err(eyre!("parsing group file {group_file:?}"))?;
+
+            groups.insert(group_file.clone(), raw_options);
+        }
+
+        Ok(groups)
+    }
+
+    pub fn group_files(
+        group_dir: &Path,
+        hostname: &str,
+        config: &Config,
+    ) -> Result<BTreeSet<PathBuf>> {
         if !group_dir.is_dir() {
             log::warn!("the groups directory: {group_dir:?}, was not found, assuming there are no group files. If this was intentional please create an empty groups folder.");
 
-            return Ok(Groups::default());
+            return Ok(BTreeSet::new());
         }
 
-        let group_files = if config.hostname_groups_enabled {
+        if config.hostname_groups_enabled {
             let group_names = config.hostname_groups.get(hostname).wrap_err(eyre!(
                 "no hostname entry in the hostname_groups config for the hostname: {hostname}"
             ))?;
 
-            group_names
+            Ok(group_names
                 .iter()
                 .map(|group_name| group_dir.join(group_name).with_extension("toml"))
-                .collect::<Vec<_>>()
+                .collect())
         } else {
-            walkdir::WalkDir::new(group_dir)
+            Ok(walkdir::WalkDir::new(group_dir)
                 .follow_links(true)
                 .into_iter()
                 .filter_map(Result::ok)
                 .filter(|x| !x.file_type().is_dir())
                 .map(|x| x.path().to_path_buf())
-                .collect::<Vec<_>>()
-        };
-
-        let mut groups = Self::default();
-
-        for group_file in group_files {
-            let file_contents =
-                read_to_string(&group_file).wrap_err(eyre!("reading group file {group_file:?}"))?;
-
-            let raw_options = parse_group_file(&group_file, &file_contents)
-                .wrap_err(eyre!("parsing group file {group_file:?}"))?;
-
-            groups.insert(group_file, raw_options);
+                .collect())
         }
-
-        Ok(groups)
     }
 }
 
