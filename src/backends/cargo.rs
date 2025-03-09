@@ -50,7 +50,7 @@ impl Backend for Cargo {
         let contents = match std::fs::read_to_string(file) {
             Ok(string) => string,
             Err(err) if err.kind() == NotFound => {
-                log::warn!("no crates file found for cargo. Assuming no crates installed yet.");
+                log::warn!("no crates file found for cargo, assuming no crates installed yet");
                 return Ok(BTreeMap::new());
             }
             Err(err) => return Err(err.into()),

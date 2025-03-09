@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, read_to_string, File};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use color_eyre::eyre::{eyre, Context, ContextCompat, Ok};
@@ -33,15 +33,19 @@ impl MainArguments {
         let group_dir = config_dir.join("groups/");
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
-        let groups = Groups::load(&group_dir, &hostname, &config)
+        let group_files = Groups::group_files(&group_dir, &hostname, &config)
+            .wrap_err("failed to find group files")?;
+        let groups = Groups::load(&group_files)
             .wrap_err("failed to load package install options from groups")?;
 
         let required = groups.to_options().map_required(&config)?;
 
         match self.subcommand {
-            MainSubcommand::Add(add) => add.run(&group_dir, &groups),
+            MainSubcommand::Add(add) => add.run(&group_dir, &group_files, &groups, &config),
             MainSubcommand::Remove(remove) => remove.run(&groups),
-            MainSubcommand::Install(install) => install.run(&group_dir, &groups, &config),
+            MainSubcommand::Install(install) => {
+                install.run(&group_dir, &group_files, &groups, &config)
+            }
             MainSubcommand::Uninstall(uninstall) => uninstall.run(&groups, &config),
             MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Sync(sync) => sync.run(&required, &config),
@@ -53,15 +57,25 @@ impl MainArguments {
 }
 
 impl AddCommand {
-    fn run(self, group_dir: &Path, groups: &Groups) -> Result<()> {
+    fn run(
+        self,
+        group_dir: &Path,
+        group_files: &BTreeSet<PathBuf>,
+        groups: &Groups,
+        config: &Config,
+    ) -> Result<()> {
         let containing_group_files = groups.contains(self.backend, &self.package);
         if !containing_group_files.is_empty() {
-            log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files", self.package, self.backend);
+            log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files, so this request has been ignored", self.package, self.backend);
 
             return Ok(());
         }
 
         let group_file = group_dir.join(&self.group).with_extension("toml");
+
+        if config.hostname_groups_enabled && !group_files.contains(&group_file) {
+            return Err(eyre!("hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.", &self.group));
+        }
 
         if !group_file.is_file() {
             File::create_new(&group_file).wrap_err(eyre!(
@@ -131,7 +145,7 @@ impl RemoveCommand {
             }
         } else {
             log::warn!(
-                "the {} package for the {} backend is not in the active group files",
+                "the {} package for the {} backend is not in any of the active group files",
                 self.package,
                 self.backend
             );
@@ -142,13 +156,19 @@ impl RemoveCommand {
 }
 
 impl InstallCommand {
-    fn run(self, group_dir: &Path, groups: &Groups, config: &Config) -> Result<()> {
+    fn run(
+        self,
+        group_dir: &Path,
+        group_files: &BTreeSet<PathBuf>,
+        groups: &Groups,
+        config: &Config,
+    ) -> Result<()> {
         AddCommand {
             backend: self.backend,
             package: self.package.clone(),
             group: self.group,
         }
-        .run(group_dir, groups)?;
+        .run(group_dir, group_files, groups, config)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
