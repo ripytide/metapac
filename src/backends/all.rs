@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::prelude::*;
@@ -35,7 +35,7 @@ macro_rules! to_package_ids {
 
 macro_rules! any {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter, Serialize, Deserialize)]
         pub enum AnyBackend {
             $($upper_backend,)*
         }
@@ -214,5 +214,5 @@ fn is_enabled(backend: AnyBackend, config: &Config) -> bool {
     !config
         .disabled_backends
         .iter()
-        .any(|x| x.to_lowercase() == backend.to_string().to_lowercase())
+        .any(|x| x.to_string().to_lowercase() == backend.to_string().to_lowercase())
 }

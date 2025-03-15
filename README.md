@@ -2,7 +2,9 @@
 
 multi-backend declarative package manager
 
-`metapac` allows you to maintain a consistent set of packages across multiple machines. It also makes setting up a new system with your preferred packages from your preferred package managers much easier.
+`metapac` allows you to maintain a consistent set of packages across
+multiple machines. It also makes setting up a new system with your
+preferred packages from your preferred package managers much easier.
 
 ## Installation
 
@@ -132,9 +134,10 @@ support for additional backends are welcome!
 # | macOS    | $HOME/Library/Application Support/metapac/config.toml | /Users/Alice/Library/Application Support/metapac/config.toml |
 # | Windows  | {FOLDERID_RoamingAppData}\metapac\config.toml         | C:\Users\Alice\AppData\Roaming\metapac\config.toml           |
 
-# To decide which group files are relevant for the current machine
-# metapac uses the machine's hostname in the hostname_groups table in
-# the config file to get a list of group file names.
+# Backends to disable from all metapac behavior. See the README.md for
+# the list of backend names
+# Default: []
+disabled_backends = ["apt"]
 
 # Since pacman, paru, pikaur and yay all operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
@@ -143,15 +146,11 @@ support for additional backends are welcome!
 # Default: "pacman"
 arch_package_manager = "paru"
 
-# Whether to default to installing flatpak packages systemwide or for the current user.
-# This setting can be overridden on a per-package basis using { systemwide = false|true }.
+# Whether to default to installing flatpak packages systemwide or for the
+# current user. This setting can be overridden on a per-package basis using
+# { systemwide = false|true }.
 # Default: true
 flatpak_default_systemwide = true
-
-# Backends to disable from all metapac behavior. See the README.md for
-# the list of backend names
-# Default: []
-disabled_backends = ["apt"]
 
 # Whether to use the [hostname_groups] config table to decide which
 # group files to use or to use all files in the groups folder.
@@ -245,7 +244,7 @@ xbps = [
 ]
 ```
 
-# Credits
+## Credits
 
 This project was forked from <https://github.com/steven-omaha/pacdef> so
 credits to the author(s) of that project for all their prior work.

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- All commands that previously took a `--package` argument now take a
+  `--packages` argument instead to allow passing multiple packages instead
+  of just one at a time.
+
 ## [0.2.8] - 2025-03-09
 
 ### Added

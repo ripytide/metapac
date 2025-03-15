@@ -47,7 +47,7 @@ pub struct CleanCommand {
 
 #[derive(Args)]
 #[command(visible_alias("a"))]
-/// add a package for the given backend and group file
+/// add packages for the given backend and group file
 ///
 /// if the group file does not exist it will be created
 pub struct AddCommand {
@@ -55,8 +55,8 @@ pub struct AddCommand {
     /// the backend for the package
     pub backend: AnyBackend,
     #[arg(short, long)]
-    /// the package name
-    pub package: String,
+    /// the package names
+    pub packages: Vec<String>,
     #[arg(short, long, default_value = "default")]
     /// the group name
     pub group: String,
@@ -64,19 +64,19 @@ pub struct AddCommand {
 
 #[derive(Args)]
 #[command(visible_alias("r"))]
-/// remove a package for the given backend from all active group files
+/// remove packages for the given backend from all active group files
 pub struct RemoveCommand {
     #[arg(short, long)]
     /// the backend for the package
     pub backend: AnyBackend,
     #[arg(short, long)]
-    /// the package name
-    pub package: String,
+    /// the package names
+    pub packages: Vec<String>,
 }
 
 #[derive(Args)]
 #[command(visible_alias("i"))]
-/// install a package for the given backend and add it to the given group file
+/// install packages for the given backend and add it to the given group file
 ///
 /// if the group file does not exist it will be created
 pub struct InstallCommand {
@@ -84,8 +84,8 @@ pub struct InstallCommand {
     /// the backend for the package
     pub backend: AnyBackend,
     #[arg(short, long)]
-    /// the package name
-    pub package: String,
+    /// the package names
+    pub packages: Vec<String>,
     #[arg(short, long, default_value = "default")]
     /// the group name
     pub group: String,
@@ -96,14 +96,14 @@ pub struct InstallCommand {
 
 #[derive(Args)]
 #[command(visible_alias("n"))]
-/// uninstall a package for the given backend and remove it from all active group files
+/// uninstall packages for the given backend and remove it from all active group files
 pub struct UninstallCommand {
     #[arg(short, long)]
     /// the backend for the package
     pub backend: AnyBackend,
     #[arg(short, long)]
-    /// the package name
-    pub package: String,
+    /// the package names
+    pub packages: Vec<String>,
     #[arg(short, long)]
     /// do not ask for any confirmation
     pub no_confirm: bool,

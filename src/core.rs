@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::fs::{self, read_to_string, File};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -64,12 +64,17 @@ impl AddCommand {
         groups: &Groups,
         config: &Config,
     ) -> Result<()> {
-        let containing_group_files = groups.contains(self.backend, &self.package);
-        if !containing_group_files.is_empty() {
-            log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files, so this request has been ignored", self.package, self.backend);
+        let packages = self.packages.iter().filter(|package| {
+            let containing_group_files = groups.contains(self.backend, package);
 
-            return Ok(());
-        }
+            if !containing_group_files.is_empty() {
+                log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files, so this package has been ignored", package, self.backend);
+
+                false
+            } else {
+                true
+            }
+        });
 
         let group_file = group_dir.join(&self.group).with_extension("toml");
 
@@ -92,15 +97,15 @@ impl AddCommand {
             .wrap_err(eyre!("parsing group file {}@{group_file:?}", &self.group))?;
 
         doc.entry(&self.backend.to_string().to_lowercase())
-            .or_insert(Item::Value(Value::Array(Array::from_iter([self
-                .package
-                .clone()]))))
+            .or_insert(Item::Value(Value::Array(Array::from_iter(
+                packages.clone(),
+            ))))
             .as_array_mut()
             .wrap_err(eyre!(
                 "the {} backend in the {group_file:?} group file has a non-array value",
                 self.backend
             ))?
-            .push(self.package);
+            .extend(packages);
 
         fs::write(group_file.clone(), doc.to_string())
             .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
@@ -111,44 +116,44 @@ impl AddCommand {
 
 impl RemoveCommand {
     fn run(self, groups: &Groups) -> Result<()> {
-        let containing_group_files = groups.contains(self.backend, &self.package);
-        if !containing_group_files.is_empty() {
-            for group_file in containing_group_files {
-                let file_contents = read_to_string(&group_file)
-                    .wrap_err(eyre!("reading group file {group_file:?}"))?;
+        for package in self.packages.iter() {
+            let containing_group_files = groups.contains(self.backend, package);
+            if !containing_group_files.is_empty() {
+                for group_file in containing_group_files {
+                    let file_contents = read_to_string(&group_file)
+                        .wrap_err(eyre!("reading group file {group_file:?}"))?;
 
-                let mut doc = file_contents
-                    .parse::<DocumentMut>()
-                    .wrap_err(eyre!("parsing group file {group_file:?}"))?;
+                    let mut doc = file_contents
+                        .parse::<DocumentMut>()
+                        .wrap_err(eyre!("parsing group file {group_file:?}"))?;
 
-                let packages = doc
-                    .get_mut(&self.backend.to_string().to_lowercase())
-                    .unwrap()
-                    .as_array_mut()
-                    .wrap_err(eyre!(
-                        "the {} backend in the {group_file:?} group file has a non-array value",
-                        self.backend
-                    ))?;
+                    let packages = doc
+                        .get_mut(&self.backend.to_string().to_lowercase())
+                        .unwrap()
+                        .as_array_mut()
+                        .wrap_err(eyre!(
+                            "the {} backend in the {group_file:?} group file has a non-array value",
+                            self.backend
+                        ))?;
 
-                packages.retain(|x| match x {
-                    Value::String(formatted) => self.package != formatted.clone().into_value(),
-                    Value::InlineTable(inline_table) => {
-                        let package = inline_table.get("package").unwrap().as_str().unwrap();
+                    packages.retain(|x| match x {
+                        Value::String(formatted) => package != &formatted.clone().into_value(),
+                        Value::InlineTable(inline_table) => {
+                            package != inline_table.get("package").unwrap().as_str().unwrap()
+                        }
+                        _ => unreachable!(),
+                    });
 
-                        self.package != package
-                    }
-                    _ => unreachable!(),
-                });
-
-                fs::write(group_file.clone(), doc.to_string())
-                    .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
+                    fs::write(group_file.clone(), doc.to_string())
+                        .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
+                }
+            } else {
+                log::warn!(
+                    "the {} package for the {} backend is not in any of the active group files",
+                    package,
+                    self.backend
+                );
             }
-        } else {
-            log::warn!(
-                "the {} package for the {} backend is not in any of the active group files",
-                self.package,
-                self.backend
-            );
         }
 
         Ok(())
@@ -165,7 +170,7 @@ impl InstallCommand {
     ) -> Result<()> {
         AddCommand {
             backend: self.backend,
-            package: self.package.clone(),
+            packages: self.packages.clone(),
             group: self.group,
         }
         .run(group_dir, group_files, groups, config)?;
@@ -175,7 +180,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&BTreeMap::from([(self.package.clone(), Default::default())]), self.no_confirm, config)?;
+                            $upper_backend::install(&self.packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
                         },
                     )*
                 }
@@ -191,12 +196,15 @@ impl UninstallCommand {
     fn run(self, groups: &Groups, config: &Config) -> Result<()> {
         RemoveCommand {
             backend: self.backend,
-            package: self.package.clone(),
+            packages: self.packages.clone(),
         }
         .run(groups)?;
 
-        self.backend
-            .uninstall(&BTreeSet::from([self.package]), self.no_confirm, config)?;
+        self.backend.uninstall(
+            &self.packages.into_iter().collect(),
+            self.no_confirm,
+            config,
+        )?;
 
         Ok(())
     }

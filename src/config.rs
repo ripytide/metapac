@@ -2,7 +2,10 @@ use color_eyre::eyre::Context;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
-use std::{collections::BTreeMap, path::Path};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::Path,
+};
 
 use crate::prelude::*;
 
@@ -10,12 +13,12 @@ use crate::prelude::*;
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
+    #[serde_inline_default(Config::default().disabled_backends)]
+    pub disabled_backends: BTreeSet<AnyBackend>,
     #[serde_inline_default(Config::default().arch_package_manager)]
     pub arch_package_manager: ArchPackageManager,
     #[serde_inline_default(Config::default().flatpak_default_systemwide)]
     pub flatpak_default_systemwide: bool,
-    #[serde_inline_default(Config::default().disabled_backends)]
-    pub disabled_backends: Vec<String>,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
     pub hostname_groups_enabled: bool,
     #[serde_inline_default(Config::default().hostname_groups)]
@@ -24,9 +27,9 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            disabled_backends: BTreeSet::new(),
             arch_package_manager: ArchPackageManager::default(),
             flatpak_default_systemwide: true,
-            disabled_backends: Vec::new(),
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),
         }
