@@ -6,7 +6,6 @@ pub mod cargo;
 pub mod dnf;
 pub mod flatpak;
 pub mod pipx;
-pub mod rustup;
 pub mod snap;
 pub mod uv;
 pub mod winget;
@@ -28,7 +27,6 @@ macro_rules! apply_public_backends {
         (Dnf, dnf),
         (Flatpak, flatpak),
         (Pipx, pipx),
-        (Rustup, rustup),
         (Snap, snap),
         (Uv, uv),
         (WinGet, winget),
@@ -63,6 +61,4 @@ pub trait Backend {
     fn clean_cache(config: &Config) -> Result<()>;
 
     fn version(config: &Config) -> Result<String>;
-
-    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options>;
 }
