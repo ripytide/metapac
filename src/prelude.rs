@@ -7,7 +7,6 @@ pub use crate::backends::cargo::{Cargo, CargoOptions};
 pub use crate::backends::dnf::{Dnf, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
-pub use crate::backends::rustup::{Rustup, RustupOptions};
 pub use crate::backends::snap::{Snap, SnapOptions};
 pub use crate::backends::uv::{Uv, UvOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};

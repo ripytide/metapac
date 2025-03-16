@@ -118,7 +118,6 @@ support for additional backends are welcome!
 | `dnf`                          | `[dnf]`     |                                       |
 | `flatpak`                      | `[flatpak]` |                                       |
 | `pipx`                         | `[pipx]`    |                                       |
-| `rustup`                       | `[rustup]`  |                                       |
 | `snap`                         | `[snap]`    |                                       |
 | `uv`                           | `[uv]`      |                                       |
 | `winget`                       | `[winget]`  |                                       |
@@ -222,14 +221,6 @@ flatpak = [
 pipx = [
  "metapac",
  { package = "metapac" }
-]
-rustup = [
- "stable",
- # components: extra non-default components to install for this toolchain
-
- # see https://rust-lang.github.io/rustup/concepts/components.html
- # for more details
- { package = "stable", components = ["rust-analyzer"] }
 ]
 snap = [
  "metapac",

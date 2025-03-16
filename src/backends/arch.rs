@@ -230,11 +230,4 @@ impl Backend for Arch {
             false,
         )
     }
-
-    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
-        match installed {
-            Some(_) => None,
-            None => Some(required),
-        }
-    }
 }

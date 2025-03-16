@@ -30,12 +30,16 @@ impl Backend for Uv {
             return Ok(BTreeMap::new());
         }
 
-        let names = run_command_for_stdout(["uv", "tool", "list", "--color", "never"], Perms::Same, true)?
-            .lines()
-            .filter(|x| !x.starts_with("-"))
-            .map(|x| x.split(" ").next().unwrap().to_string())
-            .map(|x| (x, Self::Options {}))
-            .collect();
+        let names = run_command_for_stdout(
+            ["uv", "tool", "list", "--color", "never"],
+            Perms::Same,
+            true,
+        )?
+        .lines()
+        .filter(|x| !x.starts_with("-"))
+        .map(|x| x.split(" ").next().unwrap().to_string())
+        .map(|x| (x, Self::Options {}))
+        .collect();
 
         Ok(names)
     }
@@ -67,12 +71,5 @@ impl Backend for Uv {
 
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["uv", "--version"], Perms::Same, false)
-    }
-
-    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
-        match installed {
-            Some(_) => None,
-            None => Some(required),
-        }
     }
 }

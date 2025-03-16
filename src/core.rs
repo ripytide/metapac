@@ -339,11 +339,9 @@ fn missing(required: &Options, config: &Config) -> Result<Options> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, required_options) in required.$lower_backend.iter() {
-                    if let Some(missing_options) =
-                        $upper_backend::missing(required_options.clone(), installed.$lower_backend.get(package_id).cloned())
-                    {
-                        missing.$lower_backend.insert(package_id.clone(), missing_options);
+                for (package_id, missing_options) in required.$lower_backend.iter() {
+                    if !installed.$lower_backend.contains_key(package_id) {
+                        missing.$lower_backend.insert(package_id.clone(), missing_options.clone());
                     }
                 }
             )*

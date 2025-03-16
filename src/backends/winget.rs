@@ -96,11 +96,4 @@ impl Backend for WinGet {
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["winget", "--version"], Perms::Same, false)
     }
-
-    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
-        match installed {
-            Some(_) => None,
-            None => Some(required),
-        }
-    }
 }

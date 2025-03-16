@@ -112,13 +112,6 @@ impl Backend for Cargo {
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
     }
-
-    fn missing(required: Self::Options, installed: Option<Self::Options>) -> Option<Self::Options> {
-        match installed {
-            Some(_) => None,
-            None => Some(required),
-        }
-    }
 }
 
 fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
