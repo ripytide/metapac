@@ -8,6 +8,7 @@ pub mod flatpak;
 pub mod pipx;
 pub mod rustup;
 pub mod snap;
+pub mod uv;
 pub mod winget;
 pub mod xbps;
 
@@ -29,6 +30,7 @@ macro_rules! apply_public_backends {
         (Pipx, pipx),
         (Rustup, rustup),
         (Snap, snap),
+        (Uv, uv),
         (WinGet, winget),
         (Xbps, xbps) }
     };

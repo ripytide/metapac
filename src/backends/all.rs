@@ -36,6 +36,7 @@ macro_rules! to_package_ids {
 macro_rules! any {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter, Serialize, Deserialize)]
+        #[serde(rename_all = "lowercase")]
         pub enum AnyBackend {
             $($upper_backend,)*
         }

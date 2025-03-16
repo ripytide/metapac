@@ -120,6 +120,7 @@ support for additional backends are welcome!
 | `pipx`                         | `[pipx]`    |                                       |
 | `rustup`                       | `[rustup]`  |                                       |
 | `snap`                         | `[snap]`    |                                       |
+| `uv`                           | `[uv]`      |                                       |
 | `winget`                       | `[winget]`  |                                       |
 | `xbps`                         | `[xbps]`    |                                       |
 
@@ -231,6 +232,10 @@ rustup = [
  { package = "stable", components = ["rust-analyzer"] }
 ]
 snap = [
+ "metapac",
+ { package = "metapac" }
+]
+uv = [
  "metapac",
  { package = "metapac" }
 ]

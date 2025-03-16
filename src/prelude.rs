@@ -9,6 +9,7 @@ pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
 pub use crate::backends::rustup::{Rustup, RustupOptions};
 pub use crate::backends::snap::{Snap, SnapOptions};
+pub use crate::backends::uv::{Uv, UvOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::{Backend, StringPackageStruct};
