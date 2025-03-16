@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.9] - 2025-03-16
+
 ### Added
 
 - New backend: `uv` (#75)!
@@ -16,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All commands that previously took a `--package` argument now take a
   `--packages` argument instead to allow passing multiple packages instead
   of just one at a time.
+
+### Removed
+
+- The `rustup` backend has been removed since `rustup` components are more
+  complex to manage and so don't fit with the rest of the backends very
+  nicely. (#76)
 
 ## [0.2.8] - 2025-03-09
 
