@@ -9,6 +9,7 @@ pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
 pub use crate::backends::snap::{Snap, SnapOptions};
 pub use crate::backends::uv::{Uv, UvOptions};
+pub use crate::backends::vscode::{VsCode, VsCodeOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::{Backend, StringPackageStruct};
@@ -17,5 +18,5 @@ pub use crate::cli::{
     SyncCommand, UninstallCommand, UnmanagedCommand,
 };
 pub use crate::cmd::Perms;
-pub use crate::config::{ArchPackageManager, Config};
+pub use crate::config::{ArchPackageManager, Config, VsCodeVariant};
 pub use crate::groups::Groups;

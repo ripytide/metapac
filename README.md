@@ -120,6 +120,7 @@ support for additional backends are welcome!
 | `pipx`                         | `[pipx]`    |                                       |
 | `snap`                         | `[snap]`    |                                       |
 | `uv`                           | `[uv]`      |                                       |
+| `vscode`                       | `[vscode]`  | see the `vscode_variant` config       |
 | `winget`                       | `[winget]`  |                                       |
 | `xbps`                         | `[xbps]`    |                                       |
 
@@ -145,6 +146,13 @@ disabled_backends = ["apt"]
 # Must be one of: ["pacman", "paru", "pikaur", "yay"]
 # Default: "pacman"
 arch_package_manager = "paru"
+
+# Since VSCode and VSCodium both operate on the same package database
+# they are mutually exclusive and so you must pick which one you want
+# metapac to use.
+# Must be one of: ["code", "codium"]
+# Default: "code"
+vscode_variant = "code"
 
 # Whether to default to installing flatpak packages systemwide or for the
 # current user. This setting can be overridden on a per-package basis using
@@ -227,6 +235,10 @@ snap = [
  { package = "metapac" }
 ]
 uv = [
+ "metapac",
+ { package = "metapac" }
+]
+vscode = [
  "metapac",
  { package = "metapac" }
 ]
