@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.10] - 2025-03-22
+
+### Added
+
+- New backend: `vscode`, comes with a new config option: `vscode_variant`
+  for selecting between VSCode and VSCodium (#78)!
+
 ## [0.2.9] - 2025-03-16
 
 ### Added

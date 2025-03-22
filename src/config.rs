@@ -17,6 +17,8 @@ pub struct Config {
     pub disabled_backends: BTreeSet<AnyBackend>,
     #[serde_inline_default(Config::default().arch_package_manager)]
     pub arch_package_manager: ArchPackageManager,
+    #[serde_inline_default(Config::default().vscode_variant)]
+    pub vscode_variant: VsCodeVariant,
     #[serde_inline_default(Config::default().flatpak_default_systemwide)]
     pub flatpak_default_systemwide: bool,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
@@ -29,6 +31,7 @@ impl Default for Config {
         Config {
             disabled_backends: BTreeSet::new(),
             arch_package_manager: ArchPackageManager::default(),
+            vscode_variant: VsCodeVariant::default(),
             flatpak_default_systemwide: true,
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),
@@ -80,6 +83,22 @@ impl ArchPackageManager {
             ArchPackageManager::Paru => Perms::Same,
             ArchPackageManager::Pikaur => Perms::Same,
             ArchPackageManager::Yay => Perms::Same,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VsCodeVariant {
+    #[default]
+    Code,
+    Codium,
+}
+impl VsCodeVariant {
+    pub fn as_command(&self) -> &'static str {
+        match self {
+            VsCodeVariant::Code => "code",
+            VsCodeVariant::Codium => "codium",
         }
     }
 }
