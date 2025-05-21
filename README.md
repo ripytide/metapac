@@ -232,7 +232,12 @@ pipx = [
 ]
 snap = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
+ { package = "metapac", confinement = "strict" },
+ { package = "metapac", confinement = "classic" },
+ { package = "metapac", confinement = "dangerous" },
+ { package = "metapac", confinement = "devmode" },
+ { package = "metapac", confinement = "jailmode" }
 ]
 uv = [
  "metapac",
