@@ -233,6 +233,7 @@ pipx = [
 snap = [
  "metapac",
  { package = "metapac" },
+ # see https://snapcraft.io/docs/snap-confinement for more info on confinement
  { package = "metapac", confinement = "strict" },
  { package = "metapac", confinement = "classic" },
  { package = "metapac", confinement = "dangerous" },
