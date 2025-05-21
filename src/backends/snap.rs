@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -9,8 +10,43 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Snap;
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Serialize, Deserialize, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum SnapConfinement {
+    Strict,
+    Classic,
+    Dangerous,
+    Devmode,
+    Jailmode,
+}
+
+impl SnapConfinement {
+    fn from_notes(notes: String) -> Option<SnapConfinement> {
+        match notes.as_str() {
+            "-" => Some(SnapConfinement::Strict),
+            "classic" => Some(SnapConfinement::Classic),
+            "dangerous" => Some(SnapConfinement::Dangerous),
+            "devmode" => Some(SnapConfinement::Devmode),
+            "jailmode" => Some(SnapConfinement::Jailmode),
+            _ => None,
+        }
+    }
+
+    fn get_cli_option(&self) -> Option<String> {
+        match self {
+            SnapConfinement::Strict => None,
+            SnapConfinement::Classic => Some("--classic"),
+            SnapConfinement::Dangerous => Some("--dangerous"),
+            SnapConfinement::Devmode => Some("--devmode"),
+            SnapConfinement::Jailmode => Some("--jailmode"),
+        }.map(String::from)
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct SnapOptions {}
+pub struct SnapOptions {
+    pub confinement: Option<SnapConfinement>,
+}
 
 impl Backend for Snap {
     type Options = SnapOptions;
@@ -33,22 +69,29 @@ impl Backend for Snap {
         Ok(output
             .lines()
             .skip(1)
-            .filter_map(|line| line.split_whitespace().next())
-            .map(|name| (name.to_string(), Self::Options {}))
+            .filter_map(|line| {
+                let mut fields = line.split_whitespace();
+                fields.next().map(|name|
+                    // skip "Version", "Rev", "Tracking", and "Publisher" fields
+                    (name, fields.skip(4).next())
+                )
+            })
+            .map(|(name, notes_opt)|
+                (
+                    name.to_string(),
+                    Self::Options {
+                        confinement: notes_opt.and_then(|notes|
+                            SnapConfinement::from_notes(notes.to_string())
+                        )
+                    },
+                )
+            )
             .collect())
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
-        if !packages.is_empty() {
-            run_command(
-                ["snap", "install"]
-                    .into_iter()
-                    .chain(packages.keys().map(String::as_str)),
-                Perms::Sudo,
-            )?;
-        }
-
-        Ok(())
+        build_snap_install_commands(packages).iter()
+            .try_for_each(|cmd| run_command(cmd, Perms::Sudo))
     }
 
     fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
@@ -81,4 +124,55 @@ impl Backend for Snap {
                 .join(" ")
         })
     }
+}
+
+fn build_snap_install_commands(
+    packages: &BTreeMap<String, SnapOptions>
+) -> Vec<Vec<String>> {
+    packages.iter()
+        .map(|(name, options)|
+            (
+                options.confinement.as_ref()
+                    .unwrap_or(&SnapConfinement::Strict),
+                (name, options),
+            )
+        )
+        .into_group_map()
+        .into_iter()
+        .sorted()
+        .map(|(confinement, packages_confined)|
+            atomize_not_strict(confinement, packages_confined)
+        )
+        .flat_map(Vec::into_iter)
+        .map(|(confinement, packages_confined)|
+            build_snap_install_command(confinement, packages_confined)
+        )
+        .collect()
+}
+
+fn atomize_not_strict<'a>(
+    confinement: &'a SnapConfinement,
+    packages_confined: Vec<(&'a String, &'a SnapOptions)>,
+) -> Vec<(&'a SnapConfinement, Vec<(&'a String, &'a SnapOptions)>)> {
+    match confinement.get_cli_option() {
+        Some(_) => packages_confined.into_iter()
+            .map(|name2options| (confinement, vec![name2options]))
+            .collect(),
+        None => vec![(confinement, packages_confined)],
+    }
+}
+
+fn build_snap_install_command<'a>(
+    confinement: &'a SnapConfinement,
+    packages_confined: Vec<(&'a String, &'a SnapOptions)>,
+) -> Vec<String> {
+    ["snap", "install"]
+        .into_iter()
+        .map(String::from)
+        .chain(confinement.get_cli_option())
+        .chain(
+            packages_confined.into_iter()
+                .map(|(name, _)| name.clone())
+        )
+        .collect()
 }
