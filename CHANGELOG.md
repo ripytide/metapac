@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.12] - 2025-05-21
+
+### Added
+
+- The `pamac` arch package manager as another option for the `arch` backend (#84).
+
 ## [0.2.11] - 2025-05-21
 
 ### Added
