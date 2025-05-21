@@ -20,10 +20,6 @@ cargo install metapac
 paru -S metapac
 ```
 
-```shell
-paru -S metapac-bin
-```
-
 ## Meta
 
 `metapac` is a meta package manager, that means it does not directly
