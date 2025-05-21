@@ -109,20 +109,20 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull Requests for adding
 support for additional backends are welcome!
 
-| Backend                        | Group Name  | Notes                                 |
-| ------------------------------ | ----------- | ------------------------------------- |
-| `pacman`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
-| `apt`                          | `[apt]`     |                                       |
-| `brew`                         | `[brew]`    |                                       |
-| `cargo`                        | `[cargo]`   |                                       |
-| `dnf`                          | `[dnf]`     |                                       |
-| `flatpak`                      | `[flatpak]` |                                       |
-| `pipx`                         | `[pipx]`    |                                       |
-| `snap`                         | `[snap]`    |                                       |
-| `uv`                           | `[uv]`      |                                       |
-| `vscode`                       | `[vscode]`  | see the `vscode_variant` config       |
-| `winget`                       | `[winget]`  |                                       |
-| `xbps`                         | `[xbps]`    |                                       |
+| Backend                                | Group Name  | Notes                                 |
+| -------------------------------------- | ----------- | ------------------------------------- |
+| `pacman`/`pamac`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
+| `apt`                                  | `[apt]`     |                                       |
+| `brew`                                 | `[brew]`    |                                       |
+| `cargo`                                | `[cargo]`   |                                       |
+| `dnf`                                  | `[dnf]`     |                                       |
+| `flatpak`                              | `[flatpak]` |                                       |
+| `pipx`                                 | `[pipx]`    |                                       |
+| `snap`                                 | `[snap]`    |                                       |
+| `uv`                                   | `[uv]`      |                                       |
+| `vscode`                               | `[vscode]`  | see the `vscode_variant` config       |
+| `winget`                               | `[winget]`  |                                       |
+| `xbps`                                 | `[xbps]`    |                                       |
 
 ## Config
 
@@ -140,10 +140,10 @@ support for additional backends are welcome!
 # Default: []
 disabled_backends = ["apt"]
 
-# Since pacman, paru, pikaur and yay all operate on the same package database
+# Since pacman, pamac, paru, pikaur and yay all operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
 # metapac to use.
-# Must be one of: ["pacman", "paru", "pikaur", "yay"]
+# Must be one of: ["pacman", "pamac", "paru", "pikaur", "yay"]
 # Default: "pacman"
 arch_package_manager = "paru"
 
