@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New backend: `vscode`, comes with a new config option: `vscode_variant`
   for selecting between VSCode and VSCodium (#78)!
 
+### Removed
+
+- The release notes on GitHub will no longer contain release artifacts as
+  `cargo-dist` seems to have become unmaintained and has various issues at
+  the moment.
+- This also means that the `metapac-bin` AUR package will receive no more
+  updates as it relies upon having a built artifact hosted by GitHub. The
+  non-binary `metapac` AUR package will still receive updates though.
+
 ## [0.2.9] - 2025-03-16
 
 ### Added
