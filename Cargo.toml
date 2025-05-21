@@ -20,15 +20,8 @@ include = [
   "examples/**/*"
 ]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
-[package.metadata.wix]
-upgrade-guid = "3DC3E657-A799-4AB9-9D12-8E1A62D1D583"
-path-guid = "CA73C74A-26B9-4E23-9277-FACA0F7765D1"
-license = false
-eula = false
+[lints.rustdoc]
+broken_intra_doc_links = "allow"
 
 [dependencies]
 color-eyre = "0.6.3"
@@ -56,6 +49,16 @@ indoc = "2.0.5"
 [dev-dependencies]
 assert_cmd = "2.0.16"
 markdown = "1.0.0-alpha.21"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[package.metadata.wix]
+upgrade-guid = "3DC3E657-A799-4AB9-9D12-8E1A62D1D583"
+path-guid = "CA73C74A-26B9-4E23-9277-FACA0F7765D1"
+license = false
+eula = false
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
