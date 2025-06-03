@@ -160,6 +160,7 @@ impl Backend for Arch {
                     config.arch_package_manager.as_command(),
                     "--sync",
                     "--asexplicit",
+                    "--needed",
                 ]
                 .into_iter()
                 .chain(Some("--no_confirm").filter(|_| no_confirm))
