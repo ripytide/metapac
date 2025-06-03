@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.13] - 2025-06-03
+
+### Fixed
+
+- The `arch` backend would sometimes attempt to reinstall already installed
+  packages. This has been fixed in (#87), thanks @arutonee1!
+
 ## [0.2.12] - 2025-05-21
 
 ### Added
