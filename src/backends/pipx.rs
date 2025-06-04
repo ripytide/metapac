@@ -55,13 +55,8 @@ impl Backend for Pipx {
     }
 
     fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
-        if !packages.is_empty() {
-            run_command(
-                ["pipx", "uninstall"]
-                    .into_iter()
-                    .chain(packages.iter().map(String::as_str)),
-                Perms::Same,
-            )?;
+        for package in packages {
+            run_command(["pipx", "uninstall", package], Perms::Same)?;
         }
 
         Ok(())
