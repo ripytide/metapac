@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.14] - 2025-06-04
+
+### Fixed
+
+- The `pipx` backend could would fail to uninstall multiple packages. This
+  has been fixed in (#88), thanks @arutonee1!
+
 ## [0.2.13] - 2025-06-03
 
 ### Fixed
