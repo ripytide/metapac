@@ -41,13 +41,14 @@ your group files (`metapac clean`).
 The group files are then stored with your other system configuration files
 and so can be tracked with version control.
 
-## Getting Started
+## Usage
 
 ### Enable backends
 
 By default all backends are disabled. Enable the backends you want
-`metapac` to manage by setting the `enabled_backends` config in `metapac`'s
-config file. See the [`Config`](#config) section for more details.
+`metapac` to manage by adding them to the `enabled_backends` config in
+`metapac`'s config file. See the [`Config`](#config) section for more
+details.
 
 ### Migrating a default system into `metapac`
 
@@ -100,6 +101,16 @@ opposite of `metapac add` is `metapac remove`, the opposite of `metapac
 install` is `metapac uninstall` and the opposite of `metapac sync` is
 `metapac clean`.
 
+### Hooks
+
+There are four hooks that allow you to run a custom command during the
+operation of some of the commands: `before_install`, `after_install`,
+`before_uninstall` and `after_unintall`. These four hooks are configured on
+a per-package basis. A main use-case for `arch` packages is to enable a
+packages `systemd` service after it is installed. This means you can
+declaratively maintain your enabled systemd services. See the [`Group
+Files`](#group-files) section for some examples.
+
 ### Advanced usage
 
 For more advanced usage read through the remaining sections, especially the
@@ -108,23 +119,23 @@ list of all of the available commands.
 
 ## Supported Backends
 
-At the moment, these are the supported backends. Pull Requests for adding
-support for additional backends are welcome!
+At the moment, these are the supported backends. Pull requests and issues
+for additional backends are always welcome!
 
-| Backend                                | Group Name  | Notes                                 |
-| -------------------------------------- | ----------- | ------------------------------------- |
-| `pacman`/`pamac`/`paru`/`pikaur`/`yay` | `[arch]`    | see the `arch_package_manager` config |
-| `apt`                                  | `[apt]`     |                                       |
-| `brew`                                 | `[brew]`    |                                       |
-| `cargo`                                | `[cargo]`   |                                       |
-| `dnf`                                  | `[dnf]`     |                                       |
-| `flatpak`                              | `[flatpak]` |                                       |
-| `pipx`                                 | `[pipx]`    |                                       |
-| `snap`                                 | `[snap]`    |                                       |
-| `uv`                                   | `[uv]`      |                                       |
-| `vscode`                               | `[vscode]`  | see the `vscode_variant` config       |
-| `winget`                               | `[winget]`  |                                       |
-| `xbps`                                 | `[xbps]`    |                                       |
+| Backend   | Notes                                 |
+| --------- | ------------------------------------- |
+| `arch`    | see the `arch_package_manager` config |
+| `apt`     |                                       |
+| `brew`    |                                       |
+| `cargo`   |                                       |
+| `dnf`     |                                       |
+| `flatpak` |                                       |
+| `pipx`    |                                       |
+| `snap`    |                                       |
+| `uv`      |                                       |
+| `vscode`  | see the `vscode_variant` config       |
+| `winget`  |                                       |
+| `xbps`    |                                       |
 
 ## Config
 
@@ -140,7 +151,7 @@ support for additional backends are welcome!
 # Backends to enable for most of metapac's behavior. See the README.md or
 # run `metapac backends` for the list of backend names
 # Default: []
-enabled_backends = ["arch", "systemd"]
+enabled_backends = ["arch"]
 
 # Since pacman, pamac, paru, pikaur and yay all operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
@@ -204,7 +215,21 @@ server = ["example_group"]
 
 arch = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
+ { package = "syncthing", hooks = { after_install = [
+    "sudo",
+    "systemctl",
+    "enable",
+    "--now",
+    "syncthing@ripytide",
+ ] } },
+ { package = "openssh", hooks = { after_install = [
+    "sudo",
+    "systemctl",
+    "enable",
+    "--now",
+    "sshd",
+ ] } },
 ]
 apt = [
  "metapac",
@@ -217,46 +242,46 @@ brew = [
 cargo = [
  "metapac",
  # see cargo docs for info on the options
- { package = "metapac", git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ] },
+ { package = "metapac", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ] } },
 ]
 dnf = [
  "metapac",
  # see dnf docs for more info on these options
- { package = "metapac", repo = "/etc/yum.repos.d/fedora_extras.repo" },
+ { package = "metapac", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
 ]
 flatpak = [
  "metapac",
- { package = "metapac", remote = "flathub", systemwide = false }
+ { package = "metapac", options = { remote = "flathub", systemwide = false } },
 ]
 pipx = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
 ]
 snap = [
  "metapac",
  { package = "metapac" },
  # see https://snapcraft.io/docs/snap-confinement for more info on confinement
- { package = "metapac", confinement = "strict" },
- { package = "metapac", confinement = "classic" },
- { package = "metapac", confinement = "dangerous" },
- { package = "metapac", confinement = "devmode" },
- { package = "metapac", confinement = "jailmode" }
+ { package = "metapac", options = { confinement = "strict" } },
+ { package = "metapac", options = { confinement = "classic" } },
+ { package = "metapac", options = { confinement = "dangerous" } },
+ { package = "metapac", options = { confinement = "devmode" } },
+ { package = "metapac", options = { confinement = "jailmode" } },
 ]
 uv = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
 ]
 vscode = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
 ]
 winget = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
 ]
 xbps = [
  "metapac",
- { package = "metapac" }
+ { package = "metapac" },
 ]
 ```
 

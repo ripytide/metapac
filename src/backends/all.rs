@@ -51,15 +51,9 @@ macro_rules! any {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
                 }
             }
-            pub fn uninstall(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
-                match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::uninstall(packages, no_confirm, config), )*
-                }
-            }
         }
     };
 }
-
 apply_backends!(any);
 
 macro_rules! raw_package_ids {
@@ -94,6 +88,16 @@ macro_rules! package_ids {
             append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
 
+            pub fn filtered(&self, config: &Config) -> PackageIds {
+                let mut packages = self.clone();
+                $(
+                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        packages.$lower_backend = Default::default();
+                    }
+                )*
+                packages
+            }
+
             pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
                 match backend {
                     $( AnyBackend::$upper_backend => self.$lower_backend.contains(package) ),*
@@ -108,16 +112,6 @@ macro_rules! package_ids {
                 )*
 
                 output
-            }
-
-            pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
-                $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        AnyBackend::$upper_backend.uninstall(&self.$lower_backend, no_confirm, config)?;
-                    }
-                )*
-
-                Ok(())
             }
         }
         impl std::fmt::Display for PackageIds {
@@ -138,73 +132,92 @@ macro_rules! package_ids {
     }
 }
 apply_backends!(package_ids);
-macro_rules! raw_options {
+
+macro_rules! raw_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        pub struct RawOptions {
+        pub struct RawPackages {
             $(
-                pub $lower_backend: Vec<(String, <$upper_backend as Backend>::Options)>,
+                pub $lower_backend: Vec<Package<<$upper_backend as Backend>::Options>>,
             )*
         }
-        impl RawOptions {
+        impl RawPackages {
             append!($(($upper_backend, $lower_backend)),*);
 
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
                 RawPackageIds {
-                    $( $lower_backend: self.$lower_backend.iter().map(|(x, _)| x).cloned().collect() ),*
+                    $( $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect() ),*
                 }
             }
         }
     }
 }
-apply_backends!(raw_options);
+apply_backends!(raw_packages);
 
-macro_rules! options {
+macro_rules! packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        pub struct Options {
+        pub struct Packages {
             $(
-                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::Options>,
+                pub $lower_backend: BTreeMap<String, Package<<$upper_backend as Backend>::Options>>,
             )*
         }
-        impl Options {
+        impl Packages {
             append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
             to_package_ids!($(($upper_backend, $lower_backend)),*);
 
+            pub fn filtered(&self, config: &Config) -> Packages {
+                let mut packages = self.clone();
+                $(
+                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        packages.$lower_backend = Default::default();
+                    }
+                )*
+                packages
+            }
+
             pub fn map_required(mut self, config: &Config) -> Result<Self> {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
-                    }
+                    self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
                 )*
 
                 Ok(self)
             }
 
-            pub fn install(self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn install(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        $upper_backend::install(&self.$lower_backend, no_confirm, config)?;
+                    for package in self.$lower_backend.values() {
+                        package.run_before_install()?;
+                    }
+
+                    let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
+                    $upper_backend::install(&options, no_confirm, config)?;
+
+                    for package in self.$lower_backend.values() {
+                        package.run_after_install()?;
                     }
                 )*
 
                 Ok(())
             }
 
-            pub fn query(config: &Config) -> Result<Self> {
-                Ok(Self {
-                    $(
-                        $lower_backend:
-                            if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                                $upper_backend::query(config)?
-                            } else {
-                                Default::default()
-                            },
-                    )*
-                })
+            pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
+                $(
+                    for package in self.$lower_backend.values() {
+                        package.run_before_uninstall()?;
+                    }
+
+                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config)?;
+
+                    for package in self.$lower_backend.values() {
+                        package.run_after_uninstall()?;
+                    }
+                )*
+
+                Ok(())
             }
         }
     }
 }
-apply_backends!(options);
+apply_backends!(packages);

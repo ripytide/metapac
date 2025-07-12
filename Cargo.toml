@@ -2,65 +2,40 @@
 name = "metapac"
 description = "multi-backend declarative package manager"
 version = "0.2.14"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/ripytide/metapac"
 readme = "README.md"
 keywords = ["package-manager", "linux", "declarative", "cli"]
 categories = ["command-line-utilities"]
 authors = ["James Forster <james.forsterer@gmail.com>", "Md Isfarul Haque <md-isfarul-haque@proton.me"]
-include = [
-  "build.rs",
-  "src/**/*",
-  "Cargo.toml",
-  "Cargo.lock",
-  "LICENSE*",
-  "README.md",
-  "benches/**/*",
-  "examples/**/*"
-]
 
 [lints.rustdoc]
 broken_intra_doc_links = "allow"
 
 [dependencies]
-color-eyre = "0.6.3"
-clap = { version = "4.5.21", features = ["derive"] }
+color-eyre = "0.6.5"
+clap = { version = "4.5.41", features = ["derive"] }
 regex = { version = "1.11.1", default-features = false, features = ["std"] }
-libc = "0.2.161"
-log = { version = "0.4.22", features = ["std"] }
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.132"
-toml = "0.8.19"
-derive_more = { version = "1.0.0", features = ["full"] }
-itertools = "0.13.0"
-dirs = "5.0.1"
-home = "0.5.9"
+libc = "0.2.174"
+log = { version = "0.4.27", features = ["std"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+toml = "0.9.2"
+derive_more = { version = "2.0.1", features = ["full"] }
+itertools = "0.14.0"
+dirs = "6.0.0"
+home = "0.5.11"
 pretty_env_logger = "0.5.0"
 dialoguer = "0.11.0"
-serde-inline-default = "0.2.2"
-hostname = "0.4.0"
+serde-inline-default = "0.2.3"
+hostname = "0.4.1"
 walkdir = "2.5.0"
-toml_edit = "0.22.22"
-tempfile = "3.14.0"
-strum = {version = "0.26.3", features = ["derive"]}
-indoc = "2.0.5"
+toml_edit = "0.23.1"
+tempfile = "3.20.0"
+strum = {version = "0.27.1", features = ["derive"]}
+indoc = "2.0.6"
 
 [dev-dependencies]
-assert_cmd = "2.0.16"
-markdown = "1.0.0-alpha.21"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
-[package.metadata.wix]
-upgrade-guid = "3DC3E657-A799-4AB9-9D12-8E1A62D1D583"
-path-guid = "CA73C74A-26B9-4E23-9277-FACA0F7765D1"
-license = false
-eula = false
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
+assert_cmd = "2.0.17"
+markdown = "1.0.0"
