@@ -1,3 +1,4 @@
+pub use crate::backends::Backend;
 pub use crate::backends::all::{AnyBackend, PackageIds, Packages, RawPackageIds, RawPackages};
 pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
@@ -12,7 +13,6 @@ pub use crate::backends::uv::{Uv, UvOptions};
 pub use crate::backends::vscode::{VsCode, VsCodeOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
-pub use crate::backends::Backend;
 pub use crate::cli::{
     AddCommand, CleanCommand, InstallCommand, MainArguments, MainSubcommand, RemoveCommand,
     SyncCommand, UninstallCommand, UnmanagedCommand,

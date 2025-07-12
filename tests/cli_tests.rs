@@ -1,5 +1,5 @@
 use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
-use markdown::{mdast::Node, ParseOptions};
+use markdown::{ParseOptions, mdast::Node};
 use std::process::Command;
 
 #[test]

@@ -1,6 +1,6 @@
 use std::process::{Command, Stdio};
 
-use color_eyre::{eyre::eyre, Result};
+use color_eyre::{Result, eyre::eyre};
 use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy)]

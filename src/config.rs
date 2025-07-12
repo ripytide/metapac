@@ -1,5 +1,5 @@
-use color_eyre::eyre::{eyre, Context};
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use std::{
@@ -52,7 +52,8 @@ impl Config {
             Ok(Self::default())
         } else {
             toml::from_str(
-                &std::fs::read_to_string(config_file_path.clone()).wrap_err("reading config file")?,
+                &std::fs::read_to_string(config_file_path.clone())
+                    .wrap_err("reading config file")?,
             )
             .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
         }

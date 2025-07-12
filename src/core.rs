@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
-use std::fs::{self, read_to_string, File};
+use std::fs::{self, File, read_to_string};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use color_eyre::eyre::{eyre, Context, ContextCompat, Ok};
 use color_eyre::Result;
+use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
@@ -100,7 +100,10 @@ impl AddCommand {
         let group_file = group_dir.join(&self.group).with_extension("toml");
 
         if config.hostname_groups_enabled && !group_files.contains(&group_file) {
-            return Err(eyre!("hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.", &self.group));
+            return Err(eyre!(
+                "hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.",
+                &self.group
+            ));
         }
 
         if !group_file.is_file() {

@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::ErrorKind::NotFound;
 
-use color_eyre::eyre::{eyre, Context};
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use serde_json::Value;

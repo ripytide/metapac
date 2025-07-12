@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use color_eyre::{
-    eyre::{eyre, Context, ContextCompat},
     Result,
+    eyre::{Context, ContextCompat, eyre},
 };
 use toml::{Table, Value};
 
@@ -54,7 +54,9 @@ impl Groups {
         for ((backend, package), group_files_counts) in reoriented.iter() {
             if group_files_counts.len() > 1 || group_files_counts.values().any(|y| *y > 1) {
                 let group_files = group_files_counts.keys().cloned().collect::<Vec<_>>();
-                log::warn!("duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different options");
+                log::warn!(
+                    "duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different options"
+                );
             }
         }
 
@@ -97,7 +99,9 @@ impl Groups {
         config: &Config,
     ) -> Result<BTreeSet<PathBuf>> {
         if !group_dir.is_dir() {
-            log::warn!("the groups directory: {group_dir:?}, was not found, assuming there are no group files. If this was intentional please create an empty groups folder.");
+            log::warn!(
+                "the groups directory: {group_dir:?}, was not found, assuming there are no group files. If this was intentional please create an empty groups folder."
+            );
 
             return Ok(BTreeSet::new());
         }

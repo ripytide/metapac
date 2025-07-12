@@ -48,7 +48,7 @@ impl<T> Package<T> {
     }
     pub fn run_after_uninstall(&self) -> Result<()> {
         if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.after_uninstall 
+            && let Some(args) = &hooks.after_uninstall
         {
             log::info!("running after_uninstall hook for {} package", self.package);
             run_command(args, Perms::Same)

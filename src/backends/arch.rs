@@ -56,7 +56,9 @@ impl Backend for Arch {
                         .is_some();
 
                     if overridden {
-                        log::warn!("arch package {group_package:?} has been overridden by the {group:?} package group");
+                        log::warn!(
+                            "arch package {group_package:?} has been overridden by the {group:?} package group"
+                        );
                     }
                 }
             }
