@@ -13,8 +13,8 @@ use crate::prelude::*;
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    #[serde_inline_default(Config::default().disabled_backends)]
-    pub disabled_backends: BTreeSet<AnyBackend>,
+    #[serde_inline_default(Config::default().enabled_backends)]
+    pub enabled_backends: BTreeSet<AnyBackend>,
     #[serde_inline_default(Config::default().arch_package_manager)]
     pub arch_package_manager: ArchPackageManager,
     #[serde_inline_default(Config::default().vscode_variant)]
@@ -29,7 +29,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            disabled_backends: BTreeSet::new(),
+            enabled_backends: BTreeSet::new(),
             arch_package_manager: ArchPackageManager::default(),
             vscode_variant: VsCodeVariant::default(),
             flatpak_default_systemwide: true,
