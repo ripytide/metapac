@@ -1,6 +1,6 @@
 use std::process::{Command, Stdio};
 
-use color_eyre::{eyre::eyre, Result};
+use color_eyre::{Result, eyre::eyre};
 use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy)]
@@ -85,13 +85,15 @@ where
 
 fn use_sudo(perms: Perms) -> Result<bool> {
     #[cfg(unix)]
-    return Ok(matches!(perms, Perms::Sudo) && unsafe { libc::geteuid() } != 0);
-    #[cfg(windows)]
-    if matches!(perms, Perms::Sudo) {
-        return Err(eyre!(
-            "sudo for privilege escalation is not supported on windows"
-        ));
+    match perms {
+        Perms::Same => Ok(false),
+        Perms::Sudo => Ok(unsafe { libc::geteuid() } != 0),
     }
     #[cfg(windows)]
-    return Ok(false);
+    match perms {
+        Perms::Same => Ok(false),
+        Perms::Sudo => Err(eyre!(
+            "sudo for privilege escalation is not supported on windows"
+        )),
+    }
 }

@@ -1,5 +1,5 @@
 use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
-use markdown::{mdast::Node, ParseOptions};
+use markdown::{ParseOptions, mdast::Node};
 use std::process::Command;
 
 #[test]
@@ -32,12 +32,12 @@ fn unmanaged() {
         .filter(|code| code.lang == Some("toml".to_string()))
         .collect::<Vec<_>>();
 
-    let config = &toml_blocks[0].value;
-    let group = &toml_blocks[1].value;
+    let config = &toml_blocks[1].value;
+    let group = &toml_blocks[0].value;
 
     std::fs::write("config.toml", config).unwrap();
     std::fs::create_dir("groups").unwrap();
-    std::fs::write("groups/group.toml", group).unwrap();
+    std::fs::write("groups/example_group.toml", group).unwrap();
 
     let mut cmd = Command::cargo_bin("metapac").unwrap();
     cmd.args(["--hostname", "pc", "--config-dir", ".", "unmanaged"]);

@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
-use std::fs::{self, read_to_string, File};
+use std::fs::{self, File, read_to_string};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use color_eyre::eyre::{eyre, Context, ContextCompat, Ok};
 use color_eyre::Result;
+use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
@@ -33,12 +33,31 @@ impl MainArguments {
         let group_dir = config_dir.join("groups/");
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
+
+        if config.enabled_backends.is_empty() {
+            log::warn!("no backends found in the enabled_backends config")
+        }
+
         let group_files =
             Groups::group_files(&group_dir, &hostname, &config).wrap_err("finding group files")?;
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
-        let required = groups.to_options().map_required(&config)?;
+        let mut required = groups.to_packages().map_required(&config)?;
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        if !required.$lower_backend.is_empty() {
+                            log::warn!("ignoring packages from group files for the {} backend as the backend was not found in the enabled_backends config", AnyBackend::$upper_backend);
+                            required.$lower_backend = Default::default();
+                        }
+                    }
+                )*
+            }
+        }
+        apply_backends!(x);
 
         match self.subcommand {
             MainSubcommand::Add(add) => add.run(&group_dir, &group_files, &groups, &config),
@@ -64,7 +83,9 @@ impl AddCommand {
         groups: &Groups,
         config: &Config,
     ) -> Result<()> {
-        let packages = self.packages.iter().filter(|package| {
+        let packages = package_vec_to_btreeset(self.packages);
+
+        let packages = packages.iter().filter(|package| {
             let containing_group_files = groups.contains(self.backend, package);
 
             if !containing_group_files.is_empty() {
@@ -79,7 +100,10 @@ impl AddCommand {
         let group_file = group_dir.join(&self.group).with_extension("toml");
 
         if config.hostname_groups_enabled && !group_files.contains(&group_file) {
-            return Err(eyre!("hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.", &self.group));
+            return Err(eyre!(
+                "hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.",
+                &self.group
+            ));
         }
 
         if !group_file.is_file() {
@@ -116,8 +140,10 @@ impl AddCommand {
 
 impl RemoveCommand {
     fn run(self, groups: &Groups) -> Result<()> {
-        for package in self.packages.iter() {
-            let containing_group_files = groups.contains(self.backend, package);
+        let packages = package_vec_to_btreeset(self.packages);
+
+        for package in packages {
+            let containing_group_files = groups.contains(self.backend, &package);
             if !containing_group_files.is_empty() {
                 for group_file in containing_group_files {
                     let file_contents = read_to_string(&group_file)
@@ -137,7 +163,7 @@ impl RemoveCommand {
                         ))?;
 
                     packages.retain(|x| match x {
-                        Value::String(formatted) => package != &formatted.clone().into_value(),
+                        Value::String(formatted) => package != formatted.clone().into_value(),
                         Value::InlineTable(inline_table) => {
                             package != inline_table.get("package").unwrap().as_str().unwrap()
                         }
@@ -168,9 +194,11 @@ impl InstallCommand {
         groups: &Groups,
         config: &Config,
     ) -> Result<()> {
+        let packages = package_vec_to_btreeset(self.packages);
+
         AddCommand {
             backend: self.backend,
-            packages: self.packages.clone(),
+            packages: packages.clone().iter().cloned().collect(),
             group: self.group,
         }
         .run(group_dir, group_files, groups, config)?;
@@ -180,7 +208,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&self.packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
+                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
                         },
                     )*
                 }
@@ -194,24 +222,33 @@ impl InstallCommand {
 
 impl UninstallCommand {
     fn run(self, groups: &Groups, config: &Config) -> Result<()> {
+        let packages = package_vec_to_btreeset(self.packages);
+
         RemoveCommand {
             backend: self.backend,
-            packages: self.packages.clone(),
+            packages: packages.clone().iter().cloned().collect(),
         }
         .run(groups)?;
 
-        self.backend.uninstall(
-            &self.packages.into_iter().collect(),
-            self.no_confirm,
-            config,
-        )?;
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                match self.backend {
+                    $(
+                        AnyBackend::$upper_backend => {
+                            $upper_backend::uninstall(&packages, self.no_confirm, config)?;
+                        },
+                    )*
+                }
+            };
+        }
+        apply_backends!(x);
 
         Ok(())
     }
 }
 
 impl CleanCommand {
-    fn run(self, required: &Options, config: &Config) -> Result<()> {
+    fn run(self, required: &Packages, config: &Config) -> Result<()> {
         let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
@@ -219,32 +256,28 @@ impl CleanCommand {
             return Ok(());
         }
 
+        println!("{unmanaged}");
+
+        println!("these packages will be uninstalled\n");
+
         if self.no_confirm {
             log::info!("proceeding without confirmation");
-
-            unmanaged.uninstall(self.no_confirm, config)
-        } else {
-            println!("{unmanaged}");
-
-            println!("these packages will be uninstalled\n");
-
-            if Confirm::new()
-                .with_prompt("do you want to continue?")
-                .default(true)
-                .show_default(true)
-                .interact()
-                .wrap_err("getting user confirmation")?
-            {
-                unmanaged.uninstall(self.no_confirm, config)
-            } else {
-                Ok(())
-            }
+        } else if !Confirm::new()
+            .with_prompt("do you want to continue?")
+            .default(true)
+            .show_default(true)
+            .interact()
+            .wrap_err("getting user confirmation")?
+        {
+            return Ok(());
         }
+
+        package_ids_to_packages(unmanaged).uninstall(self.no_confirm, config)
     }
 }
 
 impl SyncCommand {
-    fn run(self, required: &Options, config: &Config) -> Result<()> {
+    fn run(self, required: &Packages, config: &Config) -> Result<()> {
         let missing = missing(required, config)?;
 
         if missing.is_empty() {
@@ -273,7 +306,7 @@ impl SyncCommand {
 }
 
 impl UnmanagedCommand {
-    fn run(self, required: &Options, config: &Config) -> Result<()> {
+    fn run(self, required: &Packages, config: &Config) -> Result<()> {
         let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
@@ -328,19 +361,36 @@ impl CleanCacheCommand {
     }
 }
 
-fn unmanaged(required: &Options, config: &Config) -> Result<PackageIds> {
-    Options::query(config).map(|x| x.to_package_ids().difference(&required.to_package_ids()))
+fn installed(config: &Config) -> Result<PackageIds> {
+    macro_rules! x {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+            PackageIds {
+                $(
+                    $lower_backend:
+                        if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                            $upper_backend::query(config)?.keys().cloned().collect()
+                        } else {
+                            Default::default()
+                        },
+                )*
+            }
+        };
+    }
+    Ok(apply_backends!(x).filtered(config))
 }
-fn missing(required: &Options, config: &Config) -> Result<Options> {
-    let installed = Options::query(config)?;
+fn unmanaged(required: &Packages, config: &Config) -> Result<PackageIds> {
+    installed(config).map(|x| x.difference(&required.to_package_ids()))
+}
+fn missing(required: &Packages, config: &Config) -> Result<Packages> {
+    let installed = installed(config)?;
 
-    let mut missing = Options::default();
+    let mut missing = Packages::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
                 for (package_id, missing_options) in required.$lower_backend.iter() {
-                    if !installed.$lower_backend.contains_key(package_id) {
+                    if !installed.$lower_backend.contains(package_id) {
                         missing.$lower_backend.insert(package_id.clone(), missing_options.clone());
                     }
                 }
@@ -350,4 +400,27 @@ fn missing(required: &Options, config: &Config) -> Result<Options> {
     apply_backends!(x);
 
     Ok(missing)
+}
+fn package_vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
+    let mut packages = BTreeSet::new();
+
+    for package in vec {
+        if !packages.insert(package.clone()) {
+            log::warn!("duplicate package {package}");
+        }
+    }
+
+    packages
+}
+fn package_ids_to_packages(package_ids: PackageIds) -> Packages {
+    macro_rules! x {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+            Packages {
+                $(
+                    $lower_backend: package_ids.$lower_backend.iter().map(|x| (x.to_string(), Package {package: x.to_string(), options: Default::default(), hooks: None})).collect(),
+                )*
+            }
+        };
+    }
+    apply_backends!(x)
 }

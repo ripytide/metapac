@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use color_eyre::eyre::eyre;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
@@ -15,15 +15,16 @@ use crate::prelude::*;
 pub struct Pipx;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PipxOptions {}
 
 impl Backend for Pipx {
     type Options = PipxOptions;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 

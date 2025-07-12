@@ -14,15 +14,16 @@ use crate::prelude::*;
 pub struct VsCode;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct VsCodeOptions {}
 
 impl Backend for VsCode {
     type Options = VsCodeOptions;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 

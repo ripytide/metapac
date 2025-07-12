@@ -1,5 +1,5 @@
-use color_eyre::eyre::Context;
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use std::{
@@ -12,6 +12,7 @@ use crate::prelude::*;
 // Update README if fields change.
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde_inline_default(Config::default().enabled_backends)]
     pub enabled_backends: BTreeSet<AnyBackend>,
@@ -44,16 +45,17 @@ impl Config {
         let config_file_path = config_dir.join("config.toml");
 
         if !config_file_path.is_file() {
-            log::trace!(
+            log::warn!(
                 "no config file found at {config_file_path:?}, using default config instead"
             );
 
             Ok(Self::default())
         } else {
             toml::from_str(
-                &std::fs::read_to_string(config_file_path).wrap_err("reading config file")?,
+                &std::fs::read_to_string(config_file_path.clone())
+                    .wrap_err("reading config file")?,
             )
-            .wrap_err("parsing toml config")
+            .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
         }
     }
 }

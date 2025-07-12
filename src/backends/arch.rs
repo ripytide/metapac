@@ -11,15 +11,16 @@ pub struct Arch;
 
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ArchOptions {}
 
 impl Backend for Arch {
     type Options = ArchOptions;
 
     fn map_required(
-        mut packages: BTreeMap<String, Self::Options>,
+        mut packages: BTreeMap<String, Package<Self::Options>>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -55,29 +56,13 @@ impl Backend for Arch {
                         .is_some();
 
                     if overridden {
-                        log::warn!("arch package {group_package:?} has been overridden by the {group:?} package group");
+                        log::warn!(
+                            "arch package {group_package:?} has been overridden by the {group:?} package group"
+                        );
                     }
                 }
             }
         }
-
-        let mut packages = {
-            let mut final_packages = BTreeMap::new();
-
-            for (package, _) in packages {
-                let overridden = final_packages
-                    .insert(package.clone(), Self::Options::default())
-                    .is_some();
-
-                if overridden {
-                    log::warn!("Package {package:?} overwrote another entry");
-                }
-            }
-
-            final_packages
-        };
-
-        let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
 
         let all_packages: BTreeSet<String> = run_command_for_stdout(
             [
@@ -93,6 +78,7 @@ impl Backend for Arch {
         .map(String::from)
         .collect();
 
+        let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
         for package in packages_cloned {
             let is_real_package = all_packages.contains(&package);
 

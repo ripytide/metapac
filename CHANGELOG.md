@@ -7,12 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- 🪝Hooks🪝: Per-package custom commands: `before_install`,
+  `after_install`, `before_uninstall` and `after_uninstall` have been
+  added. This allows the automatic enabling of `systemd` services for arch
+  packages by using the `after_install` hook. See the `README.md` for
+  examples.
+
 ### Changed
 
 - ‼️ Breaking Change ‼️ the config `disabled_backends` has now been
   inverted and renamed to `enabled_backends` to prevent everything being
-  uninstalled when adding new backends (like is about to happen with the
-  new `systemd` backend)
+  uninstalled when adding new backends (#90).
+- ‼️ Breaking Change ‼️ the toml format for group files has been changed,
+  options have been moved under a key called `options` in order to make way
+  for the new per-package `hooks` feature (#91).
+  - For example, instead of `{ package = "metapac", backend_relevant_option
+= "yes"}` you should change this to `{ package = "metapac", options = {
+ backend_relevant_option = "yes" } }`
+
+### Fixed
+
+- `metapac` will now throw errors if it encounters unexpected keys when
+  deserializing config and group files. This prevents accidentally
+  misspelling a config option and then being confused by `metapac` not
+  respecting it (#91).
+- A warning is now given to the user if duplicate packages are found in the
+  same group file as well as across multiple group files (#91).
+- A warning is now also given if duplicate packages are passed on the
+  command line with the add/remove/install/uninstall commands (#91).
 
 ## [0.2.14] - 2025-06-04
 

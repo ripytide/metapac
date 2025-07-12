@@ -11,6 +11,7 @@ use crate::prelude::*;
 pub struct Snap;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SnapOptions {
     pub confinement: Option<SnapConfinement>,
 }
@@ -55,9 +56,9 @@ impl Backend for Snap {
     type Options = SnapOptions;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 

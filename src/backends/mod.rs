@@ -16,7 +16,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::prelude::*;
 use color_eyre::Result;
-use serde::{Deserialize, Serialize};
 
 macro_rules! apply_backends {
     ($macro:ident) => {
@@ -37,18 +36,13 @@ macro_rules! apply_backends {
 }
 pub(crate) use apply_backends;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct StringPackageStruct {
-    pub package: String,
-}
-
 pub trait Backend {
     type Options;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>>;
+    ) -> Result<BTreeMap<String, Package<Self::Options>>>;
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>>;
 

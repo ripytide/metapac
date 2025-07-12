@@ -11,6 +11,7 @@ use crate::prelude::*;
 pub struct Flatpak;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FlatpakOptions {
     pub systemwide: Option<bool>,
     pub remote: Option<String>,
@@ -20,9 +21,9 @@ impl Backend for Flatpak {
     type Options = FlatpakOptions;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 

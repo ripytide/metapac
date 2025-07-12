@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::ErrorKind::NotFound;
 
-use color_eyre::eyre::{eyre, Context};
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use serde_json::Value;
@@ -15,6 +15,7 @@ pub struct Cargo;
 
 #[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CargoOptions {
     #[serde_inline_default(CargoOptions::default().version)]
     version: Option<String>,
@@ -32,9 +33,9 @@ impl Backend for Cargo {
     type Options = CargoOptions;
 
     fn map_required(
-        packages: BTreeMap<String, Self::Options>,
+        packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Self::Options>> {
+    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 
