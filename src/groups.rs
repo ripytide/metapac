@@ -47,13 +47,13 @@ impl Groups {
                     )*
                 };
             }
-            apply_public_backends!(x);
+            apply_backends!(x);
         }
 
         //warn the user about duplicated packages and output a deduplicated Options
         for ((backend, package), group_files) in reoriented.iter() {
             if group_files.len() > 1 {
-                log::warn!("duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different install options");
+                log::warn!("duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different options");
             }
         }
 
@@ -70,7 +70,7 @@ impl Groups {
                 )*
             };
         }
-        apply_public_backends!(x);
+        apply_backends!(x);
 
         options
     }
@@ -165,7 +165,7 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
             )*
         };
     }
-    apply_public_backends!(x);
+    apply_backends!(x);
 
     log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
 

@@ -43,6 +43,12 @@ and so can be tracked with version control.
 
 ## Getting Started
 
+### Enable backends
+
+By default all backends are disabled. Enable the backends you want
+`metapac` to manage by setting the `enabled_backends` config in `metapac`'s
+config file. See the [`Config`](#config) section for more details.
+
 ### Migrating a default system into `metapac`
 
 Run `metapac unmanaged` and save the output into a group file in
@@ -62,7 +68,7 @@ when you run `metapac clean`.
 > [!CAUTION]
 > If you run `metapac clean` without first configuring your group files
 > with the packages you want installed then `metapac` will attempt to
-> remove all of your packages.
+> remove all of your packages from your `enabled_backends`.
 >
 > `metapac clean` will always show you which packages it intends to remove
 > and ask for confirmation, so make sure to double check that the expected
@@ -131,10 +137,10 @@ support for additional backends are welcome!
 # | macOS    | $HOME/Library/Application Support/metapac/config.toml | /Users/Alice/Library/Application Support/metapac/config.toml |
 # | Windows  | {FOLDERID_RoamingAppData}\metapac\config.toml         | C:\Users\Alice\AppData\Roaming\metapac\config.toml           |
 
-# Backends to disable from all metapac behavior. See the README.md for
-# the list of backend names
+# Backends to enable for most of metapac's behavior. See the README.md or
+# run `metapac backends` for the list of backend names
 # Default: []
-disabled_backends = ["apt"]
+enabled_backends = ["arch", "systemd"]
 
 # Since pacman, pamac, paru, pikaur and yay all operate on the same package database
 # they are mutually exclusive and so you must pick which one you want

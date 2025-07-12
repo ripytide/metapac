@@ -18,7 +18,7 @@ use crate::prelude::*;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 
-macro_rules! apply_public_backends {
+macro_rules! apply_backends {
     ($macro:ident) => {
         $macro! {
         (Arch, arch),
@@ -35,7 +35,7 @@ macro_rules! apply_public_backends {
         (Xbps, xbps) }
     };
 }
-pub(crate) use apply_public_backends;
+pub(crate) use apply_backends;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StringPackageStruct {

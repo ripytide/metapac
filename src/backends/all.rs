@@ -60,7 +60,7 @@ macro_rules! any {
     };
 }
 
-apply_public_backends!(any);
+apply_backends!(any);
 
 macro_rules! raw_package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -79,7 +79,7 @@ macro_rules! raw_package_ids {
         }
     }
 }
-apply_public_backends!(raw_package_ids);
+apply_backends!(raw_package_ids);
 
 macro_rules! package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -112,7 +112,7 @@ macro_rules! package_ids {
 
             pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    if is_enabled(AnyBackend::$upper_backend, config) {
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         AnyBackend::$upper_backend.uninstall(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
@@ -137,8 +137,7 @@ macro_rules! package_ids {
         }
     }
 }
-apply_public_backends!(package_ids);
-
+apply_backends!(package_ids);
 macro_rules! raw_options {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
@@ -158,12 +157,11 @@ macro_rules! raw_options {
         }
     }
 }
-apply_public_backends!(raw_options);
+apply_backends!(raw_options);
 
 macro_rules! options {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        #[allow(non_snake_case)]
         pub struct Options {
             $(
                 pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::Options>,
@@ -176,7 +174,7 @@ macro_rules! options {
 
             pub fn map_required(mut self, config: &Config) -> Result<Self> {
                 $(
-                    if is_enabled(AnyBackend::$upper_backend, config) {
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
                     }
                 )*
@@ -186,7 +184,7 @@ macro_rules! options {
 
             pub fn install(self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    if is_enabled(AnyBackend::$upper_backend, config) {
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         $upper_backend::install(&self.$lower_backend, no_confirm, config)?;
                     }
                 )*
@@ -198,7 +196,7 @@ macro_rules! options {
                 Ok(Self {
                     $(
                         $lower_backend:
-                            if is_enabled(AnyBackend::$upper_backend, config) {
+                            if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                                 $upper_backend::query(config)?
                             } else {
                                 Default::default()
@@ -209,11 +207,4 @@ macro_rules! options {
         }
     }
 }
-apply_public_backends!(options);
-
-fn is_enabled(backend: AnyBackend, config: &Config) -> bool {
-    !config
-        .disabled_backends
-        .iter()
-        .any(|x| x.to_string().to_lowercase() == backend.to_string().to_lowercase())
-}
+apply_backends!(options);

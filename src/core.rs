@@ -34,9 +34,9 @@ impl MainArguments {
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
         let group_files = Groups::group_files(&group_dir, &hostname, &config)
-            .wrap_err("failed to find group files")?;
+            .wrap_err("finding group files")?;
         let groups = Groups::load(&group_files)
-            .wrap_err("failed to load package install options from groups")?;
+            .wrap_err("loading package options from group files")?;
 
         let required = groups.to_options().map_required(&config)?;
 
@@ -186,7 +186,7 @@ impl InstallCommand {
                 }
             };
         }
-        apply_public_backends!(x);
+        apply_backends!(x);
 
         Ok(())
     }
@@ -347,7 +347,7 @@ fn missing(required: &Options, config: &Config) -> Result<Options> {
             )*
         };
     }
-    apply_public_backends!(x);
+    apply_backends!(x);
 
     Ok(missing)
 }

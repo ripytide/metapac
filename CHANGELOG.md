@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- ‼️ Breaking Change ‼️ the config `disabled_backends` has now been
+  inverted and renamed to `enabled_backends` to prevent everything being
+  uninstalled when adding new backends (like is about to happen with the
+  new `systemd` backend)
+
 ## [0.2.14] - 2025-06-04
 
 ### Fixed

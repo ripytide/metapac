@@ -1,5 +1,5 @@
 pub use crate::backends::all::{AnyBackend, Options, PackageIds, RawOptions, RawPackageIds};
-pub(crate) use crate::backends::apply_public_backends;
+pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
 pub use crate::backends::arch::{Arch, ArchOptions};
 pub use crate::backends::brew::{Brew, BrewOptions};
