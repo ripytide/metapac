@@ -33,10 +33,10 @@ impl MainArguments {
         let group_dir = config_dir.join("groups/");
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
-        let group_files = Groups::group_files(&group_dir, &hostname, &config)
-            .wrap_err("finding group files")?;
-        let groups = Groups::load(&group_files)
-            .wrap_err("loading package options from group files")?;
+        let group_files =
+            Groups::group_files(&group_dir, &hostname, &config).wrap_err("finding group files")?;
+        let groups =
+            Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
         let required = groups.to_options().map_required(&config)?;
 
