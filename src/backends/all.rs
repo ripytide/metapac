@@ -204,15 +204,7 @@ macro_rules! packages {
 
             pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    for package in self.$lower_backend.values() {
-                        package.run_before_uninstall()?;
-                    }
-
                     $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config)?;
-
-                    for package in self.$lower_backend.values() {
-                        package.run_after_uninstall()?;
-                    }
                 )*
 
                 Ok(())
