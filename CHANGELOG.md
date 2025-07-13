@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.3.1] - 2025-07-13
+
+### Removed
+
+- I managed to make it about 30 minutes after releasing `v0.3.0` before
+  realizing that the `before_uninstall` and `after_uninstall` hooks were
+  completely useless since to uninstall a package your remove it from you
+  group files in which case there will be no hooks to execute! These hooks
+  have now been removed (#92).
+
 ## [0.3.0] - 2025-07-13
 
 ### Added
@@ -15,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `after_install`, `before_uninstall` and `after_uninstall` have been
   added. This allows the automatic enabling of `systemd` services for arch
   packages by using the `after_install` hook. See the `README.md` for
-  examples.
+  examples (#91).
 
 ### Changed
 

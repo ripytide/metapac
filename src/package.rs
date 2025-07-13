@@ -36,26 +36,6 @@ impl<T> Package<T> {
             Ok(())
         }
     }
-    pub fn run_before_uninstall(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.before_uninstall
-        {
-            log::info!("running before_uninstall hook for {} package", self.package);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
-    pub fn run_after_uninstall(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.after_uninstall
-        {
-            log::info!("running after_uninstall hook for {} package", self.package);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
@@ -63,6 +43,4 @@ impl<T> Package<T> {
 pub struct Hooks {
     pub before_install: Option<Vec<String>>,
     pub after_install: Option<Vec<String>>,
-    pub before_uninstall: Option<Vec<String>>,
-    pub after_uninstall: Option<Vec<String>>,
 }
