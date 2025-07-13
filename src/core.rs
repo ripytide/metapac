@@ -252,13 +252,13 @@ impl CleanCommand {
         let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
-            eprintln!("nothing to clean since there are no unmanaged packages");
+            log::info!("nothing to clean since there are no unmanaged packages");
             return Ok(());
         }
 
         println!("{unmanaged}");
 
-        println!("these packages will be uninstalled\n");
+        log::info!("these packages will be uninstalled");
 
         if self.no_confirm {
             log::info!("proceeding without confirmation");
@@ -287,7 +287,7 @@ impl SyncCommand {
 
         println!("{}", missing.to_package_ids());
 
-        println!("these packages will be installed\n");
+        log::info!("these packages will be installed");
 
         if self.no_confirm {
             log::info!("proceeding without confirmation");
@@ -310,7 +310,7 @@ impl UnmanagedCommand {
         let unmanaged = unmanaged(required, config)?;
 
         if unmanaged.is_empty() {
-            eprintln!("no unmanaged packages");
+            log::info!("no unmanaged packages");
         } else {
             println!("{}", toml::to_string_pretty(&unmanaged)?);
         }
