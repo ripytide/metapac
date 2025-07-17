@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.3.2] - 2025-07-17
+
+### Fixed
+
+- Fixed a bug with packages not being set to be explicitly installed if
+  they were previously installed as a dependency (reported in #93,
+  introduced by #87, fixed in #94).
+
 ## [0.3.1] - 2025-07-13
 
 ### Removed
