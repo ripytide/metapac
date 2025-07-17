@@ -146,7 +146,6 @@ impl Backend for Arch {
                     config.arch_package_manager.as_command(),
                     "--sync",
                     "--asexplicit",
-                    "--needed",
                 ]
                 .into_iter()
                 .chain(Some("--no_confirm").filter(|_| no_confirm))
@@ -204,7 +203,11 @@ impl Backend for Arch {
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(
-                [config.arch_package_manager.as_command(), "-Sc"],
+                [
+                    config.arch_package_manager.as_command(),
+                    "--sync",
+                    "--clean",
+                ],
                 Perms::Same,
             )
         })
