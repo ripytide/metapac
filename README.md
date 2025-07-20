@@ -284,6 +284,17 @@ xbps = [
 ]
 ```
 
+## Similar Projects
+
+- [decman](https://github.com/kiviktnm/decman): written in python,
+  archlinux specific, supports installing dotfiles
+- [declaro](https://github.com/mantinhas/declaro): written in shell script,
+  currently provides support for `apt`, `dnf`, `pacman`, `paru` and `yay`
+  but is extensible
+- [pacdef](https://github.com/steven-omaha/pacdef): written in rust, custom
+  file format, unmaintained, supported `pacman`, `apt`, `dnf`, `flatpak`,
+  `pip`, `cargo`, `rustup` and `xbps`
+
 ## Credits
 
 This project was forked from <https://github.com/steven-omaha/pacdef> so
