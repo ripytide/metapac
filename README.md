@@ -126,20 +126,24 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull requests and issues
 for additional backends are always welcome!
 
-| Backend   | Notes                                 |
-| --------- | ------------------------------------- |
-| `arch`    | see the `arch_package_manager` config |
-| `apt`     |                                       |
-| `brew`    |                                       |
-| `cargo`   |                                       |
-| `dnf`     |                                       |
-| `flatpak` |                                       |
-| `pipx`    |                                       |
-| `snap`    |                                       |
-| `uv`      |                                       |
-| `vscode`  | see the `vscode_variant` config       |
-| `winget`  |                                       |
-| `xbps`    |                                       |
+| Backend   | Notes                                                                    |
+| --------- | ------------------------------------------------------------------------ |
+| `arch`    | see the `arch_package_manager` config                                    |
+| `apt`     |                                                                          |
+| `brew`    |                                                                          |
+| `bun`     |                                                                          |
+| `cargo`   |                                                                          |
+| `dnf`     |                                                                          |
+| `flatpak` |                                                                          |
+| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
+| `pipx`    |                                                                          |
+| `pnpm`    | you might need to first run `pnpm setup`                                 |
+| `snap`    |                                                                          |
+| `uv`      |                                                                          |
+| `vscode`  | see the `vscode_variant` config                                          |
+| `winget`  |                                                                          |
+| `xbps`    |                                                                          |
+| `yarn`    |                                                                          |
 
 ## Config
 
@@ -243,6 +247,10 @@ brew = [
  "metapac",
  { package = "metapac" }
 ]
+bun = [
+ "metapac",
+ { package = "metapac" }
+]
 cargo = [
  "metapac",
  # see cargo docs for info on the options
@@ -257,7 +265,15 @@ flatpak = [
  "metapac",
  { package = "metapac", options = { remote = "flathub", systemwide = false } },
 ]
+npm = [
+ "metapac",
+ { package = "metapac" }
+]
 pipx = [
+ "metapac",
+ { package = "metapac" },
+]
+pnpm = [
  "metapac",
  { package = "metapac" },
 ]
@@ -287,7 +303,38 @@ xbps = [
  "metapac",
  { package = "metapac" },
 ]
+yarn = [
+ "metapac",
+ { package = "metapac" },
+]
 ```
+
+## Wishlist
+
+Here is a list of package managers we would like to support along with any
+reasons why we can't yet if any. Feel free to add to this list if you know
+of any other package managers we should be aware of.
+
+- [`cgwin`](https://cygwin.com/): no attempt made yet
+- [`choco`](https://github.com/chocolatey/choco): no attempt made yet
+- [`deno`](https://github.com/denoland/deno): can't list installed global
+  packages <https://github.com/denoland/deno/discussions/28230>
+- [`guix`](https://codeberg.org/guix/guix): no attempt made yet
+- [`nix`](https://github.com/NixOS/nix): no attempt made yet
+- [`pip`](https://pypi.org/project/pip/): we support `pipx` instead which
+  only allows you to install cli programs which makes sense for a global
+  package manager
+- [`pkg`](https://github.com/freebsd/pkg): no attempt made yet
+- [`ports`](https://github.com/openbsd/ports): no attempt made yet
+- [`ports`](https://github.com/NetBSD/pkgsrc): no attempt made yet
+- [`scoop`](https://github.com/ScoopInstaller/Scoop): no attempt made yet
+- [`sdk`](https://github.com/sdkman/sdkman-cli): can't list installed
+  packages <https://github.com/sdkman/sdkman-cli/issues/466>. The project
+  is being rewritten in rust with the intention to implement the command in
+  the new version <https://github.com/sdkman/sdkman-cli-native>, also see
+  <https://github.com/ripytide/metapac/issues/86>
+- [`yum`](https://github.com/rpm-software-management/yum): project
+  deprecated in favor of `dnf`
 
 ## Similar Projects
 

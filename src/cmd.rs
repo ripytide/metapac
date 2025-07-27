@@ -39,12 +39,11 @@ where
         } else {
             Stdio::null()
         })
-        .output()?;
+        .output();
 
-    if output.status.success() {
-        Ok(String::from_utf8(output.stdout)?)
-    } else {
-        Err(eyre!("command failed: {:?}", args.into_iter().join(" ")))
+    match output {
+        Ok(output) if output.status.success() => Ok(String::from_utf8(output.stdout)?),
+        _ => Err(eyre!("command failed: {:?}", args.into_iter().join(" "))),
     }
 }
 
@@ -74,12 +73,11 @@ where
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
-        .status()?;
+        .status();
 
-    if status.success() {
-        Ok(())
-    } else {
-        Err(eyre!("command failed: {:?}", args.into_iter().join(" ")))
+    match status {
+        Ok(status) if status.success() => Ok(()),
+        _ => Err(eyre!("command failed: {:?}", args.into_iter().join(" "))),
     }
 }
 

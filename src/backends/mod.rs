@@ -2,15 +2,19 @@ pub mod all;
 pub mod apt;
 pub mod arch;
 pub mod brew;
+pub mod bun;
 pub mod cargo;
 pub mod dnf;
 pub mod flatpak;
+pub mod npm;
 pub mod pipx;
+pub mod pnpm;
 pub mod snap;
 pub mod uv;
 pub mod vscode;
 pub mod winget;
 pub mod xbps;
+pub mod yarn;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -23,15 +27,19 @@ macro_rules! apply_backends {
         (Arch, arch),
         (Apt, apt),
         (Brew, brew),
+        (Bun, bun),
         (Cargo, cargo),
         (Dnf, dnf),
         (Flatpak, flatpak),
+        (Npm, npm),
         (Pipx, pipx),
+        (Pnpm, pnpm),
         (Snap, snap),
         (Uv, uv),
         (VsCode, vscode),
         (WinGet, winget),
-        (Xbps, xbps) }
+        (Xbps, xbps),
+        (Yarn, yarn) }
     };
 }
 pub(crate) use apply_backends;

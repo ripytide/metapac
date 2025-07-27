@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.0] - 2025-07-27
+
+Another big release 🚢, with no breaking changes this time 🎉🎉. In this
+release we welcome the javascript ecosystem of package managers into
+`metapac`. With an exception for no `deno` support yet since it doesn't yet
+support listing global packages (see
+<https://github.com/denoland/deno/discussions/28230>)
+
+### Added
+
+- Added the `bun` backend (#95)
+- Added the `npm` backend (#95)
+- Added the `pnpm` backend (#95)
+- Added the `yarn` backend (#95)
+- Added a wishlist section to the documentation for listing package
+  managers we might want to one day support
+- Added relevant XKCDs to the readme since it feels like a right of passage
+  and to not show them would be worse
+
 ## [0.3.2] - 2025-07-17
 
 ### Fixed
@@ -26,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   have now been removed (#92).
 
 ## [0.3.0] - 2025-07-13
+
+This is the biggest release `metapac` has had in quite a while including
+two breaking changes that will require changes to most people's config and
+group files. As such I've bumped the minor version number. And so begins
+the `0.3.x` journey for `metapac` :ship: and farewell `0.2.x` :wave:
 
 ### Added
 
