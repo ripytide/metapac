@@ -30,7 +30,7 @@ impl Backend for Bun {
         }
 
         let output =
-            match run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, false) {
+            match run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, true) {
                 Ok(output) => output,
                 //unfortunately when there are no global packages installed bun returns an error rather
                 //than saying zero packages
@@ -46,27 +46,35 @@ impl Backend for Bun {
 
         let mut packages = BTreeMap::new();
         for line in &lines[1..] {
-            let parts = line.split_whitespace().collect::<Vec<_>>();
-            if parts.len() != 2 {
-                return Err(eyre!("unexpected output"));
+            let tree_parts = line.split_whitespace().collect::<Vec<_>>();
+            if tree_parts.len() != 2 {
+                return Err(eyre!("unexpected tree parts"));
             }
 
-            let name_version = parts[1].split('@').collect::<Vec<_>>();
-            if name_version.len() != 2 {
-                return Err(eyre!("unexpected output"));
-            }
+            let name = if tree_parts[1].starts_with("@") {
+                let package_parts = tree_parts[1].split('@').collect::<Vec<_>>();
 
-            packages.insert(name_version[0].to_string(), BunOptions {});
+                if package_parts.len() != 3 {
+                    return Err(eyre!("unexpected package parts"));
+                }
+
+                format!("@{}", package_parts[1])
+            } else {
+                let package_parts = tree_parts[1].split('@').collect::<Vec<_>>();
+                if package_parts.len() != 2 {
+                    return Err(eyre!("unexpected package parts"));
+                }
+
+                package_parts[0].to_string()
+            };
+
+            packages.insert(name, BunOptions {});
         }
 
         Ok(packages)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
-        _: bool,
-        _: &Config,
-    ) -> Result<()> {
+    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["bun", "install", "--global"]

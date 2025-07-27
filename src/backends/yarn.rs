@@ -35,10 +35,13 @@ impl Backend for Yarn {
         //have binaries, see https://github.com/yarnpkg/yarn/issues/5725
         //
         //instead we manually read the global `package.json` file
-        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Sudo, true)?;
+        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, true)?;
+        let dir = dir.lines().next().ok_or(eyre!("error getting global package directory"))?;
+
         let package_file = Path::new(&dir).join("package.json");
 
         if !package_file.exists() {
+            dbg!(&package_file);
             return Ok(BTreeMap::new());
         }
 
