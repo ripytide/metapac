@@ -1,7 +1,6 @@
 pub mod all;
 pub mod apt;
 pub mod arch;
-pub mod yarn;
 pub mod brew;
 pub mod bun;
 pub mod cargo;
@@ -15,6 +14,7 @@ pub mod uv;
 pub mod vscode;
 pub mod winget;
 pub mod xbps;
+pub mod yarn;
 
 use std::collections::{BTreeMap, BTreeSet};
 

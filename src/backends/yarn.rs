@@ -36,7 +36,10 @@ impl Backend for Yarn {
         //
         //instead we manually read the global `package.json` file
         let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, true)?;
-        let dir = dir.lines().next().ok_or(eyre!("error getting global package directory"))?;
+        let dir = dir
+            .lines()
+            .next()
+            .ok_or(eyre!("error getting global package directory"))?;
 
         let package_file = Path::new(&dir).join("package.json");
 
