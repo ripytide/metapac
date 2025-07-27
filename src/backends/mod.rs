@@ -2,6 +2,7 @@ pub mod all;
 pub mod apt;
 pub mod arch;
 pub mod brew;
+pub mod bun;
 pub mod cargo;
 pub mod dnf;
 pub mod flatpak;
@@ -23,6 +24,7 @@ macro_rules! apply_backends {
         (Arch, arch),
         (Apt, apt),
         (Brew, brew),
+        (Bun, bun),
         (Cargo, cargo),
         (Dnf, dnf),
         (Flatpak, flatpak),

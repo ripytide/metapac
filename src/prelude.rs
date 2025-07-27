@@ -4,6 +4,7 @@ pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
 pub use crate::backends::arch::{Arch, ArchOptions};
 pub use crate::backends::brew::{Brew, BrewOptions};
+pub use crate::backends::bun::{Bun, BunOptions};
 pub use crate::backends::cargo::{Cargo, CargoOptions};
 pub use crate::backends::dnf::{Dnf, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};

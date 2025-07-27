@@ -126,6 +126,7 @@ for additional backends are always welcome!
 | `arch`    | see the `arch_package_manager` config |
 | `apt`     |                                       |
 | `brew`    |                                       |
+| `bun`     |                                       |
 | `cargo`   |                                       |
 | `dnf`     |                                       |
 | `flatpak` |                                       |
@@ -235,6 +236,10 @@ apt = [
  { package = "metapac" }
 ]
 brew = [
+ "metapac",
+ { package = "metapac" }
+]
+bun = [
  "metapac",
  { package = "metapac" }
 ]
