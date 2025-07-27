@@ -121,22 +121,23 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull requests and issues
 for additional backends are always welcome!
 
-| Backend   | Notes                                 |
-| --------- | ------------------------------------- |
-| `arch`    | see the `arch_package_manager` config |
-| `apt`     |                                       |
-| `brew`    |                                       |
-| `bun`     |                                       |
-| `cargo`   |                                       |
-| `dnf`     |                                       |
-| `flatpak` |                                       |
-| `npm`     |                                       |
-| `pipx`    |                                       |
-| `snap`    |                                       |
-| `uv`      |                                       |
-| `vscode`  | see the `vscode_variant` config       |
-| `winget`  |                                       |
-| `xbps`    |                                       |
+| Backend   | Notes                                                                    |
+| --------- | ------------------------------------------------------------------------ |
+| `arch`    | see the `arch_package_manager` config                                    |
+| `apt`     |                                                                          |
+| `brew`    |                                                                          |
+| `bun`     |                                                                          |
+| `cargo`   |                                                                          |
+| `dnf`     |                                                                          |
+| `flatpak` |                                                                          |
+| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
+| `pipx`    |                                                                          |
+| `pnpm`    | you might need to first run `pnpm setup`                                 |
+| `snap`    |                                                                          |
+| `uv`      |                                                                          |
+| `vscode`  | see the `vscode_variant` config                                          |
+| `winget`  |                                                                          |
+| `xbps`    |                                                                          |
 
 ## Config
 
@@ -263,6 +264,10 @@ npm = [
  { package = "metapac" }
 ]
 pipx = [
+ "metapac",
+ { package = "metapac" },
+]
+pnpm = [
  "metapac",
  { package = "metapac" },
 ]
