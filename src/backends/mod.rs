@@ -6,6 +6,7 @@ pub mod bun;
 pub mod cargo;
 pub mod dnf;
 pub mod flatpak;
+pub mod npm;
 pub mod pipx;
 pub mod snap;
 pub mod uv;
@@ -28,6 +29,7 @@ macro_rules! apply_backends {
         (Cargo, cargo),
         (Dnf, dnf),
         (Flatpak, flatpak),
+        (Npm, npm),
         (Pipx, pipx),
         (Snap, snap),
         (Uv, uv),

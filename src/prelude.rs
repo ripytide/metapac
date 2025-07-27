@@ -8,6 +8,7 @@ pub use crate::backends::bun::{Bun, BunOptions};
 pub use crate::backends::cargo::{Cargo, CargoOptions};
 pub use crate::backends::dnf::{Dnf, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
+pub use crate::backends::npm::{Npm, NpmOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
 pub use crate::backends::snap::{Snap, SnapOptions};
 pub use crate::backends::uv::{Uv, UvOptions};

@@ -130,6 +130,7 @@ for additional backends are always welcome!
 | `cargo`   |                                       |
 | `dnf`     |                                       |
 | `flatpak` |                                       |
+| `npm`     |                                       |
 | `pipx`    |                                       |
 | `snap`    |                                       |
 | `uv`      |                                       |
@@ -256,6 +257,10 @@ dnf = [
 flatpak = [
  "metapac",
  { package = "metapac", options = { remote = "flathub", systemwide = false } },
+]
+npm = [
+ "metapac",
+ { package = "metapac" }
 ]
 pipx = [
  "metapac",
