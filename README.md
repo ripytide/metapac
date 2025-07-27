@@ -6,6 +6,11 @@ multi-backend declarative package manager
 multiple machines. It also makes setting up a new system with your
 preferred packages from your preferred package managers much easier.
 
+## Obligatory XKCDs
+
+[<img src="https://imgs.xkcd.com/comics/standards_2x.png" title="How Standards Proliferate" height="300"/>](https://xkcd.com/927/)
+[<img src="https://imgs.xkcd.com/comics/universal_install_script_2x.png" title="Universal Install Script" height="300"/>](https://xkcd.com/1654/)
+
 ## Installation
 
 ### Cargo
