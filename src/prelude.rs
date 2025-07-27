@@ -16,6 +16,7 @@ pub use crate::backends::uv::{Uv, UvOptions};
 pub use crate::backends::vscode::{VsCode, VsCodeOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
+pub use crate::backends::yarn::{Yarn, YarnOptions};
 pub use crate::cli::{
     AddCommand, CleanCommand, InstallCommand, MainArguments, MainSubcommand, RemoveCommand,
     SyncCommand, UninstallCommand, UnmanagedCommand,

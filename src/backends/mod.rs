@@ -1,6 +1,7 @@
 pub mod all;
 pub mod apt;
 pub mod arch;
+pub mod yarn;
 pub mod brew;
 pub mod bun;
 pub mod cargo;
@@ -37,7 +38,8 @@ macro_rules! apply_backends {
         (Uv, uv),
         (VsCode, vscode),
         (WinGet, winget),
-        (Xbps, xbps) }
+        (Xbps, xbps),
+        (Yarn, yarn) }
     };
 }
 pub(crate) use apply_backends;

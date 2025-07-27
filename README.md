@@ -138,6 +138,7 @@ for additional backends are always welcome!
 | `vscode`  | see the `vscode_variant` config                                          |
 | `winget`  |                                                                          |
 | `xbps`    |                                                                          |
+| `yarn`    |                                                                          |
 
 ## Config
 
@@ -294,6 +295,10 @@ winget = [
  { package = "metapac" },
 ]
 xbps = [
+ "metapac",
+ { package = "metapac" },
+]
+yarn = [
  "metapac",
  { package = "metapac" },
 ]
