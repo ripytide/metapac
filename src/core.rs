@@ -3,13 +3,14 @@ use std::fs::{self, File, read_to_string};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use color_eyre::Result;
 use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
+use color_eyre::{Result, eyre};
 use dialoguer::Confirm;
+use itertools::Itertools;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
-use crate::cli::{BackendsCommand, CleanCacheCommand};
+use crate::cli::{BackendsCommand, CleanCacheCommand, UpdateCommand};
 use crate::prelude::*;
 
 impl MainArguments {
@@ -71,6 +72,7 @@ impl MainArguments {
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
             MainSubcommand::Backends(found_backends) => found_backends.run(&config),
             MainSubcommand::CleanCache(backends) => backends.run(&config),
+            MainSubcommand::Update(update) => update.run(&config),
         }
     }
 }
@@ -356,6 +358,42 @@ impl CleanCacheCommand {
         }
 
         log::info!("cleaned caches of backends: {backends:?}");
+
+        Ok(())
+    }
+}
+
+impl UpdateCommand {
+    fn run(&self, config: &Config) -> Result<()> {
+        let enabled_backends: Vec<AnyBackend> =
+            config.enabled_backends.clone().into_iter().collect();
+
+        let backends: Vec<AnyBackend> = match &self.backends {
+            Some(backends) => {
+                backends.iter().map(|x|
+                     {
+                         let backend = AnyBackend::from_str(x)
+                             .or(Err(eyre!("{x:?} is not a valid backend, run `metapac backends` to see a list of valid backends")));
+
+                         if let Result::Ok(b) = backend {
+                             if !enabled_backends.contains(&b) {
+                                 return Err(eyre!("{b} is not a configured backend"))
+                             }
+                         }
+                         backend
+                     }
+                ).collect::<Result<Vec<AnyBackend>, _>>()?
+            }
+            None => enabled_backends,
+        };
+
+        for backend in backends.iter() {
+            log::info!("updating all packages for {backend} backend");
+
+            backend.update(config)?
+        }
+
+        log::info!("updated packages for backends: {backends:?}");
 
         Ok(())
     }

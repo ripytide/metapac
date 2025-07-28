@@ -34,6 +34,7 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
+    Update(UpdateCommand),
 }
 
 #[derive(Args)]
@@ -136,5 +137,12 @@ pub struct BackendsCommand {}
 #[command(visible_alias("e"))]
 /// clean the caches of all the backends, or the just those specified
 pub struct CleanCacheCommand {
+    pub backends: Option<Vec<String>>,
+}
+
+#[derive(Args)]
+#[command(visible_alias("up"))]
+/// updates installed packages for all backends, or the just those specified
+pub struct UpdateCommand {
     pub backends: Option<Vec<String>>,
 }

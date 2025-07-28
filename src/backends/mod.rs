@@ -65,4 +65,8 @@ pub trait Backend {
     fn clean_cache(config: &Config) -> Result<()>;
 
     fn version(config: &Config) -> Result<String>;
+
+    fn update(config: &Config) -> Result<()> {
+        color_eyre::eyre::bail!("Updating is not yet implemented for this backend")
+    }
 }
