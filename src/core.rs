@@ -3,10 +3,9 @@ use std::fs::{self, File, read_to_string};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use color_eyre::Result;
 use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
-use color_eyre::{Result, eyre};
 use dialoguer::Confirm;
-use itertools::Itertools;
 use strum::IntoEnumIterator;
 use toml_edit::{Array, DocumentMut, Item, Value};
 
