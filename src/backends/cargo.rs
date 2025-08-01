@@ -27,6 +27,8 @@ pub struct CargoOptions {
     no_default_features: bool,
     #[serde_inline_default(CargoOptions::default().features)]
     features: Vec<String>,
+    #[serde_inline_default(CargoOptions::default().locked)]
+    locked: bool,
 }
 
 impl Backend for Cargo {
@@ -65,6 +67,7 @@ impl Backend for Cargo {
             run_command(
                 ["cargo", "install"]
                     .into_iter()
+                    .chain(Some("--locked").into_iter().filter(|_| options.locked))
                     .chain(Some("--git").into_iter().filter(|_| options.git.is_some()))
                     .chain(options.git.as_deref())
                     .chain(
@@ -153,6 +156,8 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
                 .map(|value| value.as_str().unwrap().to_string())
                 .collect();
 
+            let locked = false;
+
             (
                 name.to_string(),
                 CargoOptions {
@@ -161,6 +166,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
                     all_features,
                     no_default_features,
                     features,
+                    locked,
                 },
             )
         })
