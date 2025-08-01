@@ -332,7 +332,6 @@ of any other package managers we should be aware of.
 - [`pkg`](https://github.com/freebsd/pkg): no attempt made yet
 - [`ports`](https://github.com/openbsd/ports): no attempt made yet
 - [`pkgsrc`](https://github.com/NetBSD/pkgsrc): no attempt made yet
-- [`scoop`](https://github.com/ScoopInstaller/Scoop): no attempt made yet
 - [`sdk`](https://github.com/sdkman/sdkman-cli): can't list installed
   packages <https://github.com/sdkman/sdkman-cli/issues/466>. The project
   is being rewritten in rust with the intention to implement the command in
