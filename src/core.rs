@@ -7,7 +7,7 @@ use color_eyre::Result;
 use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
-use toml_edit::{Array, DocumentMut, Item, Value};
+use toml_edit::{DocumentMut, Entry, Item, Value};
 
 use crate::cli::{BackendsCommand, CleanCacheCommand};
 use crate::prelude::*;
@@ -120,16 +120,23 @@ impl AddCommand {
             .parse::<DocumentMut>()
             .wrap_err(eyre!("parsing group file {}@{group_file:?}", &self.group))?;
 
-        doc.entry(&self.backend.to_string().to_lowercase())
-            .or_insert(Item::Value(Value::Array(Array::from_iter(
-                packages.clone(),
-            ))))
-            .as_array_mut()
-            .wrap_err(eyre!(
-                "the {} backend in the {group_file:?} group file has a non-array value",
-                self.backend
-            ))?
-            .extend(packages);
+        let entry = doc.entry(&self.backend.to_string().to_lowercase());
+        match entry {
+            Entry::Vacant(item) => {
+                item.insert(Item::Value(Value::Array(toml_edit::Array::from_iter(
+                    packages.clone(),
+                ))));
+            }
+            Entry::Occupied(mut item) => {
+                item.get_mut()
+                    .as_array_mut()
+                    .wrap_err(eyre!(
+                        "the {} backend in the {group_file:?} group file has a non-array value",
+                        self.backend
+                    ))?
+                    .extend(packages);
+            }
+        }
 
         fs::write(group_file.clone(), doc.to_string())
             .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
