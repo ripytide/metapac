@@ -9,6 +9,7 @@ pub mod flatpak;
 pub mod npm;
 pub mod pipx;
 pub mod pnpm;
+pub mod scoop;
 pub mod snap;
 pub mod uv;
 pub mod vscode;
@@ -34,6 +35,7 @@ macro_rules! apply_backends {
         (Npm, npm),
         (Pipx, pipx),
         (Pnpm, pnpm),
+        (Scoop, scoop),
         (Snap, snap),
         (Uv, uv),
         (VsCode, vscode),

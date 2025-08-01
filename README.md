@@ -138,6 +138,7 @@ for additional backends are always welcome!
 | `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
 | `pipx`    |                                                                          |
 | `pnpm`    | you might need to first run `pnpm setup`                                 |
+| `scoop`   |                                                                          |
 | `snap`    |                                                                          |
 | `uv`      |                                                                          |
 | `vscode`  | see the `vscode_variant` config                                          |
@@ -277,6 +278,10 @@ pnpm = [
  "metapac",
  { package = "metapac" },
 ]
+scoop = [
+ "metapac",
+ { package = "metapac" },
+]
 snap = [
  "metapac",
  { package = "metapac" },
@@ -327,7 +332,6 @@ of any other package managers we should be aware of.
 - [`pkg`](https://github.com/freebsd/pkg): no attempt made yet
 - [`ports`](https://github.com/openbsd/ports): no attempt made yet
 - [`pkgsrc`](https://github.com/NetBSD/pkgsrc): no attempt made yet
-- [`scoop`](https://github.com/ScoopInstaller/Scoop): no attempt made yet
 - [`sdk`](https://github.com/sdkman/sdkman-cli): can't list installed
   packages <https://github.com/sdkman/sdkman-cli/issues/466>. The project
   is being rewritten in rust with the intention to implement the command in
