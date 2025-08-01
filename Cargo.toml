@@ -10,6 +10,9 @@ keywords = ["package-manager", "linux", "declarative", "cli"]
 categories = ["command-line-utilities"]
 authors = ["James Forster <james.forsterer@gmail.com>", "Md Isfarul Haque <md-isfarul-haque@proton.me"]
 
+[package.metadata.release]
+allow-branch = ["main"]
+
 [lints.rustdoc]
 broken_intra_doc_links = "allow"
 
