@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed a bug with packages being added twice when the backend didn't yet
+  exist in a group file with the `metapac add` command. Fixed in (#99),
+  thanks @DominicD!
+
 ## [0.4.0] - 2025-07-27
 
 Another big release 🚢, with no breaking changes this time 🎉🎉. In this
