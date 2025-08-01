@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added the `scoop` backend (#101), thanks @jsfr!
+
 ### Fixed
 
 - Fixed a bug with packages being added twice when the backend didn't yet
