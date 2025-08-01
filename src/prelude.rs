@@ -11,6 +11,7 @@ pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
 pub use crate::backends::npm::{Npm, NpmOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
 pub use crate::backends::pnpm::{Pnpm, PnpmOptions};
+pub use crate::backends::scoop::{Scoop, ScoopGetOptions};
 pub use crate::backends::snap::{Snap, SnapOptions};
 pub use crate::backends::uv::{Uv, UvOptions};
 pub use crate::backends::vscode::{VsCode, VsCodeOptions};

@@ -138,6 +138,7 @@ for additional backends are always welcome!
 | `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
 | `pipx`    |                                                                          |
 | `pnpm`    | you might need to first run `pnpm setup`                                 |
+| `scoop`   |                                                                          |
 | `snap`    |                                                                          |
 | `uv`      |                                                                          |
 | `vscode`  | see the `vscode_variant` config                                          |
@@ -274,6 +275,10 @@ pipx = [
  { package = "metapac" },
 ]
 pnpm = [
+ "metapac",
+ { package = "metapac" },
+]
+scoop = [
  "metapac",
  { package = "metapac" },
 ]
