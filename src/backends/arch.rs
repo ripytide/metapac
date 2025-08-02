@@ -220,4 +220,17 @@ impl Backend for Arch {
             false,
         )
     }
+
+    fn update(config: &Config) -> Result<()> {
+        run_command(
+            [
+                config.arch_package_manager.as_command(),
+                "--sync",
+                "--refresh",
+                "--sysupgrade",
+            ],
+            config.arch_package_manager.change_perms(),
+        )?;
+        Ok(())
+    }
 }

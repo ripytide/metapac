@@ -51,6 +51,11 @@ macro_rules! any {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
                 }
             }
+            pub fn update(&self, config: &Config) -> Result<()> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::update(config), )*
+                }
+            }
         }
     };
 }
