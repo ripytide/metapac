@@ -43,8 +43,16 @@ where
 
     match output {
         Ok(output) if output.status.success() => Ok(String::from_utf8(output.stdout)?),
-        Ok(output) => Err(eyre!("command failed: {:?}, exit_status_code: {:?}", args.into_iter().join(" "), output.status)),
-        Err(err) => Err(eyre!("command failed: {:?}, error: {:?}", args.into_iter().join(" "), err)),
+        Ok(output) => Err(eyre!(
+            "command failed: {:?}, exit_status_code: {:?}",
+            args.into_iter().join(" "),
+            output.status
+        )),
+        Err(err) => Err(eyre!(
+            "command failed: {:?}, error: {:?}",
+            args.into_iter().join(" "),
+            err
+        )),
     }
 }
 
@@ -78,8 +86,16 @@ where
 
     match status {
         Ok(status) if status.success() => Ok(()),
-        Ok(status) => Err(eyre!("command failed: {:?}, exit_status_code: {:?}", args.into_iter().join(" "), status)),
-        Err(err) => Err(eyre!("command failed: {:?}, error: {:?}", args.into_iter().join(" "), err)),
+        Ok(status) => Err(eyre!(
+            "command failed: {:?}, exit_status_code: {:?}",
+            args.into_iter().join(" "),
+            status
+        )),
+        Err(err) => Err(eyre!(
+            "command failed: {:?}, error: {:?}",
+            args.into_iter().join(" "),
+            err
+        )),
     }
 }
 

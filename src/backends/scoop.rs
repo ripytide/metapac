@@ -35,15 +35,12 @@ impl Backend for Scoop {
         let mut packages = BTreeMap::new();
         //ignore the first four and the last lines
         for line in lines.into_iter().skip(4).rev().skip(1).rev() {
-                let parts = line.split_whitespace().collect::<Vec<_>>();
+            let parts = line.split_whitespace().collect::<Vec<_>>();
 
-                let name = parts.first().ok_or(eyre!("unexpected output"))?;
-                let bucket = parts.get(2).ok_or(eyre!("unexpected output"))?;
+            let name = parts.first().ok_or(eyre!("unexpected output"))?;
+            let bucket = parts.get(2).ok_or(eyre!("unexpected output"))?;
 
-                packages.insert(
-                    format!("{bucket}/{name}"),
-                    Self::Options {},
-                );
+            packages.insert(format!("{bucket}/{name}"), Self::Options {});
         }
 
         Ok(packages)
