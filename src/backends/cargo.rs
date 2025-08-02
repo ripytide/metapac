@@ -156,8 +156,6 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
                 .map(|value| value.as_str().unwrap().to_string())
                 .collect();
 
-            let locked = false;
-
             (
                 name.to_string(),
                 CargoOptions {
@@ -166,7 +164,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
                     all_features,
                     no_default_features,
                     features,
-                    locked,
+                    locked: false, //cargo does not track if the install happened with --locked
                 },
             )
         })
