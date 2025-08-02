@@ -148,7 +148,7 @@ impl Backend for Arch {
                     "--asexplicit",
                 ]
                 .into_iter()
-                .chain(Some("--no_confirm").filter(|_| no_confirm))
+                .chain(Some("--noconfirm").filter(|_| no_confirm))
                 .chain(packages.keys().map(String::as_str)),
                 config.arch_package_manager.change_perms(),
             )?;
