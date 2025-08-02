@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -28,25 +29,24 @@ impl Backend for Scoop {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(
-            [
-                "scoop.cmd",
-                "list",
-            ],
-            Perms::Same,
-            false,
-        )?;
+        let output = run_command_for_stdout(["scoop.cmd", "list"], Perms::Same, false)?;
+        let lines = output.lines().collect::<Vec<_>>();
 
-        Ok(output
-            .lines()
-            .skip(4)
-            .map(|x| {
-                (
-                    x.split(" ").next().unwrap().to_string(),
+        let mut packages = BTreeMap::new();
+        //ignore the first four and the last lines
+        for line in lines.into_iter().skip(4).rev().skip(1).rev() {
+                let parts = line.split_whitespace().collect::<Vec<_>>();
+
+                let name = parts.first().ok_or(eyre!("unexpected output"))?;
+                let bucket = parts.get(2).ok_or(eyre!("unexpected output"))?;
+
+                packages.insert(
+                    format!("{bucket}/{name}"),
                     Self::Options {},
-                )
-            })
-            .collect())
+                );
+        }
+
+        Ok(packages)
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
@@ -81,14 +81,7 @@ impl Backend for Scoop {
     }
 
     fn version(_: &Config) -> Result<String> {
-        let output = run_command_for_stdout(
-            [
-                "scoop.cmd",
-                "--version",
-            ],
-            Perms::Same,
-            false,
-        )?;
+        let output = run_command_for_stdout(["scoop.cmd", "--version"], Perms::Same, false)?;
 
         Ok(output.lines().nth(1).unwrap().to_string())
     }

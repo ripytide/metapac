@@ -126,25 +126,25 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull requests and issues
 for additional backends are always welcome!
 
-| Backend   | Notes                                                                    |
-| --------- | ------------------------------------------------------------------------ |
-| `arch`    | see the `arch_package_manager` config                                    |
-| `apt`     |                                                                          |
-| `brew`    |                                                                          |
-| `bun`     |                                                                          |
-| `cargo`   |                                                                          |
-| `dnf`     |                                                                          |
-| `flatpak` |                                                                          |
-| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
-| `pipx`    |                                                                          |
-| `pnpm`    | you might need to first run `pnpm setup`                                 |
-| `scoop`   |                                                                          |
-| `snap`    |                                                                          |
-| `uv`      |                                                                          |
-| `vscode`  | see the `vscode_variant` config                                          |
-| `winget`  |                                                                          |
-| `xbps`    |                                                                          |
-| `yarn`    |                                                                          |
+| Backend   | Notes                                                                                                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arch`    | see the `arch_package_manager` config                                                                                                                                                                       |
+| `apt`     |                                                                                                                                                                                                             |
+| `brew`    |                                                                                                                                                                                                             |
+| `bun`     |                                                                                                                                                                                                             |
+| `cargo`   |                                                                                                                                                                                                             |
+| `dnf`     |                                                                                                                                                                                                             |
+| `flatpak` |                                                                                                                                                                                                             |
+| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local`                                                                                                                                    |
+| `pipx`    |                                                                                                                                                                                                             |
+| `pnpm`    | you might need to first run `pnpm setup`                                                                                                                                                                    |
+| `scoop`   | doesn't differentiate between implicit and explicit dependencies, you will need to list all packages and their dependencies in your group files (see <https://github.com/ScoopInstaller/Scoop/issues/4276>) |
+| `snap`    |                                                                                                                                                                                                             |
+| `uv`      |                                                                                                                                                                                                             |
+| `vscode`  | see the `vscode_variant` config                                                                                                                                                                             |
+| `winget`  |                                                                                                                                                                                                             |
+| `xbps`    |                                                                                                                                                                                                             |
+| `yarn`    |                                                                                                                                                                                                             |
 
 ## Config
 
@@ -279,8 +279,8 @@ pnpm = [
  { package = "metapac" },
 ]
 scoop = [
- "metapac",
- { package = "metapac" },
+ "main/metapac",
+ { package = "main/metapac" },
 ]
 snap = [
  "metapac",
@@ -301,8 +301,8 @@ vscode = [
  { package = "metapac" },
 ]
 winget = [
- "metapac",
- { package = "metapac" },
+ "ripytide.metapac",
+ { package = "ripytide.metapac" },
 ]
 xbps = [
  "metapac",
