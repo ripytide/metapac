@@ -115,6 +115,13 @@ packages is to enable a package's `systemd` service after it is installed.
 This means you can declaratively maintain your enabled `systemd` services.
 See the [`Group Files`](#group-files) section for some examples.
 
+> [!WARNING]
+> A package's hooks are only run when the package is installed by
+> `metapac`. If a package is already installed then running `metapac sync`
+> will not run the hooks since it will not have to install the package. You
+> can uninstall the package and then re-install it using `metapac sync`
+> ensure the hooks are run.
+
 ### Advanced usage
 
 For more advanced usage read through the remaining sections, especially the
