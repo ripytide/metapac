@@ -50,7 +50,7 @@ impl MainArguments {
                 $(
                     if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         if !required.$lower_backend.is_empty() {
-                            log::warn!("ignoring packages from group files for the {} backend as the backend was not found in the enabled_backends config", AnyBackend::$upper_backend);
+                            log::warn!("ignoring packages from all group files for the {} backend as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
                             required.$lower_backend = Default::default();
                         }
                     }
@@ -89,7 +89,7 @@ impl AddCommand {
             let containing_group_files = groups.contains(self.backend, package);
 
             if !containing_group_files.is_empty() {
-                log::warn!("the {} package for the {} backend is already present in the {containing_group_files:?} group files, so this package has been ignored", package, self.backend);
+                log::warn!("the {package:?} package for the {} backend is already present in the {containing_group_files:?} group files, so this package has been ignored", self.backend);
 
                 false
             } else {
@@ -101,7 +101,7 @@ impl AddCommand {
 
         if config.hostname_groups_enabled && !group_files.contains(&group_file) {
             return Err(eyre!(
-                "hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead.",
+                "hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead using the `--group` option.",
                 &self.group
             ));
         }
