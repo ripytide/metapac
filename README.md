@@ -184,8 +184,7 @@ arch_package_manager = "paru"
 vscode_variant = "code"
 
 # Whether to default to installing flatpak packages systemwide or for the
-# current user. This setting can be overridden on a per-package basis using
-# { systemwide = false|true }.
+# current user. This setting can be overridden on a per-package basis.
 # Default: true
 flatpak_default_systemwide = true
 
@@ -202,7 +201,7 @@ pc = ["example_group"]
 laptop = ["example_group"]
 server = ["example_group"]
 
-# Whether to default to installing cargo packages with --locked option.
+# Whether to default to installing cargo packages with the --locked option.
 # Default: false
 cargo_default_locked = true
 ```
