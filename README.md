@@ -166,7 +166,7 @@ for additional backends are always welcome!
 
 # Backends to enable for most of metapac's behavior. See the README.md or
 # run `metapac backends` for the list of backend names
-# Default: []
+ # Default: []
 enabled_backends = ["arch"]
 
 # Since pacman, pamac, paru, pikaur and yay all operate on the same package database
@@ -201,6 +201,12 @@ hostname_groups_enabled = true
 pc = ["example_group"]
 laptop = ["example_group"]
 server = ["example_group"]
+
+# Whether to default to installing cargo packages with --locked option.
+# This setting can be overriden on a per-paclage base using 
+# { systemwide = false|true }.
+# Default: false
+cargo_default_locked = true
 ```
 
 ## Group Files

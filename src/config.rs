@@ -26,6 +26,8 @@ pub struct Config {
     pub hostname_groups_enabled: bool,
     #[serde_inline_default(Config::default().hostname_groups)]
     pub hostname_groups: BTreeMap<String, Vec<String>>,
+    #[serde_inline_default(Config::default().cargo_default_locked)]
+    pub cargo_default_locked: bool,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -36,6 +38,7 @@ impl Default for Config {
             flatpak_default_systemwide: true,
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),
+            cargo_default_locked: false,
         }
     }
 }
