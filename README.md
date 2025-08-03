@@ -176,21 +176,21 @@ enabled_backends = ["arch"]
 # Default: "pacman"
 arch_package_manager = "paru"
 
-# Since VSCode and VSCodium both operate on the same package database
-# they are mutually exclusive and so you must pick which one you want
-# metapac to use.
-# Must be one of: ["code", "codium"]
-# Default: "code"
-vscode_variant = "code"
+# Whether to default to installing cargo packages with the --locked option.
+# Default: false
+cargo_default_locked = true
 
 # Whether to default to installing flatpak packages systemwide or for the
 # current user. This setting can be overridden on a per-package basis.
 # Default: true
 flatpak_default_systemwide = true
 
-# Whether to default to installing cargo packages with the --locked option.
-# Default: false
-cargo_default_locked = true
+# Since VSCode and VSCodium both operate on the same package database
+# they are mutually exclusive and so you must pick which one you want
+# metapac to use.
+# Must be one of: ["code", "codium"]
+# Default: "code"
+vscode_variant = "code"
 
 # Whether to use the [hostname_groups] config table to decide which
 # group files to use or to use all files in the groups folder.
