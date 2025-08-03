@@ -188,6 +188,10 @@ vscode_variant = "code"
 # Default: true
 flatpak_default_systemwide = true
 
+# Whether to default to installing cargo packages with the --locked option.
+# Default: false
+cargo_default_locked = true
+
 # Whether to use the [hostname_groups] config table to decide which
 # group files to use or to use all files in the groups folder.
 # Default: false
@@ -200,10 +204,6 @@ hostname_groups_enabled = true
 pc = ["example_group"]
 laptop = ["example_group"]
 server = ["example_group"]
-
-# Whether to default to installing cargo packages with the --locked option.
-# Default: false
-cargo_default_locked = true
 ```
 
 ## Group Files
