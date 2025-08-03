@@ -18,10 +18,12 @@ pub struct Config {
     pub enabled_backends: BTreeSet<AnyBackend>,
     #[serde_inline_default(Config::default().arch_package_manager)]
     pub arch_package_manager: ArchPackageManager,
-    #[serde_inline_default(Config::default().vscode_variant)]
-    pub vscode_variant: VsCodeVariant,
+    #[serde_inline_default(Config::default().cargo_default_locked)]
+    pub cargo_default_locked: bool,
     #[serde_inline_default(Config::default().flatpak_default_systemwide)]
     pub flatpak_default_systemwide: bool,
+    #[serde_inline_default(Config::default().vscode_variant)]
+    pub vscode_variant: VsCodeVariant,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
     pub hostname_groups_enabled: bool,
     #[serde_inline_default(Config::default().hostname_groups)]
@@ -32,8 +34,9 @@ impl Default for Config {
         Config {
             enabled_backends: BTreeSet::new(),
             arch_package_manager: ArchPackageManager::default(),
-            vscode_variant: VsCodeVariant::default(),
+            cargo_default_locked: false,
             flatpak_default_systemwide: true,
+            vscode_variant: VsCodeVariant::default(),
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),
         }
