@@ -203,7 +203,7 @@ laptop = ["example_group"]
 server = ["example_group"]
 
 # Whether to default to installing cargo packages with --locked option.
-# This setting can be overriden on a per-paclage base using 
+# This setting can be overriden on a per-package base using 
 # { systemwide = false|true }.
 # Default: false
 cargo_default_locked = true
