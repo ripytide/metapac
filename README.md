@@ -115,6 +115,13 @@ packages is to enable a package's `systemd` service after it is installed.
 This means you can declaratively maintain your enabled `systemd` services.
 See the [`Group Files`](#group-files) section for some examples.
 
+> [!WARNING]
+> A package's hooks are only run when the package is installed by
+> `metapac`. If a package is already installed then running `metapac sync`
+> will not run the hooks since it will not have to install the package. You
+> can uninstall the package and then re-install it using `metapac sync`
+> ensure the hooks are run.
+
 ### Advanced usage
 
 For more advanced usage read through the remaining sections, especially the
@@ -126,24 +133,25 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull requests and issues
 for additional backends are always welcome!
 
-| Backend   | Notes                                                                    |
-| --------- | ------------------------------------------------------------------------ |
-| `arch`    | see the `arch_package_manager` config                                    |
-| `apt`     |                                                                          |
-| `brew`    |                                                                          |
-| `bun`     |                                                                          |
-| `cargo`   |                                                                          |
-| `dnf`     |                                                                          |
-| `flatpak` |                                                                          |
-| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local` |
-| `pipx`    |                                                                          |
-| `pnpm`    | you might need to first run `pnpm setup`                                 |
-| `snap`    |                                                                          |
-| `uv`      |                                                                          |
-| `vscode`  | see the `vscode_variant` config                                          |
-| `winget`  |                                                                          |
-| `xbps`    |                                                                          |
-| `yarn`    |                                                                          |
+| Backend   | Notes                                                                                                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arch`    | see the `arch_package_manager` config                                                                                                                                                                       |
+| `apt`     |                                                                                                                                                                                                             |
+| `brew`    |                                                                                                                                                                                                             |
+| `bun`     |                                                                                                                                                                                                             |
+| `cargo`   |                                                                                                                                                                                                             |
+| `dnf`     |                                                                                                                                                                                                             |
+| `flatpak` |                                                                                                                                                                                                             |
+| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local`                                                                                                                                    |
+| `pipx`    |                                                                                                                                                                                                             |
+| `pnpm`    | you might need to first run `pnpm setup`                                                                                                                                                                    |
+| `scoop`   | doesn't differentiate between implicit and explicit packages, you will need to list all packages and their dependencies in your group files (see <https://github.com/ScoopInstaller/Scoop/issues/4276>) |
+| `snap`    |                                                                                                                                                                                                             |
+| `uv`      |                                                                                                                                                                                                             |
+| `vscode`  | see the `vscode_variant` config                                                                                                                                                                             |
+| `winget`  |                                                                                                                                                                                                             |
+| `xbps`    |                                                                                                                                                                                                             |
+| `yarn`    |                                                                                                                                                                                                             |
 
 ## Config
 
@@ -277,6 +285,10 @@ pnpm = [
  "metapac",
  { package = "metapac" },
 ]
+scoop = [
+ "main/metapac",
+ { package = "main/metapac" },
+]
 snap = [
  "metapac",
  { package = "metapac" },
@@ -296,8 +308,8 @@ vscode = [
  { package = "metapac" },
 ]
 winget = [
- "metapac",
- { package = "metapac" },
+ "ripytide.metapac",
+ { package = "ripytide.metapac" },
 ]
 xbps = [
  "metapac",
@@ -327,7 +339,6 @@ of any other package managers we should be aware of.
 - [`pkg`](https://github.com/freebsd/pkg): no attempt made yet
 - [`ports`](https://github.com/openbsd/ports): no attempt made yet
 - [`pkgsrc`](https://github.com/NetBSD/pkgsrc): no attempt made yet
-- [`scoop`](https://github.com/ScoopInstaller/Scoop): no attempt made yet
 - [`sdk`](https://github.com/sdkman/sdkman-cli): can't list installed
   packages <https://github.com/sdkman/sdkman-cli/issues/466>. The project
   is being rewritten in rust with the intention to implement the command in

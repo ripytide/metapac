@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.1] - 2025-08-02
+
+### Added
+
+- Added the `scoop` backend (#101), thanks @jsfr!
+
 ### Fixed
 
 - Fixed a bug with packages being added twice when the backend didn't yet
-  exist in a group file with the `metapac add` command. Fixed in (#99),
+  exist in a group file with the `metapac add` command. Fixed in #99,
   thanks @DominicD!
+- Fixed a bug when running `metapac sync --no_confirm` with the `arch`
+  backend. Used the incorrect `--no_confirm` option rather than
+  `--noconfirm`. Fixed in #105.
 
 ## [0.4.0] - 2025-07-27
 
