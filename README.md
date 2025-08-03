@@ -166,7 +166,7 @@ for additional backends are always welcome!
 
 # Backends to enable for most of metapac's behavior. See the README.md or
 # run `metapac backends` for the list of backend names
- # Default: []
+# Default: []
 enabled_backends = ["arch"]
 
 # Since pacman, pamac, paru, pikaur and yay all operate on the same package database
