@@ -265,7 +265,7 @@ bun = [
 cargo = [
  "metapac",
  # see cargo docs for info on the options
- { package = "metapac", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ] } },
+ { package = "metapac", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ], locked = true } },
 ]
 dnf = [
  "metapac",
