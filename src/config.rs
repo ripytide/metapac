@@ -22,12 +22,12 @@ pub struct Config {
     pub vscode_variant: VsCodeVariant,
     #[serde_inline_default(Config::default().flatpak_default_systemwide)]
     pub flatpak_default_systemwide: bool,
+    #[serde_inline_default(Config::default().cargo_default_locked)]
+    pub cargo_default_locked: bool,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
     pub hostname_groups_enabled: bool,
     #[serde_inline_default(Config::default().hostname_groups)]
     pub hostname_groups: BTreeMap<String, Vec<String>>,
-    #[serde_inline_default(Config::default().cargo_default_locked)]
-    pub cargo_default_locked: bool,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -36,9 +36,9 @@ impl Default for Config {
             arch_package_manager: ArchPackageManager::default(),
             vscode_variant: VsCodeVariant::default(),
             flatpak_default_systemwide: true,
+            cargo_default_locked: false,
             hostname_groups_enabled: false,
             hostname_groups: BTreeMap::new(),
-            cargo_default_locked: false,
         }
     }
 }
