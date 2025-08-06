@@ -111,6 +111,39 @@ impl Backend for Cargo {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+        // upstream issue in case cargo ever implements a simpler way to do this
+        // https://github.com/rust-lang/cargo/issues/9527
+
+        let installed = Self::query(config)?;
+        let installed_names = installed.keys().map(String::from).collect();
+
+        let difference = packages
+            .difference(&installed_names)
+            .collect::<BTreeSet<_>>();
+
+        if !difference.is_empty() {
+            return Err(eyre!("{difference:?} packages are not installed"));
+        }
+
+        let install_options = installed
+            .clone()
+            .into_iter()
+            .filter(|(x, _)| packages.contains(x))
+            .collect();
+
+        Self::install(&install_options, no_confirm, config)
+    }
+
+    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+        // upstream issue in case cargo ever implements a simpler way to do this
+        // https://github.com/rust-lang/cargo/issues/9527
+
+        let install_options = Self::query(config)?;
+
+        Self::install(&install_options, no_confirm, config)
+    }
+
     fn clean_cache(_: &Config) -> Result<()> {
         run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)

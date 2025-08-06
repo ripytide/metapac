@@ -1,4 +1,5 @@
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
@@ -198,6 +199,41 @@ impl Backend for Arch {
         }
 
         Ok(())
+    }
+
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+        let installed = Self::query(config)?;
+        let installed_names = installed.keys().map(String::from).collect();
+
+        let difference = packages
+            .difference(&installed_names)
+            .collect::<BTreeSet<_>>();
+
+        if !difference.is_empty() {
+            return Err(eyre!("{difference:?} packages are not installed"));
+        }
+
+        let install_options = installed
+            .clone()
+            .into_iter()
+            .filter(|(x, _)| packages.contains(x))
+            .collect();
+
+        Self::install(&install_options, no_confirm, config)
+    }
+
+    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+        run_command(
+            [
+                config.arch_package_manager.as_command(),
+                "--sync",
+                "--refresh",
+                "--sysupgrade",
+            ]
+            .into_iter()
+            .chain(Some("--noconfirm").filter(|_| no_confirm)),
+            config.arch_package_manager.change_perms(),
+        )
     }
 
     fn clean_cache(config: &Config) -> Result<()> {

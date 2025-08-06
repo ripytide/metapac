@@ -46,6 +46,16 @@ macro_rules! any {
                     $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
                 }
             }
+            pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config), )*
+                }
+            }
+            pub fn update_all(&self, no_confirm: bool, config: &Config) -> Result<()> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config), )*
+                }
+            }
             pub fn version(&self, config: &Config) -> Result<String> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::version(config), )*

@@ -1,5 +1,4 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::process::Command;
 
 use color_eyre::Result;
 use regex::Regex;
@@ -30,9 +29,7 @@ impl Backend for Xbps {
             return Ok(BTreeMap::new());
         }
 
-        let mut cmd = Command::new("xbps-query");
-        cmd.args(["-l"]);
-        let stdout = run_command_for_stdout(["xbps-query", "-l"], Perms::Same, false)?;
+        let stdout = run_command_for_stdout(["xbps-query", "--list-pkgs"], Perms::Same, false)?;
 
         // Removes the package status and description from output
         let re1 = Regex::new(r"^ii |^uu |^hr |^\?\? | .*")?;
@@ -61,9 +58,9 @@ impl Backend for Xbps {
     ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                ["xbps-install", "-S"]
+                ["xbps-install", "--sync"]
                     .into_iter()
-                    .chain(Some("-y").filter(|_| no_confirm))
+                    .chain(Some("--yes").filter(|_| no_confirm))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -75,9 +72,9 @@ impl Backend for Xbps {
     fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                ["xbps-remove", "-R"]
+                ["xbps-remove", "--recursive"]
                     .into_iter()
-                    .chain(Some("-y").filter(|_| no_confirm))
+                    .chain(Some("--yes").filter(|_| no_confirm))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -86,8 +83,43 @@ impl Backend for Xbps {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["xbps-install", "--sync", "--update"]
+                    .into_iter()
+                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Sudo,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+        let update = || {
+            run_command(
+                ["xbps-install", "--sync", "--update"]
+                    .into_iter()
+                    .chain(Some("--yes").filter(|_| no_confirm)),
+                Perms::Sudo,
+            )
+        };
+
+        //has to be run twice to do a full update according to the docs:
+        //https://docs.voidlinux.org/xbps/index.html
+        update()?;
+        update()
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
-        Self::version(config).map_or(Ok(()), |_| run_command(["xbps-remove", "-Oo"], Perms::Sudo))
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(
+                ["xbps-remove", "--clean-cache", "--remove-orphans"],
+                Perms::Sudo,
+            )
+        })
     }
 
     fn version(_: &Config) -> Result<String> {

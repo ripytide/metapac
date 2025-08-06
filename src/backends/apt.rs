@@ -74,6 +74,29 @@ impl Backend for Apt {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["apt-get", "install", "--only-upgrade"]
+                    .into_iter()
+                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Sudo,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+        run_command(
+            ["apt-get", "upgrade"]
+                .into_iter()
+                .chain(Some("--yes").filter(|_| no_confirm)),
+            Perms::Sudo,
+        )
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["apt-get", "autoclean"], Perms::Sudo)

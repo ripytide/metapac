@@ -63,6 +63,23 @@ impl Backend for Pipx {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["pipx", "update"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["pipx", "update-all"], Perms::Same)
+    }
+
     fn clean_cache(_: &Config) -> Result<()> {
         Ok(())
     }
