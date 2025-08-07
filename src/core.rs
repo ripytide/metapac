@@ -14,29 +14,13 @@ use crate::prelude::*;
 
 impl MainArguments {
     pub fn run(self) -> Result<()> {
-        let hostname = if let Some(x) = self.hostname {
-            x
-        } else {
-            hostname::get()?
-                .into_string()
-                .or(Err(eyre!("getting hostname")))?
-        };
+        let hostname = self.get_hostname()?;
 
-        let config_dir = if let Some(x) = self.config_dir {
-            x
-        } else {
-            dirs::config_dir()
-                .map(|path| path.join("metapac/"))
-                .ok_or(eyre!("getting the default metapac config directory"))?
-        };
+        let config_dir = self.get_config_dir()?;
 
         let group_dir = config_dir.join("groups/");
 
-        let config = Config::load(&config_dir).wrap_err("loading config file")?;
-
-        if config.enabled_backends.is_empty() {
-            log::warn!("no backends found in the enabled_backends config")
-        }
+        let config = load_config(config_dir)?;
 
         let group_files =
             Groups::group_files(&group_dir, &hostname, &config).wrap_err("finding group files")?;
@@ -45,20 +29,19 @@ impl MainArguments {
 
         let mut required = groups.to_packages().map_required(&config)?;
 
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                $(
-                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        if !required.$lower_backend.is_empty() {
-                            log::warn!("ignoring packages from all group files for the {} backend as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
-                            required.$lower_backend = Default::default();
-                        }
-                    }
-                )*
-            }
-        }
-        apply_backends!(x);
+        warn_packages_in_deactivated_backends(&config, &mut required);
 
+        self.run_subcommand(group_dir, config, group_files, groups, required)
+    }
+
+    fn run_subcommand(
+        self,
+        group_dir: PathBuf,
+        config: Config,
+        group_files: BTreeSet<PathBuf>,
+        groups: Groups,
+        required: Packages,
+    ) -> std::result::Result<(), color_eyre::eyre::Error> {
         match self.subcommand {
             MainSubcommand::Add(add) => add.run(&group_dir, &group_files, &groups, &config),
             MainSubcommand::Remove(remove) => remove.run(&groups),
@@ -73,6 +56,52 @@ impl MainArguments {
             MainSubcommand::CleanCache(backends) => backends.run(&config),
         }
     }
+
+    fn get_config_dir(&self) -> Result<PathBuf, color_eyre::eyre::Error> {
+        let config_dir = if let Some(x) = &self.config_dir {
+            x
+        } else {
+            &dirs::config_dir()
+                .map(|path| path.join("metapac/"))
+                .ok_or(eyre!("getting the default metapac config directory"))?
+        };
+        Ok(config_dir.to_path_buf())
+    }
+
+    fn get_hostname(&self) -> Result<String, color_eyre::eyre::Error> {
+        let hostname = if let Some(x) = &self.hostname {
+            x
+        } else {
+            &hostname::get()?
+                .into_string()
+                .or(Err(eyre!("getting hostname")))?
+        };
+        Ok(hostname.to_string())
+    }
+}
+
+fn warn_packages_in_deactivated_backends(config: &Config, required: &mut Packages) {
+    macro_rules! x {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+            $(
+                if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if !required.$lower_backend.is_empty() {
+                        log::warn!("ignoring packages from all group files for the {} backend as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
+                        required.$lower_backend = Default::default();
+                    }
+                }
+            )*
+        }
+    }
+    apply_backends!(x);
+}
+
+fn load_config(config_dir: PathBuf) -> Result<Config, color_eyre::eyre::Error> {
+    let config = Config::load(&config_dir).wrap_err("loading config file")?;
+    if config.enabled_backends.is_empty() {
+        log::warn!("no backends found in the enabled_backends config")
+    }
+    Ok(config)
 }
 
 impl AddCommand {
