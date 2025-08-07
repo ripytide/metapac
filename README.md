@@ -169,29 +169,6 @@ for additional backends are always welcome!
 # Default: []
 enabled_backends = ["arch"]
 
-# Since pacman, pamac, paru, pikaur and yay all operate on the same package database
-# they are mutually exclusive and so you must pick which one you want
-# metapac to use.
-# Must be one of: ["pacman", "pamac", "paru", "pikaur", "yay"]
-# Default: "pacman"
-arch_package_manager = "paru"
-
-# Whether to default to installing cargo packages with the --locked option.
-# Default: false
-cargo_default_locked = true
-
-# Whether to default to installing flatpak packages systemwide or for the
-# current user. This setting can be overridden on a per-package basis.
-# Default: true
-flatpak_default_systemwide = true
-
-# Since VSCode and VSCodium both operate on the same package database
-# they are mutually exclusive and so you must pick which one you want
-# metapac to use.
-# Must be one of: ["code", "codium"]
-# Default: "code"
-vscode_variant = "code"
-
 # Whether to use the [hostname_groups] config table to decide which
 # group files to use or to use all files in the groups folder.
 # Default: false
@@ -204,6 +181,34 @@ hostname_groups_enabled = true
 pc = ["example_group"]
 laptop = ["example_group"]
 server = ["example_group"]
+
+[arch]
+# Since pacman, pamac, paru, pikaur and yay all operate on the same package database
+# they are mutually exclusive and so you must pick which one you want
+# metapac to use.
+# Must be one of: ["pacman", "pamac", "paru", "pikaur", "yay"]
+# Default: "pacman"
+package_manager = "paru"
+
+[cargo]
+# Whether to default to installing cargo packages with the --locked option.
+# Default: false
+default_locked = true
+
+[flatpak]
+# Whether to default to installing flatpak packages systemwide or for the
+# current user. This setting can be overridden on a per-package basis.
+# Default: true
+default_systemwide = true
+
+[vscode]
+# Since VSCode and VSCodium both operate on the same package database
+# they are mutually exclusive and so you must pick which one you want
+# metapac to use.
+# Must be one of: ["code", "codium"]
+# Default: "code"
+variant = "code"
+
 ```
 
 ## Group Files
