@@ -70,7 +70,7 @@ impl Backend for Cargo {
                     .chain(
                         Some("--locked")
                             .into_iter()
-                            .filter(|_| options.locked.unwrap_or(config.cargo_default_locked)),
+                            .filter(|_| options.locked.unwrap_or(config.cargo.default_locked)),
                     )
                     .chain(Some("--git").into_iter().filter(|_| options.git.is_some()))
                     .chain(options.git.as_deref())

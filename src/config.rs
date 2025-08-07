@@ -13,15 +13,16 @@ use crate::prelude::*;
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[derive(Default)]
 pub struct Config {
     #[serde_inline_default(Config::default().enabled_backends)]
     pub enabled_backends: BTreeSet<AnyBackend>,
-    #[serde_inline_default(Config::default().arch_package_manager)]
-    pub arch_package_manager: ArchPackageManager,
-    #[serde_inline_default(Config::default().cargo_default_locked)]
-    pub cargo_default_locked: bool,
-    #[serde_inline_default(Config::default().flatpak_default_systemwide)]
-    pub flatpak_default_systemwide: bool,
+    #[serde_inline_default(Config::default().arch)]
+    pub arch: Arch,
+    #[serde_inline_default(Config::default().cargo)]
+    pub cargo: Cargo,
+    #[serde_inline_default(Config::default().flatpak)]
+    pub flatpak: Flatpak,
     #[serde_inline_default(Config::default().vscode_variant)]
     pub vscode_variant: VsCodeVariant,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
@@ -29,18 +30,32 @@ pub struct Config {
     #[serde_inline_default(Config::default().hostname_groups)]
     pub hostname_groups: BTreeMap<String, Vec<String>>,
 }
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            enabled_backends: BTreeSet::new(),
-            arch_package_manager: ArchPackageManager::default(),
-            cargo_default_locked: false,
-            flatpak_default_systemwide: true,
-            vscode_variant: VsCodeVariant::default(),
-            hostname_groups_enabled: false,
-            hostname_groups: BTreeMap::new(),
-        }
-    }
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[derive(Default)]
+pub struct Arch {
+    #[serde_inline_default(Arch::default().package_manager)]
+    pub package_manager: ArchPackageManager,
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[derive(Default)]
+pub struct Cargo {
+    #[serde_inline_default(Cargo::default().default_locked)]
+    pub default_locked: bool,
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[derive(Default)]
+pub struct Flatpak {
+    #[serde_inline_default(Flatpak::default().default_systemwide)]
+    pub default_systemwide: bool,
 }
 
 impl Config {
