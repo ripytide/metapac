@@ -33,7 +33,7 @@ impl Backend for VsCode {
         }
 
         let names = run_command_for_stdout(
-            [config.vscode_variant.as_command(), "--list-extensions"],
+            [config.vscode.variant.as_command(), "--list-extensions"],
             Perms::Same,
             true,
         )?
@@ -48,7 +48,7 @@ impl Backend for VsCode {
         for package in packages.keys() {
             run_command(
                 [
-                    config.vscode_variant.as_command(),
+                    config.vscode.variant.as_command(),
                     "--install-extension",
                     package,
                 ],
@@ -63,7 +63,7 @@ impl Backend for VsCode {
         for package in packages {
             run_command(
                 [
-                    config.vscode_variant.as_command(),
+                    config.vscode.variant.as_command(),
                     "--uninstall-extension",
                     package,
                 ],
@@ -80,7 +80,7 @@ impl Backend for VsCode {
 
     fn version(config: &Config) -> Result<String> {
         run_command_for_stdout(
-            [config.vscode_variant.as_command(), "--version"],
+            [config.vscode.variant.as_command(), "--version"],
             Perms::Same,
             false,
         )

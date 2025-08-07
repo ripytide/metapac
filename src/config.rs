@@ -23,8 +23,8 @@ pub struct Config {
     pub cargo: Cargo,
     #[serde_inline_default(Config::default().flatpak)]
     pub flatpak: Flatpak,
-    #[serde_inline_default(Config::default().vscode_variant)]
-    pub vscode_variant: VsCodeVariant,
+    #[serde_inline_default(Config::default().vscode)]
+    pub vscode: VsCode,
     #[serde_inline_default(Config::default().hostname_groups_enabled)]
     pub hostname_groups_enabled: bool,
     #[serde_inline_default(Config::default().hostname_groups)]
@@ -56,6 +56,15 @@ pub struct Cargo {
 pub struct Flatpak {
     #[serde_inline_default(Flatpak::default().default_systemwide)]
     pub default_systemwide: bool,
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[derive(Default)]
+pub struct VsCode {
+    #[serde_inline_default(VsCodeVariant::default())]
+    pub variant: VsCodeVariant,
 }
 
 impl Config {
