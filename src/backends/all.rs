@@ -177,7 +177,6 @@ macro_rules! packages {
                 packages
             }
 
-            /// asdfasdf asdf asdf
             pub fn map_required(mut self, config: &Config) -> Result<Self> {
                 $(
                     self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
