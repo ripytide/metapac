@@ -22,21 +22,21 @@ pub struct Config {
     #[serde_inline_default(Config::default().hostname_groups)]
     pub hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde_inline_default(Config::default().arch)]
-    pub arch: Arch,
+    pub arch: ArchConfig,
     #[serde_inline_default(Config::default().cargo)]
-    pub cargo: Cargo,
+    pub cargo: CargoConfig,
     #[serde_inline_default(Config::default().flatpak)]
-    pub flatpak: Flatpak,
+    pub flatpak: FlatpakConfig,
     #[serde_inline_default(Config::default().vscode)]
-    pub vscode: VsCode,
+    pub vscode: VsCodeConfig,
 }
 
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[derive(Default)]
-pub struct Arch {
-    #[serde_inline_default(Arch::default().package_manager)]
+pub struct ArchConfig {
+    #[serde_inline_default(ArchConfig::default().package_manager)]
     pub package_manager: ArchPackageManager,
 }
 
@@ -44,25 +44,30 @@ pub struct Arch {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[derive(Default)]
-pub struct Cargo {
-    #[serde_inline_default(Cargo::default().default_locked)]
-    pub default_locked: bool,
+pub struct CargoConfig {
+    #[serde_inline_default(CargoConfig::default().locked)]
+    pub locked: bool,
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakConfig {
+    #[serde_inline_default(FlatpakConfig::default().systemwide)]
+    pub systemwide: bool,
+}
+
+impl Default for FlatpakConfig {
+    fn default() -> Self {
+        Self { systemwide: true }
+    }
 }
 
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[derive(Default)]
-pub struct Flatpak {
-    #[serde_inline_default(Flatpak::default().default_systemwide)]
-    pub default_systemwide: bool,
-}
-
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[derive(Default)]
-pub struct VsCode {
+pub struct VsCodeConfig {
     #[serde_inline_default(VsCodeVariant::default())]
     pub variant: VsCodeVariant,
 }
