@@ -53,7 +53,6 @@ pub struct FlatpakConfig {
     #[serde_inline_default(FlatpakConfig::default().systemwide)]
     pub systemwide: bool,
 }
-
 impl Default for FlatpakConfig {
     fn default() -> Self {
         Self { systemwide: true }
