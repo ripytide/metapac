@@ -155,10 +155,7 @@ impl Backend for Flatpak {
                 [
                     "flatpak",
                     "install",
-                    if options
-                        .systemwide
-                        .unwrap_or(config.flatpak_default_systemwide)
-                    {
+                    if options.systemwide.unwrap_or(config.flatpak.systemwide) {
                         "--system"
                     } else {
                         "--user"

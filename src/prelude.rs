@@ -23,6 +23,8 @@ pub use crate::cli::{
     SyncCommand, UninstallCommand, UnmanagedCommand,
 };
 pub use crate::cmd::Perms;
-pub use crate::config::{ArchPackageManager, Config, VsCodeVariant};
+pub use crate::config::{
+    ArchConfig, ArchPackageManager, CargoConfig, Config, FlatpakConfig, VsCodeConfig, VsCodeVariant,
+};
 pub use crate::groups::Groups;
 pub use crate::package::{Hooks, Package};

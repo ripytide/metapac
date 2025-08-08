@@ -27,7 +27,7 @@ impl Backend for Arch {
 
         let groups = run_command_for_stdout(
             [
-                config.arch_package_manager.as_command(),
+                config.arch.package_manager.as_command(),
                 "--sync",
                 "--groups",
                 "--quiet",
@@ -40,7 +40,7 @@ impl Backend for Arch {
             if let Some(options) = packages.remove(group) {
                 let group_packages = run_command_for_stdout(
                     [
-                        config.arch_package_manager.as_command(),
+                        config.arch.package_manager.as_command(),
                         "--sync",
                         "--groups",
                         "--quiet",
@@ -66,7 +66,7 @@ impl Backend for Arch {
 
         let all_packages: BTreeSet<String> = run_command_for_stdout(
             [
-                config.arch_package_manager.as_command(),
+                config.arch.package_manager.as_command(),
                 "--sync",
                 "--list",
                 "--quiet",
@@ -117,7 +117,7 @@ impl Backend for Arch {
 
         let explicit_packages = run_command_for_stdout(
             [
-                config.arch_package_manager.as_command(),
+                config.arch.package_manager.as_command(),
                 "--query",
                 "--explicit",
                 "--quiet",
@@ -143,14 +143,14 @@ impl Backend for Arch {
         if !packages.is_empty() {
             run_command(
                 [
-                    config.arch_package_manager.as_command(),
+                    config.arch.package_manager.as_command(),
                     "--sync",
                     "--asexplicit",
                 ]
                 .into_iter()
                 .chain(Some("--noconfirm").filter(|_| no_confirm))
                 .chain(packages.keys().map(String::as_str)),
-                config.arch_package_manager.change_perms(),
+                config.arch.package_manager.change_perms(),
             )?;
         }
 
@@ -161,18 +161,18 @@ impl Backend for Arch {
         if !packages.is_empty() {
             run_command(
                 [
-                    config.arch_package_manager.as_command(),
+                    config.arch.package_manager.as_command(),
                     "--database",
                     "--asdeps",
                 ]
                 .into_iter()
                 .chain(packages.iter().map(String::as_str)),
-                config.arch_package_manager.change_perms(),
+                config.arch.package_manager.change_perms(),
             )?;
 
             let orphans_output = run_command_for_stdout(
                 [
-                    config.arch_package_manager.as_command(),
+                    config.arch.package_manager.as_command(),
                     "--query",
                     "--deps",
                     "--unrequired",
@@ -185,7 +185,7 @@ impl Backend for Arch {
 
             run_command(
                 [
-                    config.arch_package_manager.as_command(),
+                    config.arch.package_manager.as_command(),
                     "--remove",
                     "--nosave",
                     "--recursive",
@@ -193,7 +193,7 @@ impl Backend for Arch {
                 .into_iter()
                 .chain(Some("--noconfirm").filter(|_| no_confirm))
                 .chain(orphans),
-                config.arch_package_manager.change_perms(),
+                config.arch.package_manager.change_perms(),
             )?;
         }
 
@@ -204,7 +204,7 @@ impl Backend for Arch {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(
                 [
-                    config.arch_package_manager.as_command(),
+                    config.arch.package_manager.as_command(),
                     "--sync",
                     "--clean",
                 ],
@@ -215,7 +215,7 @@ impl Backend for Arch {
 
     fn version(config: &Config) -> Result<String> {
         run_command_for_stdout(
-            [config.arch_package_manager.as_command(), "--version"],
+            [config.arch.package_manager.as_command(), "--version"],
             Perms::Same,
             false,
         )
