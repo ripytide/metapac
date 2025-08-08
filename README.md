@@ -193,13 +193,13 @@ package_manager = "paru"
 [cargo]
 # Whether to default to installing cargo packages with the --locked option.
 # Default: false
-default_locked = true
+locked = true
 
 [flatpak]
 # Whether to default to installing flatpak packages systemwide or for the
 # current user. This setting can be overridden on a per-package basis.
 # Default: true
-default_systemwide = true
+systemwide = true
 
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database
