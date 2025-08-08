@@ -208,7 +208,6 @@ systemwide = true
 # Must be one of: ["code", "codium"]
 # Default: "code"
 variant = "code"
-
 ```
 
 ## Group Files

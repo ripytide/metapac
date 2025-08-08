@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- ‼️ Breaking Change ‼️ backend specific configs have been moved into
+  sections for each backend and `flatpak_default_systemwide` has been
+  renamed to `flatpak.systemwide` (#117), thanks @steven-omaha! For
+  example:
+
+  ```toml
+  # instead of this
+  arch_package_manager = "paru"
+  flatpak_default_systemwide = false
+  vscode_variant = "code"
+
+  # do this
+  [arch]
+  package_manager = "paru"
+  [flatpak]
+  # notice this is now just systemwide and not default_systemwide
+  systemwide = false
+  [vscode]
+  variant = "code"
+  ```
+
 ## [0.4.1] - 2025-08-02
 
 ### Added
