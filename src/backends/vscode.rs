@@ -78,7 +78,7 @@ impl Backend for VsCode {
         for package in packages {
             run_command(
                 [
-                    config.vscode_variant.as_command(),
+                    config.vscode.variant.as_command(),
                     "--install-extension",
                     package,
                 ],

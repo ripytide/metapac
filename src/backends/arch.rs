@@ -225,14 +225,14 @@ impl Backend for Arch {
     fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
         run_command(
             [
-                config.arch_package_manager.as_command(),
+                config.arch.package_manager.as_command(),
                 "--sync",
                 "--refresh",
                 "--sysupgrade",
             ]
             .into_iter()
             .chain(Some("--noconfirm").filter(|_| no_confirm)),
-            config.arch_package_manager.change_perms(),
+            config.arch.package_manager.change_perms(),
         )
     }
 
