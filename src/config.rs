@@ -17,6 +17,10 @@ use crate::prelude::*;
 pub struct Config {
     #[serde_inline_default(Config::default().enabled_backends)]
     pub enabled_backends: BTreeSet<AnyBackend>,
+    #[serde_inline_default(Config::default().hostname_groups_enabled)]
+    pub hostname_groups_enabled: bool,
+    #[serde_inline_default(Config::default().hostname_groups)]
+    pub hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde_inline_default(Config::default().arch)]
     pub arch: Arch,
     #[serde_inline_default(Config::default().cargo)]
@@ -25,10 +29,6 @@ pub struct Config {
     pub flatpak: Flatpak,
     #[serde_inline_default(Config::default().vscode)]
     pub vscode: VsCode,
-    #[serde_inline_default(Config::default().hostname_groups_enabled)]
-    pub hostname_groups_enabled: bool,
-    #[serde_inline_default(Config::default().hostname_groups)]
-    pub hostname_groups: BTreeMap<String, Vec<String>>,
 }
 
 #[serde_inline_default]
