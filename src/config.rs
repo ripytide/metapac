@@ -11,9 +11,8 @@ use crate::prelude::*;
 
 // Update README if fields change.
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[derive(Default)]
 pub struct Config {
     #[serde_inline_default(Config::default().enabled_backends)]
     pub enabled_backends: BTreeSet<AnyBackend>,
@@ -32,18 +31,16 @@ pub struct Config {
 }
 
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[derive(Default)]
 pub struct ArchConfig {
     #[serde_inline_default(ArchConfig::default().package_manager)]
     pub package_manager: ArchPackageManager,
 }
 
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[derive(Default)]
 pub struct CargoConfig {
     #[serde_inline_default(CargoConfig::default().locked)]
     pub locked: bool,
@@ -64,9 +61,8 @@ impl Default for FlatpakConfig {
 }
 
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[derive(Default)]
 pub struct VsCodeConfig {
     #[serde_inline_default(VsCodeVariant::default())]
     pub variant: VsCodeVariant,
