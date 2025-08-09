@@ -126,11 +126,15 @@ impl Backend for Cargo {
             return Err(eyre!("{difference:?} packages are not installed"));
         }
 
-        let install_options = installed
+        let mut install_options = installed
             .clone()
             .into_iter()
             .filter(|(x, _)| packages.contains(x))
-            .collect();
+            .collect::<BTreeMap<String, CargoOptions>>();
+
+        for options in install_options.values_mut() {
+            options.locked = Some(config.cargo.locked);
+        }
 
         Self::install(&install_options, no_confirm, config)
     }
