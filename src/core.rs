@@ -43,7 +43,7 @@ impl MainArguments {
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
-        let mut required = groups.to_packages().map_required(&config)?;
+        let mut required = groups.to_packages().expand_group_packages(&config)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {

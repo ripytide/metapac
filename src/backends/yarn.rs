@@ -19,7 +19,7 @@ pub struct YarnOptions {}
 impl Backend for Yarn {
     type Options = YarnOptions;
 
-    fn map_required(
+    fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {

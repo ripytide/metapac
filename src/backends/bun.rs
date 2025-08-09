@@ -17,7 +17,7 @@ pub struct BunOptions {}
 impl Backend for Bun {
     type Options = BunOptions;
 
-    fn map_required(
+    fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
