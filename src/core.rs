@@ -66,11 +66,13 @@ impl MainArguments {
                 install.run(&group_dir, &group_files, &groups, &config)
             }
             MainSubcommand::Uninstall(uninstall) => uninstall.run(&groups, &config),
+            MainSubcommand::Update(update) => update.run(&config),
+            MainSubcommand::UpdateAll(update_all) => update_all.run(&config),
             MainSubcommand::Clean(clean) => clean.run(&required, &config),
             MainSubcommand::Sync(sync) => sync.run(&required, &config),
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
-            MainSubcommand::Backends(found_backends) => found_backends.run(&config),
-            MainSubcommand::CleanCache(backends) => backends.run(&config),
+            MainSubcommand::Backends(backends) => backends.run(&config),
+            MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&config),
         }
     }
 }
@@ -254,6 +256,28 @@ impl UninstallCommand {
     }
 }
 
+impl UpdateCommand {
+    fn run(self, config: &Config) -> Result<()> {
+        let packages = package_vec_to_btreeset(self.packages);
+
+        self.backend.update(&packages, self.no_confirm, config)
+    }
+}
+
+impl UpdateAllCommand {
+    fn run(self, config: &Config) -> Result<()> {
+        let backends = parse_backends(&self.backends, config)?;
+
+        for backend in backends.iter() {
+            log::info!("updating all packages for {backend} backend");
+
+            backend.update_all(self.no_confirm, config)?
+        }
+
+        Ok(())
+    }
+}
+
 impl CleanCommand {
     fn run(self, required: &Packages, config: &Config) -> Result<()> {
         let unmanaged = unmanaged(required, config)?;
@@ -345,24 +369,13 @@ impl BackendsCommand {
 
 impl CleanCacheCommand {
     fn run(&self, config: &Config) -> Result<()> {
-        let backends = match &self.backends {
-            Some(backends) => {
-                let result = backends.iter().map(|x|
-                    AnyBackend::from_str(x)
-                        .or(Err(eyre!("{x:?} is not a valid backend, run `metapac backends` to see a list of valid backends")))
-                ).collect::<Result<Vec<AnyBackend>, _>>();
-                result?
-            }
-            None => AnyBackend::iter().collect(),
-        };
+        let backends = parse_backends(&self.backends, config)?;
 
         for backend in backends.iter() {
             log::info!("cleaning cache for {backend} backend");
 
             backend.clean_cache(config)?
         }
-
-        log::info!("cleaned caches of backends: {backends:?}");
 
         Ok(())
     }
@@ -413,7 +426,7 @@ fn package_vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
 
     for package in vec {
         if !packages.insert(package.clone()) {
-            log::warn!("duplicate package {package}");
+            log::warn!("duplicate package {package}, ignoring");
         }
     }
 
@@ -430,4 +443,16 @@ fn package_ids_to_packages(package_ids: PackageIds) -> Packages {
         };
     }
     apply_backends!(x)
+}
+fn parse_backends(backends: &Vec<String>, config: &Config) -> Result<BTreeSet<AnyBackend>> {
+    if backends.is_empty() {
+        Ok(config.enabled_backends.clone())
+    } else if backends == &Vec::from(["all".to_string()]) {
+        Ok(AnyBackend::iter().collect())
+    } else {
+        backends.iter().map(|x|
+            AnyBackend::from_str(x)
+                .or(Err(eyre!("{x:?} is not a valid backend, run `metapac backends` to see a list of valid backends. Or pass `all` by itself to enable all backends.")))
+        ).collect::<Result<BTreeSet<AnyBackend>, _>>()
+    }
 }

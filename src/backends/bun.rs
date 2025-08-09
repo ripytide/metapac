@@ -100,6 +100,23 @@ impl Backend for Bun {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["bun", "update", "--global"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["bun", "update", "--global"], Perms::Same)
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["bun", "pm", "cache", "rm", "--global"], Perms::Same)

@@ -186,6 +186,25 @@ impl Backend for Flatpak {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+        run_command(
+            ["flatpak", "update"]
+                .into_iter()
+                .chain(Some("--assumeyes").filter(|_| no_confirm))
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Same,
+        )
+    }
+
+    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+        run_command(
+            ["flatpak", "update"]
+                .into_iter()
+                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+            Perms::Same,
+        )
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["flatpak", "remove", "--unused"], Perms::Same)

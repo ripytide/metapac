@@ -29,6 +29,8 @@ pub enum MainSubcommand {
     Remove(RemoveCommand),
     Install(InstallCommand),
     Uninstall(UninstallCommand),
+    Update(UpdateCommand),
+    UpdateAll(UpdateAllCommand),
     Clean(CleanCommand),
     Sync(SyncCommand),
     Unmanaged(UnmanagedCommand),
@@ -52,9 +54,9 @@ pub struct CleanCommand {
 /// if the group file does not exist it will be created
 pub struct AddCommand {
     #[arg(short, long)]
-    /// the backend for the package
+    /// the backend for the packages
     pub backend: AnyBackend,
-    #[arg(short, long)]
+    #[arg(short, long, required=true, num_args=1..)]
     /// the package names
     pub packages: Vec<String>,
     #[arg(short, long, default_value = "default")]
@@ -67,9 +69,9 @@ pub struct AddCommand {
 /// remove packages for the given backend from all active group files
 pub struct RemoveCommand {
     #[arg(short, long)]
-    /// the backend for the package
+    /// the backend for the packages
     pub backend: AnyBackend,
-    #[arg(short, long)]
+    #[arg(short, long, required=true, num_args=1..)]
     /// the package names
     pub packages: Vec<String>,
 }
@@ -81,9 +83,9 @@ pub struct RemoveCommand {
 /// if the group file does not exist it will be created
 pub struct InstallCommand {
     #[arg(short, long)]
-    /// the backend for the package
+    /// the backend for the packages
     pub backend: AnyBackend,
-    #[arg(short, long)]
+    #[arg(short, long, required=true, num_args=1..)]
     /// the package names
     pub packages: Vec<String>,
     #[arg(short, long, default_value = "default")]
@@ -99,11 +101,44 @@ pub struct InstallCommand {
 /// uninstall packages for the given backend and remove it from all active group files
 pub struct UninstallCommand {
     #[arg(short, long)]
-    /// the backend for the package
+    /// the backend for the packages
     pub backend: AnyBackend,
-    #[arg(short, long)]
+    #[arg(short, long, required=true, num_args=1..)]
     /// the package names
     pub packages: Vec<String>,
+    #[arg(short, long)]
+    /// do not ask for any confirmation
+    pub no_confirm: bool,
+}
+
+#[derive(Args)]
+#[command(visible_alias("p"))]
+/// update packages for the given backend
+pub struct UpdateCommand {
+    #[arg(short, long)]
+    /// the backend for the packages
+    pub backend: AnyBackend,
+    #[arg(short, long, required=true, num_args=1..)]
+    /// the package names
+    pub packages: Vec<String>,
+    #[arg(short, long)]
+    /// do not ask for any confirmation
+    pub no_confirm: bool,
+}
+
+#[derive(Args)]
+#[command(visible_alias("t"))]
+/// update all packages for the given backends
+pub struct UpdateAllCommand {
+    #[arg(short, long)]
+    /// the backends to operate on
+    ///
+    /// - if no backends are passed then the enabled_backend config is used
+    ///
+    /// - if "all" is passed by itself then all backends are used
+    ///
+    /// - otherwise the list will be parsed as a list of backends to be used
+    pub backends: Vec<String>,
     #[arg(short, long)]
     /// do not ask for any confirmation
     pub no_confirm: bool,
@@ -134,7 +169,15 @@ pub struct BackendsCommand {}
 
 #[derive(Args)]
 #[command(visible_alias("e"))]
-/// clean the caches of all the backends, or the just those specified
+/// clean the caches for the given backends
 pub struct CleanCacheCommand {
-    pub backends: Option<Vec<String>>,
+    #[arg(short, long)]
+    /// the backends to operate on
+    ///
+    /// - if no backends are passed then the enabled_backend config is used
+    ///
+    /// - if "all" is passed by itself then all backends are used
+    ///
+    /// - otherwise the list will be parsed as a list of backends to be used
+    pub backends: Vec<String>,
 }

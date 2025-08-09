@@ -66,6 +66,23 @@ impl Backend for Uv {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["uv", "tool", "upgrade"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["uv", "tool", "upgrade", "--all"], Perms::Same)
+    }
+
     fn clean_cache(_: &Config) -> Result<()> {
         Ok(())
     }

@@ -102,6 +102,23 @@ impl Backend for Snap {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["snap", "refresh"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Sudo,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["snap", "refresh"], Perms::Sudo)
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["rm", "-rf", "/var/lib/snapd/cache/*"], Perms::Sudo)

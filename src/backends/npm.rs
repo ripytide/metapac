@@ -78,6 +78,23 @@ impl Backend for Npm {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["npm", "update", "--global"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["npm", "update", "--global"], Perms::Same)
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["npm", "cache", "clean", "--force"], Perms::Same)

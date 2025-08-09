@@ -88,6 +88,23 @@ impl Backend for WinGet {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["winget", "update"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["winget", "update"], Perms::Same)
+    }
+
     // currently there is no way to do it for winget, see
     // https://github.com/microsoft/winget-cli/issues/343
     fn clean_cache(_: &Config) -> Result<()> {

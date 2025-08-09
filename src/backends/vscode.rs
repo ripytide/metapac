@@ -74,6 +74,30 @@ impl Backend for VsCode {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+        for package in packages {
+            run_command(
+                [
+                    config.vscode.variant.as_command(),
+                    "--install-extension",
+                    package,
+                ],
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+        let packages = Self::query(config)?;
+        Self::update(
+            &packages.keys().map(String::from).collect(),
+            no_confirm,
+            config,
+        )
+    }
+
     fn clean_cache(_: &Config) -> Result<()> {
         Ok(())
     }

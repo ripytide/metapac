@@ -64,6 +64,10 @@ pub trait Backend {
 
     fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()>;
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()>;
+
+    fn update_all(no_confirm: bool, config: &Config) -> Result<()>;
+
     fn clean_cache(config: &Config) -> Result<()>;
 
     fn version(config: &Config) -> Result<String>;

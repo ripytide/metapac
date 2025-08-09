@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- New subcommand `metapac update`! (#113)
+- New subcommand `metapac update-all`! (#113)
+- New `--locked` option for the `cargo` backend, including a new config:
+  `cargo_default_locked` (#104), thanks @DominicD!.
+
 ### Changed
 
-- ‼️ Breaking Change ‼️ backend specific configs have been moved into
+- ‼️ Breaking Change ‼️ Backend specific configs have been moved into
   sections for each backend and `flatpak_default_systemwide` has been
   renamed to `flatpak.systemwide` (#117), thanks @steven-omaha! For
   example:
@@ -29,6 +36,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [vscode]
   variant = "code"
   ```
+
+- The `clean-cache` command and the new `update` command now do 3 different
+  things depending on what you pass to the `--backends` option if anything:
+  - if no backends are passed then the enabled_backend config is used
+  - if "all" is passed by itself then all backends are used
+  - otherwise the list will be parsed as a list of backends to be used
+
+This release marks the final big part of `metapac` that has now been
+implemented: updating packages! There are four core mechanisms that make up
+a package manager:
+
+- install a package
+- uninstall a package
+- list installed packages
+- update a package
+
+`metapac` now implements all of these key mechanisms for all our
+supported backends!
+
+> [!WARNING] There are very high chances that the update implementations
+> for most of the backends don't actually work yet. This is simply because
+> I don't have the time or energy required to fully test every different
+> backend's update commands, especially since lots of the package managers
+> only work on a specific linux distro!
+>
+> Therefore, I've tried my best for each backend and I am going to
+> crowdsource the rest of the testing to the users. So as usual, if a
+> backend is not behaving as you would expect, please file a bug report.
+> Ideally, you can also try to find the issue with the commands so we can
+> fix them.
+
+### Fixed
+
+- For commands that take a list of packages as an option, the `--packages`
+  option is now required and has a `num_args=1..` so not passing at least
+  one package is a clap error. (#113)
 
 ## [0.4.1] - 2025-08-02
 

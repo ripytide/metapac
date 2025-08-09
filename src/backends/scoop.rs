@@ -72,6 +72,23 @@ impl Backend for Scoop {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+        if !packages.is_empty() {
+            run_command(
+                ["scoop.cmd", "update"]
+                    .into_iter()
+                    .chain(packages.iter().map(String::as_str)),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn update_all(_: bool, _: &Config) -> Result<()> {
+        run_command(["scoop.cmd", "update", "--all"], Perms::Same)
+    }
+
     fn clean_cache(_: &Config) -> Result<()> {
         run_command(["scoop.cmd", "cache", "rm", "--all"], Perms::Same)?;
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)

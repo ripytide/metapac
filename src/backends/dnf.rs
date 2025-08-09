@@ -120,6 +120,25 @@ impl Backend for Dnf {
         Ok(())
     }
 
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+        run_command(
+            ["dnf", "upgrade"]
+                .into_iter()
+                .chain(Some("--assumeyes").filter(|_| no_confirm))
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Sudo,
+        )
+    }
+
+    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+        run_command(
+            ["dnf", "upgrade"]
+                .into_iter()
+                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+            Perms::Sudo,
+        )
+    }
+
     fn clean_cache(config: &Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["dnf", "clean", "all"], Perms::Same)
