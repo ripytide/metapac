@@ -20,7 +20,7 @@ pub struct FlatpakOptions {
 impl Backend for Flatpak {
     type Options = FlatpakOptions;
 
-    fn map_required(
+    fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {

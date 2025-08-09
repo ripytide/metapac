@@ -16,7 +16,7 @@ pub struct AptOptions {}
 impl Backend for Apt {
     type Options = AptOptions;
 
-    fn map_required(
+    fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
         _: &Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {

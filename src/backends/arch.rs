@@ -18,7 +18,7 @@ pub struct ArchOptions {}
 impl Backend for Arch {
     type Options = ArchOptions;
 
-    fn map_required(
+    fn expand_group_packages(
         mut packages: BTreeMap<String, Package<Self::Options>>,
         config: &Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
