@@ -187,9 +187,9 @@ macro_rules! packages {
                 packages
             }
 
-            pub fn map_required(mut self, config: &Config) -> Result<Self> {
+            pub fn expand_group_packages(mut self, config: &Config) -> Result<Self> {
                 $(
-                    self.$lower_backend = $upper_backend::map_required(self.$lower_backend, config)?;
+                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config)?;
                 )*
 
                 Ok(self)
