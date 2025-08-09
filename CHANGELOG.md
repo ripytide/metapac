@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- ‼️ Breaking Change ‼️ backend specific configs have been moved into
+- ‼️ Breaking Change ‼️ Backend specific configs have been moved into
   sections for each backend and `flatpak_default_systemwide` has been
   renamed to `flatpak.systemwide` (#117), thanks @steven-omaha! For
   example:
