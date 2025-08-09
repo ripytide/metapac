@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sections for each backend and `flatpak_default_systemwide` has been
   renamed to `flatpak.systemwide` (#117), thanks @steven-omaha! For
   example:
+
   ```toml
   # instead of this
   arch_package_manager = "paru"
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [vscode]
   variant = "code"
   ```
+
 - The `clean-cache` command and the new `update` command now do 3 different
   things depending on what you pass to the `--backends` option if anything:
   - if no backends are passed then the enabled_backend config is used
