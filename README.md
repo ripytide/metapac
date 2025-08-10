@@ -353,6 +353,7 @@ of any other package managers we should be aware of.
   <https://github.com/ripytide/metapac/issues/86>
 - [`yum`](https://github.com/rpm-software-management/yum): project
   deprecated in favor of `dnf`
+- [`mise`](https://github.com/jdx/mise): no attempt made yet
 
 ## Similar Projects
 
