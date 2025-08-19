@@ -28,7 +28,42 @@ pub struct Config {
     pub flatpak: FlatpakConfig,
     #[serde_inline_default(Config::default().vscode)]
     pub vscode: VsCodeConfig,
+    pub yarn: YarnConfig,
 }
+
+macro_rules! apply_configs {
+    ($macro:ident) => {
+        $macro! {
+        (CargoConfig, cargo),
+        (YarnConfig, yarn),
+        (ArchConfig, arch),
+        (VsCodeConfig, vscode),
+        (FlatpakConfig, flatpak) }
+    };
+}
+
+macro_rules! impl_asRef {
+    ($(($config_type:ident, $config:ident)),*) => {
+        $(
+        impl AsRef<$config_type> for Config {
+            fn as_ref(&self) -> &$config_type{
+            &self.$config
+        }
+        })*
+    };
+}
+
+apply_configs!(impl_asRef);
+
+impl AsRef<()> for Config {
+    fn as_ref(&self) -> &() {
+        &()
+    }
+}
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct YarnConfig {}
 
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]

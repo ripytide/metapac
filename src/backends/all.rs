@@ -43,22 +43,22 @@ macro_rules! any {
         impl AnyBackend {
             pub fn clean_cache(&self, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config.as_ref()), )*
                 }
             }
             pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config.as_ref()), )*
                 }
             }
             pub fn update_all(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config.as_ref()), )*
                 }
             }
             pub fn version(&self, config: &Config) -> Result<String> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::version(config.as_ref()), )*
                 }
             }
         }
@@ -189,7 +189,7 @@ macro_rules! packages {
 
             pub fn expand_group_packages(mut self, config: &Config) -> Result<Self> {
                 $(
-                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config)?;
+                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config.as_ref())?;
                 )*
 
                 Ok(self)
@@ -202,7 +202,7 @@ macro_rules! packages {
                     }
 
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
-                    $upper_backend::install(&options, no_confirm, config)?;
+                    $upper_backend::install(&options, no_confirm, config.as_ref())?;
 
                     for package in self.$lower_backend.values() {
                         package.run_after_install()?;
@@ -214,7 +214,7 @@ macro_rules! packages {
 
             pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config)?;
+                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config.as_ref())?;
                 )*
 
                 Ok(())

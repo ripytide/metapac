@@ -217,7 +217,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
+                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config.as_ref())?;
                         },
                     )*
                 }
@@ -244,7 +244,7 @@ impl UninstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::uninstall(&packages, self.no_confirm, config)?;
+                            $upper_backend::uninstall(&packages, self.no_confirm, config.as_ref())?;
                         },
                     )*
                 }
@@ -388,7 +388,7 @@ fn installed(config: &Config) -> Result<PackageIds> {
                 $(
                     $lower_backend:
                         if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::query(config)?.keys().cloned().collect()
+                            $upper_backend::query(config.as_ref())?.keys().cloned().collect()
                         } else {
                             Default::default()
                         },

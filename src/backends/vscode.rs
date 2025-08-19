@@ -19,21 +19,22 @@ pub struct VsCodeOptions {}
 
 impl Backend for VsCode {
     type Options = VsCodeOptions;
+    type Config = VsCodeConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let names = run_command_for_stdout(
-            [config.vscode.variant.as_command(), "--list-extensions"],
+            [config.variant.as_command(), "--list-extensions"],
             Perms::Same,
             true,
         )?
@@ -44,14 +45,14 @@ impl Backend for VsCode {
         Ok(names)
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         for package in packages.keys() {
             run_command(
-                [
-                    config.vscode.variant.as_command(),
-                    "--install-extension",
-                    package,
-                ],
+                [config.variant.as_command(), "--install-extension", package],
                 Perms::Same,
             )?;
         }
@@ -59,11 +60,11 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
                 [
-                    config.vscode.variant.as_command(),
+                    config.variant.as_command(),
                     "--uninstall-extension",
                     package,
                 ],
@@ -74,14 +75,10 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
-                [
-                    config.vscode.variant.as_command(),
-                    "--install-extension",
-                    package,
-                ],
+                [config.variant.as_command(), "--install-extension", package],
                 Perms::Same,
             )?;
         }
@@ -89,7 +86,7 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
         let packages = Self::query(config)?;
         Self::update(
             &packages.keys().map(String::from).collect(),
@@ -98,13 +95,13 @@ impl Backend for VsCode {
         )
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
     }
 
-    fn version(config: &Config) -> Result<String> {
+    fn version(config: &Self::Config) -> Result<String> {
         run_command_for_stdout(
-            [config.vscode.variant.as_command(), "--version"],
+            [config.variant.as_command(), "--version"],
             Perms::Same,
             false,
         )

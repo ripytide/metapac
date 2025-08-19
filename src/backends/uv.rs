@@ -18,15 +18,16 @@ pub struct UvOptions {}
 
 impl Backend for Uv {
     type Options = UvOptions;
+    type Config = ();
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -45,7 +46,11 @@ impl Backend for Uv {
         Ok(names)
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         for package in packages.keys() {
             run_command(["uv", "tool", "install", package], Perms::Same)?;
         }
@@ -53,7 +58,7 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["uv", "tool", "uninstall"]
@@ -66,7 +71,7 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["uv", "tool", "upgrade"]
@@ -79,15 +84,15 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["uv", "tool", "upgrade", "--all"], Perms::Same)
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["uv", "--version"], Perms::Same, false)
     }
 }

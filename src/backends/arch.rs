@@ -17,10 +17,11 @@ pub struct ArchOptions {}
 
 impl Backend for Arch {
     type Options = ArchOptions;
+    type Config = ArchConfig;
 
     fn expand_group_packages(
         mut packages: BTreeMap<String, Package<Self::Options>>,
-        config: &Config,
+        config: &Self::Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
@@ -28,7 +29,7 @@ impl Backend for Arch {
 
         let groups = run_command_for_stdout(
             [
-                config.arch.package_manager.as_command(),
+                config.package_manager.as_command(),
                 "--sync",
                 "--groups",
                 "--quiet",
@@ -41,7 +42,7 @@ impl Backend for Arch {
             if let Some(options) = packages.remove(group) {
                 let group_packages = run_command_for_stdout(
                     [
-                        config.arch.package_manager.as_command(),
+                        config.package_manager.as_command(),
                         "--sync",
                         "--groups",
                         "--quiet",
@@ -67,7 +68,7 @@ impl Backend for Arch {
 
         let all_packages: BTreeSet<String> = run_command_for_stdout(
             [
-                config.arch.package_manager.as_command(),
+                config.package_manager.as_command(),
                 "--sync",
                 "--list",
                 "--quiet",
@@ -111,14 +112,14 @@ impl Backend for Arch {
         Ok(packages)
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let explicit_packages = run_command_for_stdout(
             [
-                config.arch.package_manager.as_command(),
+                config.package_manager.as_command(),
                 "--query",
                 "--explicit",
                 "--quiet",
@@ -139,41 +140,45 @@ impl Backend for Arch {
     fn install(
         packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
-        config: &Config,
+        config: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 [
-                    config.arch.package_manager.as_command(),
+                    config.package_manager.as_command(),
                     "--sync",
                     "--asexplicit",
                 ]
                 .into_iter()
                 .chain(Some("--noconfirm").filter(|_| no_confirm))
                 .chain(packages.keys().map(String::as_str)),
-                config.arch.package_manager.change_perms(),
+                config.package_manager.change_perms(),
             )?;
         }
 
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+    fn uninstall(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 [
-                    config.arch.package_manager.as_command(),
+                    config.package_manager.as_command(),
                     "--database",
                     "--asdeps",
                 ]
                 .into_iter()
                 .chain(packages.iter().map(String::as_str)),
-                config.arch.package_manager.change_perms(),
+                config.package_manager.change_perms(),
             )?;
 
             let orphans_output = run_command_for_stdout(
                 [
-                    config.arch.package_manager.as_command(),
+                    config.package_manager.as_command(),
                     "--query",
                     "--deps",
                     "--unrequired",
@@ -186,7 +191,7 @@ impl Backend for Arch {
 
             run_command(
                 [
-                    config.arch.package_manager.as_command(),
+                    config.package_manager.as_command(),
                     "--remove",
                     "--nosave",
                     "--recursive",
@@ -194,14 +199,14 @@ impl Backend for Arch {
                 .into_iter()
                 .chain(Some("--noconfirm").filter(|_| no_confirm))
                 .chain(orphans),
-                config.arch.package_manager.change_perms(),
+                config.package_manager.change_perms(),
             )?;
         }
 
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
         let installed = Self::query(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
@@ -222,36 +227,32 @@ impl Backend for Arch {
         Self::install(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
         run_command(
             [
-                config.arch.package_manager.as_command(),
+                config.package_manager.as_command(),
                 "--sync",
                 "--refresh",
                 "--sysupgrade",
             ]
             .into_iter()
             .chain(Some("--noconfirm").filter(|_| no_confirm)),
-            config.arch.package_manager.change_perms(),
+            config.package_manager.change_perms(),
         )
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(
-                [
-                    config.arch.package_manager.as_command(),
-                    "--sync",
-                    "--clean",
-                ],
+                [config.package_manager.as_command(), "--sync", "--clean"],
                 Perms::Same,
             )
         })
     }
 
-    fn version(config: &Config) -> Result<String> {
+    fn version(config: &Self::Config) -> Result<String> {
         run_command_for_stdout(
-            [config.arch.package_manager.as_command(), "--version"],
+            [config.package_manager.as_command(), "--version"],
             Perms::Same,
             false,
         )
