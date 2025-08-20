@@ -31,6 +31,14 @@ pub struct CargoOptions {
     locked: Option<bool>,
 }
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct CargoConfig {
+    #[serde_inline_default(CargoConfig::default().locked)]
+    pub locked: bool,
+}
+
 impl Backend for Cargo {
     type Options = CargoOptions;
     type Config = CargoConfig;

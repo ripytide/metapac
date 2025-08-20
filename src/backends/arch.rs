@@ -15,6 +15,14 @@ pub struct Arch;
 #[serde(deny_unknown_fields)]
 pub struct ArchOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct ArchConfig {
+    #[serde_inline_default(ArchConfig::default().package_manager)]
+    pub package_manager: ArchPackageManager,
+}
+
 impl Backend for Arch {
     type Options = ArchOptions;
     type Config = ArchConfig;

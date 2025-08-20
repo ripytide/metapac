@@ -28,14 +28,12 @@ pub struct Config {
     pub flatpak: FlatpakConfig,
     #[serde_inline_default(Config::default().vscode)]
     pub vscode: VsCodeConfig,
-    pub yarn: YarnConfig,
 }
 
 macro_rules! apply_configs {
     ($macro:ident) => {
         $macro! {
         (CargoConfig, cargo),
-        (YarnConfig, yarn),
         (ArchConfig, arch),
         (VsCodeConfig, vscode),
         (FlatpakConfig, flatpak) }
@@ -59,47 +57,6 @@ impl AsRef<()> for Config {
     fn as_ref(&self) -> &() {
         &()
     }
-}
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-pub struct YarnConfig {}
-
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-pub struct ArchConfig {
-    #[serde_inline_default(ArchConfig::default().package_manager)]
-    pub package_manager: ArchPackageManager,
-}
-
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-pub struct CargoConfig {
-    #[serde_inline_default(CargoConfig::default().locked)]
-    pub locked: bool,
-}
-
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct FlatpakConfig {
-    #[serde_inline_default(FlatpakConfig::default().systemwide)]
-    pub systemwide: bool,
-}
-impl Default for FlatpakConfig {
-    fn default() -> Self {
-        Self { systemwide: true }
-    }
-}
-
-#[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-pub struct VsCodeConfig {
-    #[serde_inline_default(VsCodeVariant::default())]
-    pub variant: VsCodeVariant,
 }
 
 impl Config {

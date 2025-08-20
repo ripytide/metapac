@@ -1,14 +1,14 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+use crate::cmd::run_command;
+use crate::cmd::run_command_for_stdout;
+use crate::prelude::*;
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::cmd::run_command;
-use crate::cmd::run_command_for_stdout;
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct VsCode;
@@ -16,6 +16,14 @@ pub struct VsCode;
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VsCodeOptions {}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodeConfig {
+    #[serde_inline_default(VsCodeVariant::default())]
+    pub variant: VsCodeVariant,
+}
 
 impl Backend for VsCode {
     type Options = VsCodeOptions;

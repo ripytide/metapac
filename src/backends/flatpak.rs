@@ -1,11 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
@@ -15,6 +15,20 @@ pub struct Flatpak;
 pub struct FlatpakOptions {
     pub systemwide: Option<bool>,
     pub remote: Option<String>,
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakConfig {
+    #[serde_inline_default(FlatpakConfig::default().systemwide)]
+    pub systemwide: bool,
+}
+
+impl Default for FlatpakConfig {
+    fn default() -> Self {
+        Self { systemwide: true }
+    }
 }
 
 impl Backend for Flatpak {

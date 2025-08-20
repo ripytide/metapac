@@ -1,14 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::config::YarnConfig;
-use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Yarn;
@@ -19,7 +17,7 @@ pub struct YarnOptions {}
 
 impl Backend for Yarn {
     type Options = YarnOptions;
-    type Config = YarnConfig;
+    type Config = ();
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
