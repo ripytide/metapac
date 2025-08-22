@@ -1,11 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Bun;
@@ -14,9 +14,14 @@ pub struct Bun;
 #[serde(deny_unknown_fields)]
 pub struct BunOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct BunConfig {}
+
 impl Backend for Bun {
     type Options = BunOptions;
-    type Config = ();
+    type Config = BunConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

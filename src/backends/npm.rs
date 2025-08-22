@@ -1,12 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 use serde_json::Value;
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Npm;
@@ -15,9 +15,14 @@ pub struct Npm;
 #[serde(deny_unknown_fields)]
 pub struct NpmOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct NpmConfig {}
+
 impl Backend for Npm {
     type Options = NpmOptions;
-    type Config = ();
+    type Config = NpmConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-
 use crate::prelude::*;
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
+use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 macro_rules! append {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -142,6 +144,58 @@ macro_rules! package_ids {
     }
 }
 apply_backends!(package_ids);
+
+macro_rules! configs {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[serde_inline_default]
+        #[derive(Debug, Serialize, Deserialize, Default)]
+        #[serde(deny_unknown_fields)]
+        pub struct Config {// Update README if fields change.
+            #[serde_inline_default(Config::default().enabled_backends)]
+            pub enabled_backends: BTreeSet<AnyBackend>,
+            #[serde_inline_default(Config::default().hostname_groups_enabled)]
+            pub hostname_groups_enabled: bool,
+            #[serde_inline_default(Config::default().hostname_groups)]
+            pub hostname_groups: BTreeMap<String, Vec<String>>,
+            $(
+                #[serde_inline_default(Config::default().$lower_backend)]
+                pub $lower_backend: <$upper_backend as Backend>::Config,
+            )*
+        }
+
+
+impl Config {
+    pub fn load(config_dir: &Path) -> Result<Self> {
+        let config_file_path = config_dir.join("config.toml");
+
+        if !config_file_path.is_file() {
+            log::warn!(
+                "no config file found at {config_file_path:?}, using default config instead"
+            );
+
+            Ok(Self::default())
+        } else {
+            toml::from_str(
+                &std::fs::read_to_string(config_file_path.clone())
+                    .wrap_err("reading config file")?,
+            )
+            .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
+        }
+    }
+}
+
+
+
+        $(
+        impl AsRef<<$upper_backend as Backend>::Config> for Config {
+            fn as_ref(&self) -> &<$upper_backend as Backend>::Config{
+                &self.$lower_backend
+            }
+        }
+        )*
+    }
+}
+apply_backends!(configs);
 
 macro_rules! raw_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {

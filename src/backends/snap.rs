@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -15,6 +16,11 @@ pub struct Snap;
 pub struct SnapOptions {
     pub confinement: Option<SnapConfinement>,
 }
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct SnapConfig {}
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Serialize, Deserialize, Hash,
@@ -54,7 +60,7 @@ impl SnapConfinement {
 
 impl Backend for Snap {
     type Options = SnapOptions;
-    type Config = ();
+    type Config = SnapConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

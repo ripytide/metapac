@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -14,9 +15,14 @@ pub struct Scoop;
 #[serde(deny_unknown_fields)]
 pub struct ScoopGetOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopConfig {}
+
 impl Backend for Scoop {
     type Options = ScoopGetOptions;
-    type Config = ();
+    type Config = ScoopConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

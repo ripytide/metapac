@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap, BTreeSet};
-
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -13,9 +13,14 @@ pub struct Apt;
 #[serde(deny_unknown_fields)]
 pub struct AptOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct AptConfig {}
+
 impl Backend for Apt {
     type Options = AptOptions;
-    type Config = ();
+    type Config = AptConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

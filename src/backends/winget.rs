@@ -3,6 +3,7 @@ use std::io::Read;
 
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -15,9 +16,14 @@ pub struct WinGet;
 #[serde(deny_unknown_fields)]
 pub struct WinGetOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct WinGetConfig {}
+
 impl Backend for WinGet {
     type Options = WinGetOptions;
-    type Config = ();
+    type Config = WinGetConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,

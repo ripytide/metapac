@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 use color_eyre::Result;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
@@ -16,9 +17,14 @@ pub struct Uv;
 #[serde(deny_unknown_fields)]
 pub struct UvOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct UvConfig {}
+
 impl Backend for Uv {
     type Options = UvOptions;
-    type Config = ();
+    type Config = UvConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
