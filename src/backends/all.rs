@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-
 use crate::prelude::*;
 use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
+use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 macro_rules! append {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -43,22 +45,22 @@ macro_rules! any {
         impl AnyBackend {
             pub fn clean_cache(&self, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config.as_ref()), )*
                 }
             }
             pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config.as_ref()), )*
                 }
             }
             pub fn update_all(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config.as_ref()), )*
                 }
             }
             pub fn version(&self, config: &Config) -> Result<String> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::version(config.as_ref()), )*
                 }
             }
         }
@@ -143,6 +145,58 @@ macro_rules! package_ids {
 }
 apply_backends!(package_ids);
 
+macro_rules! configs {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[serde_inline_default]
+        #[derive(Debug, Serialize, Deserialize, Default)]
+        #[serde(deny_unknown_fields)]
+        pub struct Config {// Update README if fields change.
+            #[serde_inline_default(Config::default().enabled_backends)]
+            pub enabled_backends: BTreeSet<AnyBackend>,
+            #[serde_inline_default(Config::default().hostname_groups_enabled)]
+            pub hostname_groups_enabled: bool,
+            #[serde_inline_default(Config::default().hostname_groups)]
+            pub hostname_groups: BTreeMap<String, Vec<String>>,
+            $(
+                #[serde_inline_default(Config::default().$lower_backend)]
+                pub $lower_backend: <$upper_backend as Backend>::Config,
+            )*
+        }
+
+
+impl Config {
+    pub fn load(config_dir: &Path) -> Result<Self> {
+        let config_file_path = config_dir.join("config.toml");
+
+        if !config_file_path.is_file() {
+            log::warn!(
+                "no config file found at {config_file_path:?}, using default config instead"
+            );
+
+            Ok(Self::default())
+        } else {
+            toml::from_str(
+                &std::fs::read_to_string(config_file_path.clone())
+                    .wrap_err("reading config file")?,
+            )
+            .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
+        }
+    }
+}
+
+
+
+        $(
+        impl AsRef<<$upper_backend as Backend>::Config> for Config {
+            fn as_ref(&self) -> &<$upper_backend as Backend>::Config{
+                &self.$lower_backend
+            }
+        }
+        )*
+    }
+}
+apply_backends!(configs);
+
 macro_rules! raw_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
@@ -189,7 +243,7 @@ macro_rules! packages {
 
             pub fn expand_group_packages(mut self, config: &Config) -> Result<Self> {
                 $(
-                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config)?;
+                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config.as_ref())?;
                 )*
 
                 Ok(self)
@@ -202,7 +256,7 @@ macro_rules! packages {
                     }
 
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
-                    $upper_backend::install(&options, no_confirm, config)?;
+                    $upper_backend::install(&options, no_confirm, config.as_ref())?;
 
                     for package in self.$lower_backend.values() {
                         package.run_after_install()?;
@@ -214,7 +268,7 @@ macro_rules! packages {
 
             pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config)?;
+                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config.as_ref())?;
                 )*
 
                 Ok(())

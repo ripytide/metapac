@@ -1,11 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
@@ -17,17 +17,32 @@ pub struct FlatpakOptions {
     pub remote: Option<String>,
 }
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakConfig {
+    #[serde_inline_default(FlatpakConfig::default().systemwide)]
+    pub systemwide: bool,
+}
+
+impl Default for FlatpakConfig {
+    fn default() -> Self {
+        Self { systemwide: true }
+    }
+}
+
 impl Backend for Flatpak {
     type Options = FlatpakOptions;
+    type Config = FlatpakConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -148,14 +163,14 @@ impl Backend for Flatpak {
     fn install(
         packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
-        config: &Config,
+        config: &Self::Config,
     ) -> Result<()> {
         for (package, options) in packages {
             run_command(
                 [
                     "flatpak",
                     "install",
-                    if options.systemwide.unwrap_or(config.flatpak.systemwide) {
+                    if options.systemwide.unwrap_or(config.systemwide) {
                         "--system"
                     } else {
                         "--user"
@@ -172,7 +187,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["flatpak", "uninstall"]
@@ -186,7 +201,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
@@ -196,7 +211,7 @@ impl Backend for Flatpak {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
@@ -205,13 +220,13 @@ impl Backend for Flatpak {
         )
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["flatpak", "remove", "--unused"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
     }
 }

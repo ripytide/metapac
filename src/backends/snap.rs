@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -15,6 +16,11 @@ pub struct Snap;
 pub struct SnapOptions {
     pub confinement: Option<SnapConfinement>,
 }
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct SnapConfig {}
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Serialize, Deserialize, Hash,
@@ -54,15 +60,16 @@ impl SnapConfinement {
 
 impl Backend for Snap {
     type Options = SnapOptions;
+    type Config = SnapConfig;
 
     fn expand_group_packages(
         packages: BTreeMap<String, Package<Self::Options>>,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<BTreeMap<String, Package<Self::Options>>> {
         Ok(packages)
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -83,13 +90,17 @@ impl Backend for Snap {
             .collect())
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         build_snap_install_commands(packages)
             .iter()
             .try_for_each(|cmd| run_command(cmd, Perms::Sudo))
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
@@ -102,7 +113,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "refresh"]
@@ -115,17 +126,17 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["snap", "refresh"], Perms::Sudo)
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["rm", "-rf", "/var/lib/snapd/cache/*"], Perms::Sudo)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["snap", "--version"], Perms::Same, false).map(|output| {
             output
                 .lines()
