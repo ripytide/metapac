@@ -10,7 +10,7 @@ use serde_json::Value;
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
 use crate::prelude::*;
-use crate::backends::mise::{parse_provider_and_name, query_installed_tools};
+use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Pipx;
@@ -31,15 +31,9 @@ impl Backend for Pipx {
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         // If pipx is managed by mise, query via mise's installed tool list (provider == pipx)
-        if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            if let Ok(tools) = query_installed_tools(config) {
-                let names: BTreeSet<String> = tools.into_iter().filter_map(|t| {
-                    parse_provider_and_name(&t)
-                        .and_then(|(prov, name)| if prov == "pipx" { Some(name) } else { None })
-                }).collect();
-                return Ok(names.into_iter().map(|x| (x, Self::Options {})).collect());
-            }
-            return Ok(BTreeMap::new());
+        if is_delegated(config, &AnyBackend::Pipx) {
+            let names = list_names_for_backend(config, &AnyBackend::Pipx)?;
+            return Ok(names.into_iter().map(|x| (x, Self::Options {})).collect());
         }
 
         if Self::version(config).is_err() {
@@ -58,10 +52,9 @@ impl Backend for Pipx {
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            let mut args: Vec<String> = vec!["mise".into(), "install".into()];
-            args.extend(packages.keys().map(|k| format!("pipx:{k}")));
-            run_command(args, Perms::Same)?;
+        if is_delegated(config, &AnyBackend::Pipx) {
+            let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
+            install_for(&AnyBackend::Pipx, &args)?;
             return Ok(());
         }
 
@@ -76,10 +69,8 @@ impl Backend for Pipx {
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            for package in packages {
-                run_command(["mise", "uninstall", &format!("pipx:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Pipx) {
+            uninstall_for(&AnyBackend::Pipx, packages)?;
             return Ok(());
         }
 
@@ -92,10 +83,8 @@ impl Backend for Pipx {
     fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            for package in packages {
-                run_command(["mise", "upgrade", &format!("pipx:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Pipx) {
+            upgrade_for(&AnyBackend::Pipx, packages)?;
             return Ok(());
         }
 
@@ -108,8 +97,8 @@ impl Backend for Pipx {
     }
 
     fn update_all(_: bool, config: &Config) -> Result<()> {
-        if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            return run_command(["mise", "upgrade", "pipx:*"], Perms::Same);
+        if is_delegated(config, &AnyBackend::Pipx) {
+            return upgrade_all_for(&AnyBackend::Pipx);
         }
         run_command(["pipx", "update-all"], Perms::Same)
     }

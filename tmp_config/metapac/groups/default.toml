@@ -1,3 +1,0 @@
-npm = ["prettier"]
-pipx = ["black"]
-cargo = ["ripgrep"]

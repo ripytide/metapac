@@ -1,9 +1,0 @@
-error: get https://aur.archlinux.org/packages.gz: error sending request for url (https://aur.archlinux.org/packages.gz): error trying to connect: dns error: failed to lookup address information: Temporary failure in name resolution: error trying to connect: dns error: failed to lookup address information: Temporary failure in name resolution: dns error: failed to lookup address information: Temporary failure in name resolution: failed to lookup address information: Temporary failure in name resolution
-Error: 
-   0: [91mcommand failed: "paru --sync --list --quiet", exit_status_code: ExitStatus(unix_wait_status(256))[0m
-
-Location:
-   [35msrc/cmd.rs[0m:[35m46[0m
-
-Backtrace omitted. Run with RUST_BACKTRACE=1 environment variable to display it.
-Run with RUST_BACKTRACE=full to include source snippets.

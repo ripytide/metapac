@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
-use crate::backends::mise::{parse_provider_and_name, query_installed_tools};
+use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
@@ -44,15 +44,9 @@ impl Backend for Cargo {
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         // If cargo is managed by mise, query via mise (provider == cargo) and return empty options
-        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            if let Ok(tools) = query_installed_tools(config) {
-                let names = tools.into_iter().filter_map(|t| {
-                    parse_provider_and_name(&t)
-                        .and_then(|(prov, name)| if prov == "cargo" { Some(name) } else { None })
-                });
-                return Ok(names.map(|n| (n, CargoOptions::default())).collect());
-            }
-            return Ok(BTreeMap::new());
+        if is_delegated(config, &AnyBackend::Cargo) {
+            let names = list_names_for_backend(config, &AnyBackend::Cargo)?;
+            return Ok(names.into_iter().map(|n| (n, CargoOptions::default())).collect());
         }
 
         if Self::version(config).is_err() {
@@ -78,10 +72,9 @@ impl Backend for Cargo {
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            let mut args: Vec<String> = vec!["mise".into(), "install".into()];
-            args.extend(packages.keys().map(|k| format!("cargo:{k}")));
-            run_command(args, Perms::Same)?;
+        if is_delegated(config, &AnyBackend::Cargo) {
+            let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
+            install_for(&AnyBackend::Cargo, &args)?;
             return Ok(());
         }
 
@@ -123,10 +116,8 @@ impl Backend for Cargo {
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            for package in packages {
-                run_command(["mise", "uninstall", &format!("cargo:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Cargo) {
+            uninstall_for(&AnyBackend::Cargo, packages)?;
             return Ok(());
         }
 
@@ -139,11 +130,8 @@ impl Backend for Cargo {
     }
 
     fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
-        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            // Upgrade only the provided cargo tools via mise
-            for package in packages {
-                run_command(["mise", "upgrade", &format!("cargo:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Cargo) {
+            upgrade_for(&AnyBackend::Cargo, packages)?;
             return Ok(());
         }
 
@@ -175,8 +163,8 @@ impl Backend for Cargo {
     }
 
     fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
-        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            return run_command(["mise", "upgrade", "cargo:*"], Perms::Same);
+        if is_delegated(config, &AnyBackend::Cargo) {
+            return upgrade_all_for(&AnyBackend::Cargo);
         }
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527

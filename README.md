@@ -154,6 +154,14 @@ for additional backends are always welcome!
 | `xbps`    |                                                                                                                                                                                                             |
 | `yarn`    |                                                                                                                                                                                                             |
 
+### Mise Delegation
+
+When using mise as a tool manager, you can keep packages organized under their native backends while delegating their implementation to mise via the centralized `[mise].manage_backends` setting.
+
+- Enable `mise` alongside delegation: It’s fine to include `mise` in `enabled_backends` while using `[mise].manage_backends`. The `mise` backend will list only non-delegated tools (e.g., core tools like `bun`, `deno`, `node`, `python`, `rust`), and delegated providers (e.g., `npm`, `pipx`, `cargo`) will appear under their native backends.
+- Internals handled by mise: Delegated backends inherit mise’s internal choices (e.g., `npm` may use bun; `pipx` may use uvx). metapac delegates to mise and stays agnostic.
+- Scoped upgrades: For delegated backends, `update-all` is scoped to that provider via mise (e.g., `npm:*`, `pipx:*`, `cargo:*`).
+
 ## Config
 
 ```toml
@@ -204,7 +212,9 @@ systemwide = true
 
 [mise]
 # Backends that mise should manage (delegate to mise). Example: ["npm", "pipx"].
-# Default: [] (no delegation)
+# Default: [] (no delegation). It’s fine to enable the `mise` backend at the
+# same time; the `mise` section will only show non-delegated tools while
+# delegated providers remain grouped under their native backends.
 manage_backends = ["npm", "pipx"]
 
 [vscode]

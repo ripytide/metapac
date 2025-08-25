@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
-use crate::backends::mise::{parse_provider_and_name, query_installed_tools};
+use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Npm;
@@ -28,15 +28,9 @@ impl Backend for Npm {
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
         // If npm is managed by mise, query via mise's installed tool list (provider == npm)
-        if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            if let Ok(tools) = query_installed_tools(config) {
-                let names = tools.into_iter().filter_map(|t| {
-                    parse_provider_and_name(&t)
-                        .and_then(|(prov, name)| if prov == "npm" { Some(name) } else { None })
-                });
-                return Ok(names.map(|n| (n, NpmOptions {})).collect());
-            }
-            return Ok(BTreeMap::new());
+        if is_delegated(config, &AnyBackend::Npm) {
+            let names = list_names_for_backend(config, &AnyBackend::Npm)?;
+            return Ok(names.into_iter().map(|n| (n, NpmOptions {})).collect());
         }
 
         if Self::version(config).is_err() {
@@ -68,10 +62,9 @@ impl Backend for Npm {
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            let mut args: Vec<String> = vec!["mise".into(), "install".into()];
-            args.extend(packages.keys().map(|k| format!("npm:{k}")));
-            run_command(args, Perms::Same)?;
+        if is_delegated(config, &AnyBackend::Npm) {
+            let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
+            install_for(&AnyBackend::Npm, &args)?;
             return Ok(());
         }
 
@@ -86,10 +79,8 @@ impl Backend for Npm {
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            for package in packages {
-                run_command(["mise", "uninstall", &format!("npm:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Npm) {
+            uninstall_for(&AnyBackend::Npm, packages)?;
             return Ok(());
         }
 
@@ -99,11 +90,8 @@ impl Backend for Npm {
     fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
         if packages.is_empty() { return Ok(()); }
 
-        if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            // Upgrade only the provided npm tools via mise
-            for package in packages {
-                run_command(["mise", "upgrade", &format!("npm:{package}")], Perms::Same)?;
-            }
+        if is_delegated(config, &AnyBackend::Npm) {
+            upgrade_for(&AnyBackend::Npm, packages)?;
             return Ok(());
         }
 
@@ -111,9 +99,8 @@ impl Backend for Npm {
     }
 
     fn update_all(_: bool, config: &Config) -> Result<()> {
-        if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            // Scope upgrades to npm tools only
-            return run_command(["mise", "upgrade", "npm:*"], Perms::Same);
+        if is_delegated(config, &AnyBackend::Npm) {
+            return upgrade_all_for(&AnyBackend::Npm);
         }
         run_command(["npm", "update", "--global"], Perms::Same)
     }

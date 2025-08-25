@@ -1,5 +1,0 @@
-error: unexpected argument '--config-dir' found
-
-Usage: metapac backends
-
-For more information, try '--help'.
