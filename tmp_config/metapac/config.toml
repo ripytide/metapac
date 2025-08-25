@@ -1,0 +1,5 @@
+# minimal test config
+enabled_backends = ["npm", "pipx", "cargo"]
+
+[mise]
+manage_backends = ["npm", "pipx", "cargo"]

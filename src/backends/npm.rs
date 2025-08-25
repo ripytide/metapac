@@ -112,8 +112,8 @@ impl Backend for Npm {
 
     fn update_all(_: bool, config: &Config) -> Result<()> {
         if config.mise.manage_backends.contains(&AnyBackend::Npm) {
-            // Best-effort: upgrade all tools via mise (might affect other providers)
-            return run_command(["mise", "upgrade"], Perms::Same);
+            // Scope upgrades to npm tools only
+            return run_command(["mise", "upgrade", "npm:*"], Perms::Same);
         }
         run_command(["npm", "update", "--global"], Perms::Same)
     }

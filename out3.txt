@@ -1,0 +1,5 @@
+error: unexpected argument '--config-dir' found
+
+Usage: metapac unmanaged
+
+For more information, try '--help'.

@@ -176,7 +176,7 @@ impl Backend for Cargo {
 
     fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
         if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
-            return run_command(["mise", "upgrade"], Perms::Same);
+            return run_command(["mise", "upgrade", "cargo:*"], Perms::Same);
         }
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527

@@ -28,12 +28,28 @@ impl Backend for Mise {
             return Ok(BTreeMap::new());
         }
 
-        // Use helper to get the "tool id" (first column), e.g. "node" or "npm:mcp-hub"
+        // Get installed tools and filter out provider-prefixed tools that are delegated
+        // to their native backends via [mise].manage_backends. This keeps mise's section
+        // for core tools (bun, deno, node, python, etc.) and non-delegated providers.
         let tools = query_installed_tools(config)?;
+        let mut packages = BTreeMap::new();
 
-        Ok(BTreeMap::from_iter(
-            tools.into_iter().map(|tool| (tool, Self::Options {})),
-        ))
+        for tool in tools {
+            if let Some((provider, _name)) = parse_provider_and_name(&tool) {
+                let delegated = match provider.as_str() {
+                    "npm" => config.mise.manage_backends.contains(&AnyBackend::Npm),
+                    "pipx" => config.mise.manage_backends.contains(&AnyBackend::Pipx),
+                    "cargo" => config.mise.manage_backends.contains(&AnyBackend::Cargo),
+                    _ => false,
+                };
+                if delegated {
+                    continue;
+                }
+            }
+            packages.insert(tool, Self::Options {});
+        }
+
+        Ok(packages)
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {

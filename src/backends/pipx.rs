@@ -109,7 +109,7 @@ impl Backend for Pipx {
 
     fn update_all(_: bool, config: &Config) -> Result<()> {
         if config.mise.manage_backends.contains(&AnyBackend::Pipx) {
-            return run_command(["mise", "upgrade"], Perms::Same);
+            return run_command(["mise", "upgrade", "pipx:*"], Perms::Same);
         }
         run_command(["pipx", "update-all"], Perms::Same)
     }
