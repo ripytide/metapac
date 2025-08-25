@@ -25,7 +25,8 @@ pub use crate::cli::{
 };
 pub use crate::cmd::Perms;
 pub use crate::config::{
-    ArchConfig, ArchPackageManager, CargoConfig, Config, FlatpakConfig, VsCodeConfig, VsCodeVariant,
+    ArchConfig, ArchPackageManager, CargoConfig, Config, FlatpakConfig, MiseConfig, VsCodeConfig,
+    VsCodeVariant,
 };
 pub use crate::groups::Groups;
 pub use crate::package::{Hooks, Package};

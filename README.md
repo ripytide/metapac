@@ -142,7 +142,7 @@ for additional backends are always welcome!
 | `cargo`   |                                                                                                                                                                                                             |
 | `dnf`     |                                                                                                                                                                                                             |
 | `flatpak` |                                                                                                                                                                                                             |
-| `mise`    |                                                                                                                                                                                                             |
+| `mise`    | Can drive other backends via centralized `[mise].manage_backends` (e.g., npm, pipx, cargo). Internals like bun/uvx are handled by mise transparently.                                                     |
 | `npm`     | if on linux you might need to first run `npm config set prefix ~/.local`                                                                                                                                    |
 | `pipx`    |                                                                                                                                                                                                             |
 | `pnpm`    | you might need to first run `pnpm setup`                                                                                                                                                                    |
@@ -201,6 +201,11 @@ locked = true
 # current user. This setting can be overridden on a per-package basis.
 # Default: true
 systemwide = true
+
+[mise]
+# Backends that mise should manage (delegate to mise). Example: ["npm", "pipx"].
+# Default: [] (no delegation)
+manage_backends = ["npm", "pipx"]
 
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database

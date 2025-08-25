@@ -9,6 +9,7 @@ use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
+use crate::backends::mise::{parse_provider_and_name, query_installed_tools};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
@@ -42,6 +43,18 @@ impl Backend for Cargo {
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+        // If cargo is managed by mise, query via mise (provider == cargo) and return empty options
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            if let Ok(tools) = query_installed_tools(config) {
+                let names = tools.into_iter().filter_map(|t| {
+                    parse_provider_and_name(&t)
+                        .and_then(|(prov, name)| if prov == "cargo" { Some(name) } else { None })
+                });
+                return Ok(names.map(|n| (n, CargoOptions::default())).collect());
+            }
+            return Ok(BTreeMap::new());
+        }
+
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -63,6 +76,15 @@ impl Backend for Cargo {
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
+        if packages.is_empty() { return Ok(()); }
+
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            let mut args: Vec<String> = vec!["mise".into(), "install".into()];
+            args.extend(packages.keys().map(|k| format!("cargo:{k}")));
+            run_command(args, Perms::Same)?;
+            return Ok(());
+        }
+
         for (package, options) in packages {
             run_command(
                 ["cargo", "install"]
@@ -98,20 +120,33 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
-        if !packages.is_empty() {
-            run_command(
-                ["cargo", "uninstall"]
-                    .into_iter()
-                    .chain(packages.iter().map(String::as_str)),
-                Perms::Same,
-            )?;
+    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+        if packages.is_empty() { return Ok(()); }
+
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            for package in packages {
+                run_command(["mise", "uninstall", &format!("cargo:{package}")], Perms::Same)?;
+            }
+            return Ok(());
         }
 
-        Ok(())
+        run_command(
+            ["cargo", "uninstall"]
+                .into_iter()
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Same,
+        )
     }
 
     fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            // Upgrade only the provided cargo tools via mise
+            for package in packages {
+                run_command(["mise", "upgrade", &format!("cargo:{package}")], Perms::Same)?;
+            }
+            return Ok(());
+        }
+
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -140,6 +175,9 @@ impl Backend for Cargo {
     }
 
     fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            return run_command(["mise", "upgrade"], Perms::Same);
+        }
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -148,7 +186,11 @@ impl Backend for Cargo {
         Self::install(&install_options, no_confirm, config)
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(config: &Config) -> Result<()> {
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            // No direct cache clean via mise for cargo tools
+            return Ok(());
+        }
         run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)
         })

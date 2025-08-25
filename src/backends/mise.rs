@@ -28,31 +28,12 @@ impl Backend for Mise {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(
-            ["mise", "list", "--installed"],
-            Perms::Same,
-            true,
-        )?;
+        // Use helper to get the "tool id" (first column), e.g. "node" or "npm:mcp-hub"
+        let tools = query_installed_tools(config)?;
 
-        let mut packages = BTreeMap::new();
-        
-        for line in output.lines() {
-            // Parse mise list output which typically shows: tool@version
-            if let Some(tool) = line.split_whitespace().next() {
-                // Extract tool name from tool@version format
-                let tool_name = if let Some(at_pos) = tool.find('@') {
-                    &tool[..at_pos]
-                } else {
-                    tool
-                };
-                
-                if !tool_name.is_empty() {
-                    packages.insert(tool_name.to_string(), Self::Options {});
-                }
-            }
-        }
-
-        Ok(packages)
+        Ok(BTreeMap::from_iter(
+            tools.into_iter().map(|tool| (tool, Self::Options {})),
+        ))
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
@@ -91,4 +72,41 @@ impl Backend for Mise {
     fn version(_: &Config) -> Result<String> {
         run_command_for_stdout(["mise", "--version"], Perms::Same, false)
     }
+}
+
+/// Returns the installed tools as reported by `mise list --installed`'s first column ("Tool").
+/// Examples include:
+/// - "node"
+/// - "npm:mcp-hub"
+/// - "npm:@anthropic-ai/claude-code"
+/// - "pipx:ruff"
+pub fn query_installed_tools(_: &Config) -> Result<BTreeSet<String>> {
+    // We intentionally do not depend on the registry to resolve aliases here; we only care
+    // about the tool identifier as shown by mise to keep behavior stable and predictable.
+    let output = run_command_for_stdout(["mise", "list", "--installed"], Perms::Same, true)?;
+
+    let mut tools: BTreeSet<String> = BTreeSet::new();
+    for (i, line) in output.lines().enumerate() {
+        // Skip header line if present (starts with "Tool"), and any empty lines
+        let first = line.split_whitespace().next();
+        let Some(first) = first else { continue };
+        if i == 0 && first == "Tool" { continue; }
+
+        // The first column is what we need; keep it as-is
+        tools.insert(first.to_string());
+    }
+
+    Ok(tools)
+}
+
+/// Parse provider/name from a mise tool identifier like "npm:mcp-hub".
+/// Returns (provider, name). If no provider is present, returns None.
+pub fn parse_provider_and_name(tool_id: &str) -> Option<(String, String)> {
+    let mut parts = tool_id.splitn(2, ':');
+    let provider = parts.next()?;
+    let name = parts.next()?;
+    if provider.is_empty() || name.is_empty() {
+        return None;
+    }
+    Some((provider.to_string(), name.to_string()))
 }

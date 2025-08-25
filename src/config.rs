@@ -26,6 +26,8 @@ pub struct Config {
     pub cargo: CargoConfig,
     #[serde_inline_default(Config::default().flatpak)]
     pub flatpak: FlatpakConfig,
+    #[serde_inline_default(Config::default().mise)]
+    pub mise: MiseConfig,
     #[serde_inline_default(Config::default().vscode)]
     pub vscode: VsCodeConfig,
 }
@@ -57,6 +59,15 @@ impl Default for FlatpakConfig {
     fn default() -> Self {
         Self { systemwide: true }
     }
+}
+
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct MiseConfig {
+    /// Backends that should be managed by mise (delegation). For example: ["npm", "pipx"].
+    #[serde_inline_default(MiseConfig::default().manage_backends)]
+    pub manage_backends: BTreeSet<AnyBackend>,
 }
 
 #[serde_inline_default]
