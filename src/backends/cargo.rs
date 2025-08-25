@@ -7,9 +7,11 @@ use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
+use crate::backends::mise::{
+    install_for, is_delegated, list_names_for_backend, uninstall_for, upgrade_all_for, upgrade_for,
+};
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
-use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
@@ -46,7 +48,10 @@ impl Backend for Cargo {
         // If cargo is managed by mise, query via mise (provider == cargo) and return empty options
         if is_delegated(config, &AnyBackend::Cargo) {
             let names = list_names_for_backend(config, &AnyBackend::Cargo)?;
-            return Ok(names.into_iter().map(|n| (n, CargoOptions::default())).collect());
+            return Ok(names
+                .into_iter()
+                .map(|n| (n, CargoOptions::default()))
+                .collect());
         }
 
         if Self::version(config).is_err() {
@@ -70,7 +75,9 @@ impl Backend for Cargo {
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Cargo) {
             let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
@@ -114,7 +121,9 @@ impl Backend for Cargo {
     }
 
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Cargo) {
             uninstall_for(&AnyBackend::Cargo, packages)?;

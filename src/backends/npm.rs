@@ -5,9 +5,11 @@ use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::backends::mise::{
+    install_for, is_delegated, list_names_for_backend, uninstall_for, upgrade_all_for, upgrade_for,
+};
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
-use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Npm;
@@ -60,7 +62,9 @@ impl Backend for Npm {
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Npm) {
             let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
@@ -77,25 +81,39 @@ impl Backend for Npm {
     }
 
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Npm) {
             uninstall_for(&AnyBackend::Npm, packages)?;
             return Ok(());
         }
 
-        run_command(["npm", "uninstall", "--global"].into_iter().chain(packages.iter().map(String::as_str)), Perms::Same)
+        run_command(
+            ["npm", "uninstall", "--global"]
+                .into_iter()
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Same,
+        )
     }
 
     fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Npm) {
             upgrade_for(&AnyBackend::Npm, packages)?;
             return Ok(());
         }
 
-        run_command(["npm", "update", "--global"].into_iter().chain(packages.iter().map(String::as_str)), Perms::Same)
+        run_command(
+            ["npm", "update", "--global"]
+                .into_iter()
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Same,
+        )
     }
 
     fn update_all(_: bool, config: &Config) -> Result<()> {
@@ -110,7 +128,9 @@ impl Backend for Npm {
             // No direct mise cache clean for npm; avoid conflicting with mise internals
             return Ok(());
         }
-        Self::version(config).map_or(Ok(()), |_| run_command(["npm", "cache", "clean", "--force"], Perms::Same))
+        Self::version(config).map_or(Ok(()), |_| {
+            run_command(["npm", "cache", "clean", "--force"], Perms::Same)
+        })
     }
 
     fn version(_: &Config) -> Result<String> {

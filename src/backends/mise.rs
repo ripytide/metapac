@@ -39,9 +39,15 @@ impl Backend for Mise {
                 "cargo" => config.mise.manage_backends.contains(&AnyBackend::Cargo),
                 _ => false,
             };
-            if delegated { continue; }
+            if delegated {
+                continue;
+            }
 
-            let id = if provider == "core" { name.clone() } else { format!("{provider}:{name}") };
+            let id = if provider == "core" {
+                name.clone()
+            } else {
+                format!("{provider}:{name}")
+            };
             packages.insert(id, Self::Options {});
         }
 
@@ -86,32 +92,10 @@ impl Backend for Mise {
     }
 }
 
-/// Returns the installed tools as reported by `mise list --installed`'s first column ("Tool").
-/// Examples include:
-/// - "node"
-/// - "npm:mcp-hub"
-/// - "npm:@anthropic-ai/claude-code"
-/// - "pipx:ruff"
-pub fn query_installed_tools(_: &Config) -> Result<BTreeSet<String>> {
-    // Prefer robust JSON output which directly lists tool identifiers as keys.
-    // Equivalent CLI: `mise ls --global --json`
-    let stdout = run_command_for_stdout(["mise", "ls", "--global", "--json"], Perms::Same, true)?;
-
-    let v: Value = serde_json::from_str(&stdout)?;
-    let tools: BTreeSet<String> = if let Some(obj) = v.as_object() {
-        obj.keys().cloned().collect()
-    } else {
-        BTreeSet::new()
-    };
-    Ok(tools)
-}
-
 /// Parse provider/name from a mise tool identifier like "npm:mcp-hub".
 /// Returns (provider, name). If no provider is present, returns None.
 pub fn parse_provider_and_name(tool_id: &str) -> Option<(String, String)> {
-    let mut parts = tool_id.splitn(2, ':');
-    let provider = parts.next()?;
-    let name = parts.next()?;
+    let (provider, name) = tool_id.split_once(':')?;
     if provider.is_empty() || name.is_empty() {
         return None;
     }
@@ -132,7 +116,11 @@ pub fn list_installed_tools_with_providers(_: &Config) -> Result<Vec<(String, St
                 out.push((prov, name));
             } else {
                 // Resolve provider for tools without explicit prefix
-                let backend = run_command_for_stdout(["mise", "tool", key.as_str(), "--backend"], Perms::Same, true)?;
+                let backend = run_command_for_stdout(
+                    ["mise", "tool", key.as_str(), "--backend"],
+                    Perms::Same,
+                    true,
+                )?;
                 // backend format is like "core:bun" or "npm:cowsay"; trim whitespace/newlines
                 let backend = backend.trim();
                 if let Some((prov, name)) = parse_provider_and_name(backend) {
@@ -164,7 +152,9 @@ pub fn is_delegated(config: &Config, backend: &AnyBackend) -> bool {
 
 /// List installed package names for a backend delegated to mise.
 pub fn list_names_for_backend(config: &Config, backend: &AnyBackend) -> Result<BTreeSet<String>> {
-    let Some(provider) = provider_for_backend(backend) else { return Ok(BTreeSet::new()) };
+    let Some(provider) = provider_for_backend(backend) else {
+        return Ok(BTreeSet::new());
+    };
     let tools = list_installed_tools_with_providers(config)?;
     Ok(tools
         .into_iter()
@@ -174,8 +164,12 @@ pub fn list_names_for_backend(config: &Config, backend: &AnyBackend) -> Result<B
 
 /// Run `mise install provider:pkg` for packages under a delegated backend.
 pub fn install_for(backend: &AnyBackend, packages: &BTreeMap<String, String>) -> Result<()> {
-    let Some(provider) = provider_for_backend(backend) else { return Ok(()) };
-    if packages.is_empty() { return Ok(()); }
+    let Some(provider) = provider_for_backend(backend) else {
+        return Ok(());
+    };
+    if packages.is_empty() {
+        return Ok(());
+    }
     let mut args: Vec<String> = vec!["mise".into(), "install".into()];
     args.extend(packages.keys().map(|k| format!("{provider}:{k}")));
     run_command(args, Perms::Same)
@@ -183,24 +177,36 @@ pub fn install_for(backend: &AnyBackend, packages: &BTreeMap<String, String>) ->
 
 /// Run `mise uninstall provider:pkg` for packages under a delegated backend.
 pub fn uninstall_for(backend: &AnyBackend, packages: &BTreeSet<String>) -> Result<()> {
-    let Some(provider) = provider_for_backend(backend) else { return Ok(()) };
+    let Some(provider) = provider_for_backend(backend) else {
+        return Ok(());
+    };
     for package in packages {
-        run_command(["mise", "uninstall", &format!("{provider}:{package}")], Perms::Same)?;
+        run_command(
+            ["mise", "uninstall", &format!("{provider}:{package}")],
+            Perms::Same,
+        )?;
     }
     Ok(())
 }
 
 /// Run `mise upgrade provider:pkg` for the given packages.
 pub fn upgrade_for(backend: &AnyBackend, packages: &BTreeSet<String>) -> Result<()> {
-    let Some(provider) = provider_for_backend(backend) else { return Ok(()) };
+    let Some(provider) = provider_for_backend(backend) else {
+        return Ok(());
+    };
     for package in packages {
-        run_command(["mise", "upgrade", &format!("{provider}:{package}")], Perms::Same)?;
+        run_command(
+            ["mise", "upgrade", &format!("{provider}:{package}")],
+            Perms::Same,
+        )?;
     }
     Ok(())
 }
 
 /// Run `mise upgrade provider:*` for upgrade-all.
 pub fn upgrade_all_for(backend: &AnyBackend) -> Result<()> {
-    let Some(provider) = provider_for_backend(backend) else { return Ok(()) };
+    let Some(provider) = provider_for_backend(backend) else {
+        return Ok(());
+    };
     run_command(["mise", "upgrade", &format!("{provider}:*")], Perms::Same)
 }

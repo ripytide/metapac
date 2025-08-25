@@ -7,10 +7,12 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
+use crate::backends::mise::{
+    install_for, is_delegated, list_names_for_backend, uninstall_for, upgrade_all_for, upgrade_for,
+};
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
 use crate::prelude::*;
-use crate::backends::mise::{is_delegated, list_names_for_backend, upgrade_all_for, uninstall_for, install_for, upgrade_for};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Pipx;
@@ -50,7 +52,9 @@ impl Backend for Pipx {
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Pipx) {
             let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
@@ -67,7 +71,9 @@ impl Backend for Pipx {
     }
 
     fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Pipx) {
             uninstall_for(&AnyBackend::Pipx, packages)?;
@@ -81,7 +87,9 @@ impl Backend for Pipx {
     }
 
     fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
-        if packages.is_empty() { return Ok(()); }
+        if packages.is_empty() {
+            return Ok(());
+        }
 
         if is_delegated(config, &AnyBackend::Pipx) {
             upgrade_for(&AnyBackend::Pipx, packages)?;
