@@ -8,6 +8,7 @@ pub use crate::backends::bun::{Bun, BunOptions};
 pub use crate::backends::cargo::{Cargo, CargoOptions};
 pub use crate::backends::dnf::{Dnf, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakOptions};
+pub use crate::backends::mise::{Mise, MiseOptions};
 pub use crate::backends::npm::{Npm, NpmOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
 pub use crate::backends::pnpm::{Pnpm, PnpmOptions};
@@ -24,7 +25,8 @@ pub use crate::cli::{
 };
 pub use crate::cmd::Perms;
 pub use crate::config::{
-    ArchConfig, ArchPackageManager, CargoConfig, Config, FlatpakConfig, VsCodeConfig, VsCodeVariant,
+    ArchConfig, ArchPackageManager, CargoConfig, Config, FlatpakConfig, MiseConfig, VsCodeConfig,
+    VsCodeVariant,
 };
 pub use crate::groups::Groups;
 pub use crate::package::{Hooks, Package};

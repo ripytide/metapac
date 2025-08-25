@@ -7,6 +7,9 @@ use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
+use crate::backends::mise::{
+    install_for, is_delegated, list_names_for_backend, uninstall_for, upgrade_all_for, upgrade_for,
+};
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 
@@ -42,6 +45,15 @@ impl Backend for Cargo {
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+        // If cargo is managed by mise, query via mise (provider == cargo) and return empty options
+        if is_delegated(config, &AnyBackend::Cargo) {
+            let names = list_names_for_backend(config, &AnyBackend::Cargo)?;
+            return Ok(names
+                .into_iter()
+                .map(|n| (n, CargoOptions::default()))
+                .collect());
+        }
+
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -63,6 +75,16 @@ impl Backend for Cargo {
     }
 
     fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
+        if packages.is_empty() {
+            return Ok(());
+        }
+
+        if is_delegated(config, &AnyBackend::Cargo) {
+            let args = BTreeMap::from_iter(packages.keys().cloned().map(|k| (k, String::new())));
+            install_for(&AnyBackend::Cargo, &args)?;
+            return Ok(());
+        }
+
         for (package, options) in packages {
             run_command(
                 ["cargo", "install"]
@@ -98,20 +120,30 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
-        if !packages.is_empty() {
-            run_command(
-                ["cargo", "uninstall"]
-                    .into_iter()
-                    .chain(packages.iter().map(String::as_str)),
-                Perms::Same,
-            )?;
+    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+        if packages.is_empty() {
+            return Ok(());
         }
 
-        Ok(())
+        if is_delegated(config, &AnyBackend::Cargo) {
+            uninstall_for(&AnyBackend::Cargo, packages)?;
+            return Ok(());
+        }
+
+        run_command(
+            ["cargo", "uninstall"]
+                .into_iter()
+                .chain(packages.iter().map(String::as_str)),
+            Perms::Same,
+        )
     }
 
     fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+        if is_delegated(config, &AnyBackend::Cargo) {
+            upgrade_for(&AnyBackend::Cargo, packages)?;
+            return Ok(());
+        }
+
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -140,6 +172,9 @@ impl Backend for Cargo {
     }
 
     fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+        if is_delegated(config, &AnyBackend::Cargo) {
+            return upgrade_all_for(&AnyBackend::Cargo);
+        }
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -148,7 +183,11 @@ impl Backend for Cargo {
         Self::install(&install_options, no_confirm, config)
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(config: &Config) -> Result<()> {
+        if config.mise.manage_backends.contains(&AnyBackend::Cargo) {
+            // No direct cache clean via mise for cargo tools
+            return Ok(());
+        }
         run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)
         })
