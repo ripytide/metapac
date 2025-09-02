@@ -18,54 +18,8 @@ pub struct ArchOptions {}
 impl Backend for Arch {
     type Options = ArchOptions;
 
-    fn expand_group_packages(
-        mut packages: BTreeMap<String, Package<Self::Options>>,
-        config: &Config,
-    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
-        if Self::version(config).is_err() {
-            return Ok(BTreeMap::new());
-        }
-
-        let groups = run_command_for_stdout(
-            [
-                config.arch.package_manager.as_command(),
-                "--sync",
-                "--groups",
-                "--quiet",
-            ],
-            Perms::Same,
-            false,
-        )?;
-
-        for group in groups.lines() {
-            if let Some(options) = packages.remove(group) {
-                let group_packages = run_command_for_stdout(
-                    [
-                        config.arch.package_manager.as_command(),
-                        "--sync",
-                        "--groups",
-                        "--quiet",
-                        group,
-                    ],
-                    Perms::Same,
-                    false,
-                )?;
-
-                for group_package in group_packages.lines() {
-                    let overridden = packages
-                        .insert(group_package.to_string(), options.clone())
-                        .is_some();
-
-                    if overridden {
-                        log::warn!(
-                            "arch package {group_package:?} has been overridden by the {group:?} package group"
-                        );
-                    }
-                }
-            }
-        }
-
-        let all_packages: BTreeSet<String> = run_command_for_stdout(
+    fn are_valid_packages(packages: BTreeSet<String>, config: &Config) -> Result<BTreeMap<String, Option<bool>>> {
+        let available_packages: BTreeSet<String> = run_command_for_stdout(
             [
                 config.arch.package_manager.as_command(),
                 "--sync",
@@ -79,13 +33,9 @@ impl Backend for Arch {
         .map(String::from)
         .collect();
 
-        let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
-        for package in packages_cloned {
-            let is_real_package = all_packages.contains(&package);
-
-            if !is_real_package {
-                packages.remove(&package);
-
+        let mut output = BTreeMap::new();
+        for package in packages {
+            let validity = if available_packages.contains(&package) {
                 log::warn!(
                     "{}",
                     indoc::formatdoc! {"
@@ -105,10 +55,16 @@ impl Backend for Arch {
                               update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
                     "}
                 );
-            }
+
+                Some(false)
+            } else {
+                Some(true)
+            };
+
+            output.insert(package, validity);
         }
 
-        Ok(packages)
+        Ok(output)
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {

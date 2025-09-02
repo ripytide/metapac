@@ -19,11 +19,11 @@ pub struct YarnOptions {}
 impl Backend for Yarn {
     type Options = YarnOptions;
 
-    fn expand_group_packages(
-        packages: BTreeMap<String, Package<Self::Options>>,
+    fn are_valid_packages(
+        packages: BTreeSet<String>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
-        Ok(packages)
+    ) -> Result<BTreeMap<String, Option<bool>>> {
+        Ok(packages.into_iter().map(|x| (x, None)).collect())
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
