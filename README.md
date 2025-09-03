@@ -135,7 +135,7 @@ for additional backends are always welcome!
 
 | Backend   | Notes                                                                                                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arch`    | see the `arch_package_manager` config                                                                                                                                                                       |
+| [`arch`](#arch)    | see the `arch_package_manager` config                                                                                                                                                                       |
 | `apt`     |                                                                                                                                                                                                             |
 | `brew`    |                                                                                                                                                                                                             |
 | `bun`     |                                                                                                                                                                                                             |
@@ -152,6 +152,40 @@ for additional backends are always welcome!
 | `winget`  |                                                                                                                                                                                                             |
 | `xbps`    |                                                                                                                                                                                                             |
 | `yarn`    |                                                                                                                                                                                                             |
+
+### Backend Specific Notes
+
+#### Arch
+
+#### Package Groups
+
+Arch's main package manager: `pacman` and the various AUR helpers have
+two special types of packages called meta packages and package groups. See
+<https://wiki.archlinux.org/title/Meta_package_and_package_group> for the
+full definitions and potential use-cases.
+
+`metapac` only supports meta packages in group files since they are "real"
+packages whereas groups are not "real". This is because meta packages are
+normal PKGBUILD files with no content of themselves but which have several
+dependencies, whereas package groups are special cases that don't have a
+corresponding PKGBUILD file.
+
+If you still want the behavior of a meta package you have two options.
+
+Firstly, consider creating your own meta package with the same packages as
+the group. Consider also publishing this package to the AUR so other users
+can also benefit from it. Convention has it that meta packages end in
+`-meta`, for example, the meta package version of `nerd-fonts` might be
+called `nerd-fonts-meta` (Although `nerd-fonts-meta` does not yet exist at
+the time of writing, 2025-09-03).
+
+Alternatively, you could create a new group file using the packages from
+the package group, which you can get from the command: `pacman -Sgq <group_name>`.
+
+Instead if you want to add a
+package group to your package files you should 
+
+
 
 ## Config
 
