@@ -43,7 +43,9 @@ impl MainArguments {
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
-        let mut required = groups.to_packages().expand_group_packages(&config)?;
+        let mut required = groups
+            .to_packages()
+            .expand_group_packages(&config.backends)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -217,7 +219,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config.as_ref())?;
+                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backends.$lower_backend)?;
                         },
                     )*
                 }
@@ -244,7 +246,7 @@ impl UninstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::uninstall(&packages, self.no_confirm, config.as_ref())?;
+                            $upper_backend::uninstall(&packages, self.no_confirm, &config.backends.$lower_backend)?;
                         },
                     )*
                 }
@@ -260,7 +262,8 @@ impl UpdateCommand {
     fn run(self, config: &Config) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
-        self.backend.update(&packages, self.no_confirm, config)
+        self.backend
+            .update(&packages, self.no_confirm, &config.backends)
     }
 }
 
@@ -271,7 +274,7 @@ impl UpdateAllCommand {
         for backend in backends.iter() {
             log::info!("updating all packages for {backend} backend");
 
-            backend.update_all(self.no_confirm, config)?
+            backend.update_all(self.no_confirm, &config.backends)?
         }
 
         Ok(())
@@ -303,7 +306,7 @@ impl CleanCommand {
             return Ok(());
         }
 
-        package_ids_to_packages(unmanaged).uninstall(self.no_confirm, config)
+        package_ids_to_packages(unmanaged).uninstall(self.no_confirm, &config.backends)
     }
 }
 
@@ -332,7 +335,7 @@ impl SyncCommand {
             return Ok(());
         }
 
-        missing.install(self.no_confirm, config)
+        missing.install(self.no_confirm, &config.backends)
     }
 }
 
@@ -356,7 +359,7 @@ impl BackendsCommand {
             println!(
                 "{backend}: {}",
                 backend
-                    .version(config)
+                    .version(&config.backends)
                     .as_deref()
                     .unwrap_or("Not Found")
                     .trim()
@@ -374,7 +377,7 @@ impl CleanCacheCommand {
         for backend in backends.iter() {
             log::info!("cleaning cache for {backend} backend");
 
-            backend.clean_cache(config)?
+            backend.clean_cache(&config.backends)?
         }
 
         Ok(())
@@ -388,7 +391,7 @@ fn installed(config: &Config) -> Result<PackageIds> {
                 $(
                     $lower_backend:
                         if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::query(config.as_ref())?.keys().cloned().collect()
+                            $upper_backend::query(&config.backends.$lower_backend)?.keys().cloned().collect()
                         } else {
                             Default::default()
                         },
@@ -396,7 +399,7 @@ fn installed(config: &Config) -> Result<PackageIds> {
             }
         };
     }
-    Ok(apply_backends!(x).filtered(config))
+    Ok(apply_backends!(x).filtered(&config))
 }
 fn unmanaged(required: &Packages, config: &Config) -> Result<PackageIds> {
     installed(config).map(|x| x.difference(&required.to_package_ids()))

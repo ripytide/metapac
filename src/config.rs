@@ -1,51 +1,41 @@
-use serde::{Deserialize, Serialize};
-
 use crate::prelude::*;
+use color_eyre::Result;
+use color_eyre::eyre::{Context, eyre};
+use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ArchPackageManager {
-    #[default]
-    Pacman,
-    Pamac,
-    Paru,
-    Pikaur,
-    Yay,
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct Config {
+    // Update README if fields change.
+    #[serde_inline_default(Config::default().enabled_backends)]
+    pub enabled_backends: BTreeSet<AnyBackend>,
+    #[serde_inline_default(Config::default().hostname_groups_enabled)]
+    pub hostname_groups_enabled: bool,
+    #[serde_inline_default(Config::default().hostname_groups)]
+    pub hostname_groups: BTreeMap<String, Vec<String>>,
+    #[serde(flatten)]
+    pub backends: BackendConfigs,
 }
-impl ArchPackageManager {
-    pub fn as_command(&self) -> &'static str {
-        match self {
-            ArchPackageManager::Pacman => "pacman",
-            ArchPackageManager::Pamac => "pamac",
-            ArchPackageManager::Paru => "paru",
-            ArchPackageManager::Pikaur => "pikaur",
-            ArchPackageManager::Yay => "yay",
-        }
-    }
+impl Config {
+    pub fn load(config_dir: &Path) -> Result<Self> {
+        let config_file_path = config_dir.join("config.toml");
 
-    pub fn change_perms(&self) -> Perms {
-        match self {
-            ArchPackageManager::Pacman => Perms::Sudo,
-            ArchPackageManager::Pamac => Perms::Same,
-            ArchPackageManager::Paru => Perms::Same,
-            ArchPackageManager::Pikaur => Perms::Same,
-            ArchPackageManager::Yay => Perms::Same,
-        }
-    }
-}
+        if !config_file_path.is_file() {
+            log::warn!(
+                "no config file found at {config_file_path:?}, using default config instead"
+            );
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum VsCodeVariant {
-    #[default]
-    Code,
-    Codium,
-}
-impl VsCodeVariant {
-    pub fn as_command(&self) -> &'static str {
-        match self {
-            VsCodeVariant::Code => "code",
-            VsCodeVariant::Codium => "codium",
+            Ok(Self::default())
+        } else {
+            toml::from_str(
+                &std::fs::read_to_string(config_file_path.clone())
+                    .wrap_err("reading config file")?,
+            )
+            .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
         }
     }
 }

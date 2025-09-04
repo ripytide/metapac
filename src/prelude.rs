@@ -1,6 +1,7 @@
 pub use crate::backends::Backend;
-pub use crate::backends::all::Config;
-pub use crate::backends::all::{AnyBackend, PackageIds, Packages, RawPackageIds, RawPackages};
+pub use crate::backends::all::{
+    AnyBackend, BackendConfigs, PackageIds, Packages, RawPackageIds, RawPackages,
+};
 pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
 pub use crate::backends::arch::{Arch, ArchConfig, ArchOptions};
@@ -24,6 +25,6 @@ pub use crate::cli::{
     SyncCommand, UninstallCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
 };
 pub use crate::cmd::Perms;
-pub use crate::config::{ArchPackageManager, VsCodeVariant};
+pub use crate::config::Config;
 pub use crate::groups::Groups;
 pub use crate::package::{Hooks, Package};

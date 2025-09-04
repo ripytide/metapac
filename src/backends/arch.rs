@@ -23,6 +23,38 @@ pub struct ArchConfig {
     pub package_manager: ArchPackageManager,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ArchPackageManager {
+    #[default]
+    Pacman,
+    Pamac,
+    Paru,
+    Pikaur,
+    Yay,
+}
+impl ArchPackageManager {
+    pub fn as_command(&self) -> &'static str {
+        match self {
+            ArchPackageManager::Pacman => "pacman",
+            ArchPackageManager::Pamac => "pamac",
+            ArchPackageManager::Paru => "paru",
+            ArchPackageManager::Pikaur => "pikaur",
+            ArchPackageManager::Yay => "yay",
+        }
+    }
+
+    pub fn change_perms(&self) -> Perms {
+        match self {
+            ArchPackageManager::Pacman => Perms::Sudo,
+            ArchPackageManager::Pamac => Perms::Same,
+            ArchPackageManager::Paru => Perms::Same,
+            ArchPackageManager::Pikaur => Perms::Same,
+            ArchPackageManager::Yay => Perms::Same,
+        }
+    }
+}
+
 impl Backend for Arch {
     type Options = ArchOptions;
     type Config = ArchConfig;

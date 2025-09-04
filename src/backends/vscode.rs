@@ -25,6 +25,22 @@ pub struct VsCodeConfig {
     pub variant: VsCodeVariant,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VsCodeVariant {
+    #[default]
+    Code,
+    Codium,
+}
+impl VsCodeVariant {
+    pub fn as_command(&self) -> &'static str {
+        match self {
+            VsCodeVariant::Code => "code",
+            VsCodeVariant::Codium => "codium",
+        }
+    }
+}
+
 impl Backend for VsCode {
     type Options = VsCodeOptions;
     type Config = VsCodeConfig;

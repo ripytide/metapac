@@ -1,10 +1,8 @@
 use crate::prelude::*;
 use color_eyre::Result;
-use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 macro_rules! append {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -43,24 +41,24 @@ macro_rules! any {
             $($upper_backend,)*
         }
         impl AnyBackend {
-            pub fn clean_cache(&self, config: &Config) -> Result<()> {
+            pub fn clean_cache(&self, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config.as_ref()), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(&config.$lower_backend), )*
                 }
             }
-            pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config.as_ref()), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, &config.$lower_backend), )*
                 }
             }
-            pub fn update_all(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn update_all(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config.as_ref()), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, &config.$lower_backend), )*
                 }
             }
-            pub fn version(&self, config: &Config) -> Result<String> {
+            pub fn version(&self, config: &BackendConfigs) -> Result<String> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::version(config.as_ref()), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::version(&config.$lower_backend), )*
                 }
             }
         }
@@ -150,49 +148,12 @@ macro_rules! configs {
         #[serde_inline_default]
         #[derive(Debug, Serialize, Deserialize, Default)]
         #[serde(deny_unknown_fields)]
-        pub struct Config {// Update README if fields change.
-            #[serde_inline_default(Config::default().enabled_backends)]
-            pub enabled_backends: BTreeSet<AnyBackend>,
-            #[serde_inline_default(Config::default().hostname_groups_enabled)]
-            pub hostname_groups_enabled: bool,
-            #[serde_inline_default(Config::default().hostname_groups)]
-            pub hostname_groups: BTreeMap<String, Vec<String>>,
+        pub struct BackendConfigs {// Update README if fields change.
             $(
-                #[serde_inline_default(Config::default().$lower_backend)]
+                #[serde_inline_default(BackendConfigs::default().$lower_backend)]
                 pub $lower_backend: <$upper_backend as Backend>::Config,
             )*
         }
-
-
-impl Config {
-    pub fn load(config_dir: &Path) -> Result<Self> {
-        let config_file_path = config_dir.join("config.toml");
-
-        if !config_file_path.is_file() {
-            log::warn!(
-                "no config file found at {config_file_path:?}, using default config instead"
-            );
-
-            Ok(Self::default())
-        } else {
-            toml::from_str(
-                &std::fs::read_to_string(config_file_path.clone())
-                    .wrap_err("reading config file")?,
-            )
-            .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
-        }
-    }
-}
-
-
-
-        $(
-        impl AsRef<<$upper_backend as Backend>::Config> for Config {
-            fn as_ref(&self) -> &<$upper_backend as Backend>::Config{
-                &self.$lower_backend
-            }
-        }
-        )*
     }
 }
 apply_backends!(configs);
@@ -241,22 +202,22 @@ macro_rules! packages {
                 packages
             }
 
-            pub fn expand_group_packages(mut self, config: &Config) -> Result<Self> {
+            pub fn expand_group_packages(mut self, config: &BackendConfigs) -> Result<Self> {
                 $(
-                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config.as_ref())?;
+                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, &config.$lower_backend)?;
                 )*
 
                 Ok(self)
             }
 
-            pub fn install(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn install(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
                     for package in self.$lower_backend.values() {
                         package.run_before_install()?;
                     }
 
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
-                    $upper_backend::install(&options, no_confirm, config.as_ref())?;
+                    $upper_backend::install(&options, no_confirm, &config.$lower_backend)?;
 
                     for package in self.$lower_backend.values() {
                         package.run_after_install()?;
@@ -266,9 +227,9 @@ macro_rules! packages {
                 Ok(())
             }
 
-            pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn uninstall(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config.as_ref())?;
+                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, &config.$lower_backend)?;
                 )*
 
                 Ok(())
