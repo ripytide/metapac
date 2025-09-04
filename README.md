@@ -309,8 +309,8 @@ variant = "code"
 # ]
 
 arch = [
-  "metapac",
-  { package = "metapac" },
+  "package1",
+  { package = "package2" },
   { package = "syncthing", hooks = { after_sync = [
     "sudo",
     "systemctl",
@@ -339,44 +339,44 @@ arch = [
     "after_sync",
   ] } },
 ]
-apt = ["metapac", { package = "metapac" }]
-brew = ["metapac", { package = "metapac" }]
-bun = ["metapac", { package = "metapac" }]
+apt = ["package1", { package = "package2" }]
+brew = ["package1", { package = "package2" }]
+bun = ["package1", { package = "package2" }]
 cargo = [
-  "metapac",
+  "package1",
   # see cargo docs for info on the options
-  { package = "metapac", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [
+  { package = "package2", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [
     "feature1",
   ], locked = true } },
 ]
 dnf = [
-  "metapac",
+  "package1",
   # see dnf docs for more info on these options
-  { package = "metapac", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
+  { package = "package2", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
 ]
 flatpak = [
-  "metapac",
-  { package = "metapac", options = { remote = "flathub", systemwide = false } },
+  "package1",
+  { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
-npm = ["metapac", { package = "metapac" }]
-pipx = ["metapac", { package = "metapac" }]
-pnpm = ["metapac", { package = "metapac" }]
-scoop = ["main/metapac", { package = "main/metapac" }]
+npm = ["package1", { package = "package2" }]
+pipx = ["package1", { package = "package2" }]
+pnpm = ["package1", { package = "package2" }]
+scoop = ["main/metapac1", { package = "main/package2" }]
 snap = [
-  "metapac",
-  { package = "metapac" },
+  "package1",
+  { package = "package2" },
   # see https://snapcraft.io/docs/snap-confinement for more info on confinement
-  { package = "metapac", options = { confinement = "strict" } },
-  { package = "metapac", options = { confinement = "classic" } },
-  { package = "metapac", options = { confinement = "dangerous" } },
-  { package = "metapac", options = { confinement = "devmode" } },
-  { package = "metapac", options = { confinement = "jailmode" } },
+  { package = "package3", options = { confinement = "strict" } },
+  { package = "package4", options = { confinement = "classic" } },
+  { package = "package5", options = { confinement = "dangerous" } },
+  { package = "package6", options = { confinement = "devmode" } },
+  { package = "package7", options = { confinement = "jailmode" } },
 ]
-uv = ["metapac", { package = "metapac" }]
-vscode = ["metapac", { package = "metapac" }]
-winget = ["ripytide.metapac", { package = "ripytide.metapac" }]
-xbps = ["metapac", { package = "metapac" }]
-yarn = ["metapac", { package = "metapac" }]
+uv = ["package1", { package = "package2" }]
+vscode = ["package1", { package = "package2" }]
+winget = ["ripytide.package1", { package = "ripytide.package2" }]
+xbps = ["package1", { package = "package2" }]
+yarn = ["package1", { package = "package2" }]
 ```
 
 ## Wishlist
