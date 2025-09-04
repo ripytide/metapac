@@ -26,7 +26,7 @@ impl Groups {
         result
     }
 
-    pub fn to_packages(&self) -> Packages {
+    pub fn to_packages(&self) -> Result<Packages> {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
@@ -50,13 +50,13 @@ impl Groups {
             apply_backends!(x);
         }
 
-        //warn the user about duplicated packages and output a deduplicated Options
         for ((backend, package), group_files_counts) in reoriented.iter() {
             if group_files_counts.len() > 1 || group_files_counts.values().any(|y| *y > 1) {
                 let group_files = group_files_counts.keys().cloned().collect::<Vec<_>>();
-                log::warn!(
-                    "duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend, only one of the duplicated packages will be used which could may cause unintended behaviour if the duplicates have different options"
-                );
+
+                return Err(eyre!(
+                    "duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend"
+                ));
             }
         }
 
@@ -74,7 +74,7 @@ impl Groups {
                 }
             };
         }
-        apply_backends!(x)
+        Ok(apply_backends!(x))
     }
 
     pub fn load(group_files: &BTreeSet<PathBuf>) -> Result<Groups> {

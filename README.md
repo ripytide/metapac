@@ -108,19 +108,23 @@ install` is `metapac uninstall` and the opposite of `metapac sync` is
 
 ### Hooks
 
-There are two hooks that allow you to run a custom command before and after
-`metapac` installs your package: `before_install` and `after_install`.
-These hooks are configured on a per-package basis. One use-case for `arch`
-packages is to enable a package's `systemd` service after it is installed.
-This means you can declaratively maintain your enabled `systemd` services.
-See the [`Group Files`](#group-files) section for some examples.
+Hooks are commands that you can add per-package in your group files. They
+get run by `metapac` at various stages in some of `metapac`'s commands.
 
-> [!WARNING]
-> A package's hooks are only run when the package is installed by
-> `metapac`. If a package is already installed then running `metapac sync`
-> will not run the hooks since it will not have to install the package. You
-> can uninstall the package and then re-install it using `metapac sync`
-> ensure the hooks are run.
+One of the main use-case is to allow you to declaratively maintain your
+enabled `systemd` services alongside each package in your group files. See
+the [`Group Files`](#group-files) section for some examples.
+
+- `before_install`: Run before a package is installed. Only applies to the
+  `metapac sync` command.
+- `after_install`: Run after a package is installed. Only applies to the
+  `metapac sync` command.
+- `before_sync`: Run before installing any packages, regardless of whether
+  the package is already installed or not. Only applies to the `metapac
+  sync` command.
+- `after_sync`: Run after installing all packages, regardless of whether
+  the package was already installed or not. Only applies to the `metapac
+  sync` command.
 
 ### Advanced usage
 
@@ -155,7 +159,7 @@ for additional backends are always welcome!
 
 ### arch
 
-### Package Groups
+#### Package Groups
 
 Arch has two special types of packages called meta packages and package
 groups. (See
@@ -305,95 +309,74 @@ variant = "code"
 # ]
 
 arch = [
- "metapac",
- { package = "metapac" },
- { package = "syncthing", hooks = { after_install = [
+  "package1",
+  { package = "package2" },
+  { package = "syncthing", hooks = { after_sync = [
     "sudo",
     "systemctl",
     "enable",
     "--now",
     "syncthing@ripytide",
- ] } },
- { package = "openssh", hooks = { after_install = [
+  ] } },
+  { package = "openssh", hooks = { after_sync = [
     "sudo",
     "systemctl",
     "enable",
     "--now",
     "sshd",
- ] } },
+  ] } },
+  { package = "fastfetch", hooks = { before_install = [
+    "echo",
+    "before_install",
+  ], after_install = [
+    "echo",
+    "after_install",
+  ], before_sync = [
+    "echo",
+    "before_sync",
+  ], after_sync = [
+    "echo",
+    "after_sync",
+  ] } },
 ]
-apt = [
- "metapac",
- { package = "metapac" }
-]
-brew = [
- "metapac",
- { package = "metapac" }
-]
-bun = [
- "metapac",
- { package = "metapac" }
-]
+apt = ["package1", { package = "package2" }]
+brew = ["package1", { package = "package2" }]
+bun = ["package1", { package = "package2" }]
 cargo = [
- "metapac",
- # see cargo docs for info on the options
- { package = "metapac", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [ "feature1", ], locked = true } },
+  "package1",
+  # see cargo docs for info on the options
+  { package = "package2", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [
+    "feature1",
+  ], locked = true } },
 ]
 dnf = [
- "metapac",
- # see dnf docs for more info on these options
- { package = "metapac", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
+  "package1",
+  # see dnf docs for more info on these options
+  { package = "package2", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
 ]
 flatpak = [
- "metapac",
- { package = "metapac", options = { remote = "flathub", systemwide = false } },
+  "package1",
+  { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
-npm = [
- "metapac",
- { package = "metapac" }
-]
-pipx = [
- "metapac",
- { package = "metapac" },
-]
-pnpm = [
- "metapac",
- { package = "metapac" },
-]
-scoop = [
- "main/metapac",
- { package = "main/metapac" },
-]
+npm = ["package1", { package = "package2" }]
+pipx = ["package1", { package = "package2" }]
+pnpm = ["package1", { package = "package2" }]
+scoop = ["main/metapac1", { package = "main/package2" }]
 snap = [
- "metapac",
- { package = "metapac" },
- # see https://snapcraft.io/docs/snap-confinement for more info on confinement
- { package = "metapac", options = { confinement = "strict" } },
- { package = "metapac", options = { confinement = "classic" } },
- { package = "metapac", options = { confinement = "dangerous" } },
- { package = "metapac", options = { confinement = "devmode" } },
- { package = "metapac", options = { confinement = "jailmode" } },
+  "package1",
+  { package = "package2" },
+  # see https://snapcraft.io/docs/snap-confinement for more info on confinement
+  { package = "package3", options = { confinement = "strict" } },
+  { package = "package4", options = { confinement = "classic" } },
+  { package = "package5", options = { confinement = "dangerous" } },
+  { package = "package6", options = { confinement = "devmode" } },
+  { package = "package7", options = { confinement = "jailmode" } },
 ]
-uv = [
- "metapac",
- { package = "metapac" },
-]
-vscode = [
- "metapac",
- { package = "metapac" },
-]
-winget = [
- "ripytide.metapac",
- { package = "ripytide.metapac" },
-]
-xbps = [
- "metapac",
- { package = "metapac" },
-]
-yarn = [
- "metapac",
- { package = "metapac" },
-]
+uv = ["package1", { package = "package2" }]
+vscode = ["package1", { package = "package2" }]
+winget = ["ripytide.package1", { package = "ripytide.package2" }]
+xbps = ["package1", { package = "package2" }]
+yarn = ["package1", { package = "package2" }]
 ```
 
 ## Wishlist
