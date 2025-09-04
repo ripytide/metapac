@@ -108,19 +108,23 @@ install` is `metapac uninstall` and the opposite of `metapac sync` is
 
 ### Hooks
 
-There are two hooks that allow you to run a custom command before and after
-`metapac` installs your package: `before_install` and `after_install`.
-These hooks are configured on a per-package basis. One use-case for `arch`
-packages is to enable a package's `systemd` service after it is installed.
-This means you can declaratively maintain your enabled `systemd` services.
-See the [`Group Files`](#group-files) section for some examples.
+Hooks are commands that you can add per-package in your group files. They
+get run by `metapac` at various stages in some of `metapac`'s commands.
 
-> [!WARNING]
-> A package's hooks are only run when the package is installed by
-> `metapac`. If a package is already installed then running `metapac sync`
-> will not run the hooks since it will not have to install the package. You
-> can uninstall the package and then re-install it using `metapac sync`
-> ensure the hooks are run.
+One of the main use-case is to allow you to declaratively maintain your
+enabled `systemd` services alongside each package in your group files. See
+the [`Group Files`](#group-files) section for some examples.
+
+- `before_install`: Run before a package is installed. Only applies to the
+  `metapac sync` command.
+- `after_install`: Run after a package is installed. Only applies to the
+  `metapac sync` command.
+- `before_sync`: Run before installing any packages, regardless of whether
+  the package is already installed or not. Only applies to the `metapac
+  sync` command.
+- `after_sync`: Run after installing all packages, regardless of whether
+  the package was already installed or not. Only applies to the `metapac
+  sync` command.
 
 ### Advanced usage
 
