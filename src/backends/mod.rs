@@ -49,14 +49,18 @@ pub(crate) use apply_backends;
 pub trait Backend {
     type Options;
 
-    /// Attempts to expand group packages keeping the same options.
+    fn invalid_package_help_text() -> String;
+
+    /// If possible the backend will attempt to decide whether the given package is a valid package
+    /// or not.
     ///
-    /// This uses archlinux's definition for a group package. Note that a group package is distict
-    /// from a meta package, see <https://wiki.archlinux.org/title/Meta_package_and_package_group>
-    fn expand_group_packages(
-        packages: BTreeMap<String, Package<Self::Options>>,
+    /// - `Some(true)` means the package is valid
+    /// - `Some(false)` means the package is invalid
+    /// - `None` means the package could be valid or invalid.
+    fn are_valid_packages(
+        packages: &BTreeSet<String>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Package<Self::Options>>>;
+    ) -> BTreeMap<String, Option<bool>>;
 
     /// Attempts to query which packages are explicitly installed along with their options.
     ///

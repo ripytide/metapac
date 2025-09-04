@@ -187,14 +187,6 @@ macro_rules! packages {
                 packages
             }
 
-            pub fn expand_group_packages(mut self, config: &Config) -> Result<Self> {
-                $(
-                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, config)?;
-                )*
-
-                Ok(self)
-            }
-
             pub fn install(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
                     for package in self.$lower_backend.values() {

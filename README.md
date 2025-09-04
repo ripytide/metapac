@@ -133,25 +133,93 @@ list of all of the available commands.
 At the moment, these are the supported backends. Pull requests and issues
 for additional backends are always welcome!
 
-| Backend   | Notes                                                                                                                                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arch`    | see the `arch_package_manager` config                                                                                                                                                                       |
-| `apt`     |                                                                                                                                                                                                             |
-| `brew`    |                                                                                                                                                                                                             |
-| `bun`     |                                                                                                                                                                                                             |
-| `cargo`   |                                                                                                                                                                                                             |
-| `dnf`     |                                                                                                                                                                                                             |
-| `flatpak` |                                                                                                                                                                                                             |
-| `npm`     | if on linux you might need to first run `npm config set prefix ~/.local`                                                                                                                                    |
-| `pipx`    |                                                                                                                                                                                                             |
-| `pnpm`    | you might need to first run `pnpm setup`                                                                                                                                                                    |
-| `scoop`   | doesn't differentiate between implicit and explicit packages, you will need to list all packages and their dependencies in your group files (see <https://github.com/ScoopInstaller/Scoop/issues/4276>) |
-| `snap`    |                                                                                                                                                                                                             |
-| `uv`      |                                                                                                                                                                                                             |
-| `vscode`  | see the `vscode_variant` config                                                                                                                                                                             |
-| `winget`  |                                                                                                                                                                                                             |
-| `xbps`    |                                                                                                                                                                                                             |
-| `yarn`    |                                                                                                                                                                                                             |
+| Backend               |
+| --------------------- |
+| [`arch`](#arch)       |
+| [`apt`](#apt)         |
+| [`brew`](#brew)       |
+| [`bun`](#bun)         |
+| [`cargo`](#cargo)     |
+| [`dnf`](#dnf)         |
+| [`flatpak`](#flatpak) |
+| [`npm`](#npm)         |
+| [`pipx`](#pipx)       |
+| [`pnpm`](#pnpm)       |
+| [`scoop`](#scoop)     |
+| [`snap`](#snap)       |
+| [`uv`](#uv)           |
+| [`vscode`](#vscode)   |
+| [`winget`](#winget)   |
+| [`xbps`](#xbps)       |
+| [`yarn`](#yarn)       |
+
+### arch
+
+### Package Groups
+
+Arch has two special types of packages called meta packages and package
+groups. (See
+<https://wiki.archlinux.org/title/Meta_package_and_package_group>).
+`metapac` only supports meta packages in group files since they are "real"
+packages whereas groups are not "real". This is because meta packages are
+normal PKGBUILD files with no content of themselves but which have several
+dependencies, whereas package groups are special cases that don't have a
+corresponding PKGBUILD file. For example, running `pacman -Si nerd-fonts`
+returns "error: package 'nerd-fonts' was not found".
+
+If you still want the behavior of a meta package you have two options.
+
+Firstly, consider creating your own meta package with the same packages as
+the group. Consider also publishing this package to the AUR so other users
+can also benefit from it. Convention has it that meta packages end in
+`-meta`, for example, the meta package version of `nerd-fonts` might be
+called `nerd-fonts-meta` (Although `nerd-fonts-meta` does not yet exist at
+the time of writing, 2025-09-03).
+
+Alternatively, you could create a new group file using the packages from
+the package group, which you can get from the command: `pacman -Sgq
+<group_name>`.
+
+### apt
+
+### brew
+
+### bun
+
+### cargo
+
+### dnf
+
+### flatpak
+
+### npm
+
+If on linux you might need to first run `npm config set prefix ~/.local`.
+
+### pipx
+
+### pnpm
+
+You might need to first run `pnpm setup`.
+
+### scoop
+
+`scoop` doesn't differentiate between implicit and explicit packages.
+Therefore, you will need to list all packages and their dependencies in
+your group files. See
+<https://github.com/ScoopInstaller/Scoop/issues/4276>.
+
+### snap
+
+### uv
+
+### vscode
+
+### winget
+
+### xbps
+
+### yarn
 
 ## Config
 

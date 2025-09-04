@@ -34,11 +34,15 @@ pub struct CargoOptions {
 impl Backend for Cargo {
     type Options = CargoOptions;
 
-    fn expand_group_packages(
-        packages: BTreeMap<String, Package<Self::Options>>,
+    fn invalid_package_help_text() -> String {
+        String::new()
+    }
+
+    fn are_valid_packages(
+        packages: &BTreeSet<String>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
-        Ok(packages)
+    ) -> BTreeMap<String, Option<bool>> {
+        packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {

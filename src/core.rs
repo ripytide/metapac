@@ -43,16 +43,37 @@ impl MainArguments {
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
-        let mut required = groups.to_packages().expand_group_packages(&config)?;
+        let mut required = groups.to_packages();
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
                     if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         if !required.$lower_backend.is_empty() {
-                            log::warn!("ignoring packages from all group files for the {} backend as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
+                            log::warn!("ignoring {} packages from all group files as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
                             required.$lower_backend = Default::default();
                         }
+                    }
+                )*
+            }
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    let are_valid_packages = $upper_backend::are_valid_packages(&required.to_package_ids().$lower_backend, &config);
+
+                    let invalid_packages = are_valid_packages
+                        .iter()
+                        .filter_map(|(x, y)| if *y == Some(false) { Some(x) } else { None })
+                        .collect::<BTreeSet<_>>();
+
+                    if !invalid_packages.is_empty() {
+                        let first_part = format!("the following packages for the {} backend are invalid: {invalid_packages:?}, please fix them, or remove them from your group files", AnyBackend::$upper_backend);
+                        let second_part = <$upper_backend as Backend>::invalid_package_help_text();
+
+                        return Err(eyre!("{first_part}\n\n{second_part}"));
                     }
                 )*
             }

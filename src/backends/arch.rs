@@ -18,97 +18,33 @@ pub struct ArchOptions {}
 impl Backend for Arch {
     type Options = ArchOptions;
 
-    fn expand_group_packages(
-        mut packages: BTreeMap<String, Package<Self::Options>>,
+    fn invalid_package_help_text() -> String {
+        indoc::formatdoc! {"
+            A package may be invalid due to one of the following issues:
+                - the package name has a typo as written in your group files
+                - the package is in a repository that you don't have enabled in
+                    /etc/pacman.conf (such as multilib)
+                - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
+                    and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
+                    which provide the virtual package
+                - the package was removed from the repositories
+                - the package was renamed to a different name
+                - the local package database is out of date and so doesn't yet contain the package:
+                    update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
+                - the package is actually a package group which is not valid in metapac group files, see <https://github.com/ripytide/metapac#arch>
+
+            You can check to see if the package exists via `pacman -Si <package>` or a similar command using your chosen AUR helper.
+        "}
+    }
+
+    fn are_valid_packages(
+        packages: &BTreeSet<String>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Package<Self::Options>>> {
-        if Self::version(config).is_err() {
-            return Ok(BTreeMap::new());
+    ) -> BTreeMap<String, Option<bool>> {
+        match inner_are_valid_packages(packages, config) {
+            Ok(x) => x,
+            Err(_) => packages.iter().map(|x| (x.to_string(), None)).collect(),
         }
-
-        let groups = run_command_for_stdout(
-            [
-                config.arch.package_manager.as_command(),
-                "--sync",
-                "--groups",
-                "--quiet",
-            ],
-            Perms::Same,
-            false,
-        )?;
-
-        for group in groups.lines() {
-            if let Some(options) = packages.remove(group) {
-                let group_packages = run_command_for_stdout(
-                    [
-                        config.arch.package_manager.as_command(),
-                        "--sync",
-                        "--groups",
-                        "--quiet",
-                        group,
-                    ],
-                    Perms::Same,
-                    false,
-                )?;
-
-                for group_package in group_packages.lines() {
-                    let overridden = packages
-                        .insert(group_package.to_string(), options.clone())
-                        .is_some();
-
-                    if overridden {
-                        log::warn!(
-                            "arch package {group_package:?} has been overridden by the {group:?} package group"
-                        );
-                    }
-                }
-            }
-        }
-
-        let all_packages: BTreeSet<String> = run_command_for_stdout(
-            [
-                config.arch.package_manager.as_command(),
-                "--sync",
-                "--list",
-                "--quiet",
-            ],
-            Perms::Same,
-            false,
-        )?
-        .lines()
-        .map(String::from)
-        .collect();
-
-        let packages_cloned = packages.keys().cloned().collect::<Vec<_>>();
-        for package in packages_cloned {
-            let is_real_package = all_packages.contains(&package);
-
-            if !is_real_package {
-                packages.remove(&package);
-
-                log::warn!(
-                    "{}",
-                    indoc::formatdoc! {"
-                        arch package {package:?} was not found as an available package and so was ignored (you can test
-                        if the package exists via `pacman -Si {package:?}` or similar command using your chosen AUR helper)
-
-                        it may be due to one of the following issues:
-                            - the package name has a typo as written in your group files
-                            - the package is in a repository that you don't have enabled in
-                              /etc/pacman.conf (such as multilib)
-                            - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
-                              and so is ambiguous. You can run `pacman -Ss {package:?}` to list non-virtual packages which
-                              which provide the virtual package
-                            - the package was removed from the repositories
-                            - the package was renamed to a different name
-                            - the local package database is out of date and so doesn't yet contain the package:
-                              update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
-                    "}
-                );
-            }
-        }
-
-        Ok(packages)
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
@@ -256,4 +192,33 @@ impl Backend for Arch {
             false,
         )
     }
+}
+
+fn inner_are_valid_packages(
+    packages: &BTreeSet<String>,
+    config: &Config,
+) -> Result<BTreeMap<String, Option<bool>>> {
+    let available_packages: BTreeSet<String> = run_command_for_stdout(
+        [
+            config.arch.package_manager.as_command(),
+            "--sync",
+            "--list",
+            "--quiet",
+        ],
+        Perms::Same,
+        false,
+    )?
+    .lines()
+    .map(String::from)
+    .collect();
+
+    let mut output = BTreeMap::new();
+    for package in packages {
+        output.insert(
+            package.to_string(),
+            Some(available_packages.contains(package)),
+        );
+    }
+
+    Ok(output)
 }
