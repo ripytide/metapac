@@ -331,25 +331,81 @@ impl SyncCommand {
         let missing = missing(required, config)?;
 
         if missing.is_empty() {
-            log::info!("nothing to do as there are no missing packages");
-            return Ok(());
+            log::info!("nothing to install as there are no missing packages");
         }
 
-        print!("{}", missing.to_package_ids());
+        if !missing.is_empty() {
+            print!("{}", missing.to_package_ids());
+        }
 
         if self.no_confirm {
             log::info!("proceeding to install packages without confirmation");
-        } else if !Confirm::new()
-            .with_prompt("these packages will be installed, do you want to continue?")
-            .default(true)
-            .show_default(true)
-            .interact()
-            .wrap_err("getting user confirmation")?
+        } else if !missing.is_empty()
+            && !Confirm::new()
+                .with_prompt("these packages will be installed, do you want to continue?")
+                .default(true)
+                .show_default(true)
+                .interact()
+                .wrap_err("getting user confirmation")?
         {
             return Ok(());
         }
 
-        missing.install(self.no_confirm, config)
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in required.$lower_backend.values() {
+                            package.run_before_sync()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in missing.$lower_backend.values() {
+                            package.run_before_install()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        missing.install(self.no_confirm, config)?;
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in missing.$lower_backend.values() {
+                            package.run_after_install()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in required.$lower_backend.values() {
+                            package.run_after_sync()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        Ok(())
     }
 }
 

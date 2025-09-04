@@ -36,6 +36,26 @@ impl<T> Package<T> {
             Ok(())
         }
     }
+    pub fn run_after_sync(&self) -> Result<()> {
+        if let Some(hooks) = &self.hooks
+            && let Some(args) = &hooks.after_sync
+        {
+            log::info!("running after_sync hook for {} package", self.package);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
+    pub fn run_before_sync(&self) -> Result<()> {
+        if let Some(hooks) = &self.hooks
+            && let Some(args) = &hooks.before_sync
+        {
+            log::info!("running before_sync hook for {} package", self.package);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
@@ -43,4 +63,6 @@ impl<T> Package<T> {
 pub struct Hooks {
     pub before_install: Option<Vec<String>>,
     pub after_install: Option<Vec<String>>,
+    pub after_sync: Option<Vec<String>>,
+    pub before_sync: Option<Vec<String>>,
 }

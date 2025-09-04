@@ -179,16 +179,8 @@ macro_rules! packages {
 
             pub fn install(&self, no_confirm: bool, config: &Config) -> Result<()> {
                 $(
-                    for package in self.$lower_backend.values() {
-                        package.run_before_install()?;
-                    }
-
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
                     $upper_backend::install(&options, no_confirm, config)?;
-
-                    for package in self.$lower_backend.values() {
-                        package.run_after_install()?;
-                    }
                 )*
 
                 Ok(())

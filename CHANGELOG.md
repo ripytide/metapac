@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- New 🪝Hooks🪝: `before_sync` and `after_sync`. Which are always run when
+  using the `metapac sync` command regardless of whether the package is
+  already installed or not unlike `before_install` and `after_install`.
+  Only runs for enabled backends. (#)
+
 ### Changed
 
 - ‼️ Breaking Change ‼️ `arch` group files now no longer accept package
