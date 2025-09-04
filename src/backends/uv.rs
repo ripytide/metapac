@@ -13,9 +13,13 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Uv;
 
+#[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct UvOptions {}
+pub struct UvOptions {
+    #[serde_inline_default(UvOptions::default().python)]
+    python: Option<String>,
+}
 
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -50,7 +54,7 @@ impl Backend for Uv {
         .lines()
         .filter(|x| !x.starts_with("-"))
         .map(|x| x.split(" ").next().unwrap().to_string())
-        .map(|x| (x, Self::Options {}))
+        .map(|x| (x, Self::Options { python: None }))
         .collect();
 
         Ok(names)
@@ -61,8 +65,19 @@ impl Backend for Uv {
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        for package in packages.keys() {
-            run_command(["uv", "tool", "install", package], Perms::Same)?;
+        for (package, options) in packages {
+            run_command(
+                ["uv", "tool", "install"]
+                    .into_iter()
+                    .chain(
+                        Some("--python")
+                            .into_iter()
+                            .filter(|_| options.python.is_some()),
+                    )
+                    .chain(options.python.as_deref())
+                    .chain([package.as_str()]),
+                Perms::Same,
+            )?;
         }
 
         Ok(())
