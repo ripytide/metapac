@@ -1,6 +1,9 @@
 name: ci
 
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+      - main
 
 env:
   RUST_BACKTRACE: 1
