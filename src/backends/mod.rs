@@ -49,6 +49,8 @@ pub(crate) use apply_backends;
 pub trait Backend {
     type Options;
 
+    fn invalid_package_help_text() -> String;
+
     /// If possible the backend will attempt to decide whether the given package is a valid package
     /// or not.
     ///
@@ -56,9 +58,9 @@ pub trait Backend {
     /// - `Some(false)` means the package is invalid
     /// - `None` means the package could be valid or invalid.
     fn are_valid_packages(
-        packages: BTreeSet<String>,
+        packages: &BTreeSet<String>,
         config: &Config,
-    ) -> Result<BTreeMap<String, Option<bool>>>;
+    ) -> BTreeMap<String, Option<bool>>;
 
     /// Attempts to query which packages are explicitly installed along with their options.
     ///

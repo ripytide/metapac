@@ -21,11 +21,15 @@ pub struct PipxOptions {}
 impl Backend for Pipx {
     type Options = PipxOptions;
 
+    fn invalid_package_help_text() -> String {
+        String::new()
+    }
+
     fn are_valid_packages(
-        packages: BTreeSet<String>,
+        packages: &BTreeSet<String>,
         _: &Config,
-    ) -> Result<BTreeMap<String, Option<bool>>> {
-        Ok(packages.into_iter().map(|x| (x, None)).collect())
+    ) -> BTreeMap<String, Option<bool>> {
+        packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {

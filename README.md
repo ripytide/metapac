@@ -153,22 +153,19 @@ for additional backends are always welcome!
 | `xbps`    |                                                                                                                                                                                                             |
 | `yarn`    |                                                                                                                                                                                                             |
 
-### Backend Specific Notes
+### arch
 
-#### Arch
+### Package Groups
 
-#### Package Groups
-
-Arch's main package manager: `pacman` and the various AUR helpers have
-two special types of packages called meta packages and package groups. See
-<https://wiki.archlinux.org/title/Meta_package_and_package_group> for the
-full definitions and potential use-cases.
-
+Arch has two special types of packages called meta packages and package
+groups. (See
+<https://wiki.archlinux.org/title/Meta_package_and_package_group>).
 `metapac` only supports meta packages in group files since they are "real"
 packages whereas groups are not "real". This is because meta packages are
 normal PKGBUILD files with no content of themselves but which have several
 dependencies, whereas package groups are special cases that don't have a
-corresponding PKGBUILD file.
+corresponding PKGBUILD file. For example, running `pacman -Si nerd-fonts`
+returns "error: package 'nerd-fonts' was not found".
 
 If you still want the behavior of a meta package you have two options.
 
@@ -180,12 +177,49 @@ called `nerd-fonts-meta` (Although `nerd-fonts-meta` does not yet exist at
 the time of writing, 2025-09-03).
 
 Alternatively, you could create a new group file using the packages from
-the package group, which you can get from the command: `pacman -Sgq <group_name>`.
+the package group, which you can get from the command: `pacman -Sgq
+<group_name>`.
 
-Instead if you want to add a
-package group to your package files you should 
+### apt
 
+### brew
 
+### bun
+
+### cargo
+
+### dnf
+
+### flatpak
+
+### npm
+
+If on linux you might need to first run `npm config set prefix ~/.local`.
+
+### pipx
+
+### pnpm
+
+You might need to first run `pnpm setup`.
+
+### scoop
+
+`scoop` doesn't differentiate between implicit and explicit packages.
+Therefore, you will need to list all packages and their dependencies in
+your group files. See
+<https://github.com/ScoopInstaller/Scoop/issues/4276>.
+
+### snap
+
+### uv
+
+### vscode
+
+### winget
+
+### xbps
+
+### yarn
 
 ## Config
 

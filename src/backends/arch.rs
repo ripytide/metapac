@@ -18,53 +18,33 @@ pub struct ArchOptions {}
 impl Backend for Arch {
     type Options = ArchOptions;
 
-    fn are_valid_packages(packages: BTreeSet<String>, config: &Config) -> Result<BTreeMap<String, Option<bool>>> {
-        let available_packages: BTreeSet<String> = run_command_for_stdout(
-            [
-                config.arch.package_manager.as_command(),
-                "--sync",
-                "--list",
-                "--quiet",
-            ],
-            Perms::Same,
-            false,
-        )?
-        .lines()
-        .map(String::from)
-        .collect();
+    fn invalid_package_help_text() -> String {
+        indoc::formatdoc! {"
+            A package may be invalid due to one of the following issues:
+                - the package name has a typo as written in your group files
+                - the package is in a repository that you don't have enabled in
+                    /etc/pacman.conf (such as multilib)
+                - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
+                    and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
+                    which provide the virtual package
+                - the package was removed from the repositories
+                - the package was renamed to a different name
+                - the local package database is out of date and so doesn't yet contain the package:
+                    update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
+                - the package is actually a package group which is not valid in metapac group files, see <https://github.com/ripytide/metapac#arch>
 
-        let mut output = BTreeMap::new();
-        for package in packages {
-            let validity = if available_packages.contains(&package) {
-                log::warn!(
-                    "{}",
-                    indoc::formatdoc! {"
-                        arch package {package:?} was not found as an available package and so was ignored (you can test
-                        if the package exists via `pacman -Si {package:?}` or similar command using your chosen AUR helper)
+            You can check to see if the package exists via `pacman -Si <package>` or a similar command using your chosen AUR helper.
+        "}
+    }
 
-                        it may be due to one of the following issues:
-                            - the package name has a typo as written in your group files
-                            - the package is in a repository that you don't have enabled in
-                              /etc/pacman.conf (such as multilib)
-                            - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
-                              and so is ambiguous. You can run `pacman -Ss {package:?}` to list non-virtual packages which
-                              which provide the virtual package
-                            - the package was removed from the repositories
-                            - the package was renamed to a different name
-                            - the local package database is out of date and so doesn't yet contain the package:
-                              update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
-                    "}
-                );
-
-                Some(false)
-            } else {
-                Some(true)
-            };
-
-            output.insert(package, validity);
+    fn are_valid_packages(
+        packages: &BTreeSet<String>,
+        config: &Config,
+    ) -> BTreeMap<String, Option<bool>> {
+        match inner_are_valid_packages(packages, config) {
+            Ok(x) => x,
+            Err(_) => packages.iter().map(|x| (x.to_string(), None)).collect(),
         }
-
-        Ok(output)
     }
 
     fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
@@ -212,4 +192,33 @@ impl Backend for Arch {
             false,
         )
     }
+}
+
+fn inner_are_valid_packages(
+    packages: &BTreeSet<String>,
+    config: &Config,
+) -> Result<BTreeMap<String, Option<bool>>> {
+    let available_packages: BTreeSet<String> = run_command_for_stdout(
+        [
+            config.arch.package_manager.as_command(),
+            "--sync",
+            "--list",
+            "--quiet",
+        ],
+        Perms::Same,
+        false,
+    )?
+    .lines()
+    .map(String::from)
+    .collect();
+
+    let mut output = BTreeMap::new();
+    for package in packages {
+        output.insert(
+            package.to_string(),
+            Some(available_packages.contains(package)),
+        );
+    }
+
+    Ok(output)
 }
