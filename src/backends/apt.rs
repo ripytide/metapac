@@ -45,7 +45,6 @@ impl Backend for Apt {
         // lots of different methods all of which seem to have
         // caveats.
         let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, false)?;
-
         Ok(explicit
             .lines()
             .map(|x| (x.to_string(), Self::Options {}))

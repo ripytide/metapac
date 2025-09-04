@@ -470,7 +470,7 @@ fn installed(config: &Config) -> Result<PackageIds> {
             }
         };
     }
-    Ok(apply_backends!(x).filtered(&config))
+    Ok(apply_backends!(x).filtered(config))
 }
 fn unmanaged(required: &Packages, config: &Config) -> Result<PackageIds> {
     installed(config).map(|x| x.difference(&required.to_package_ids()))
