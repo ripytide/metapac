@@ -159,7 +159,7 @@ for additional backends are always welcome!
 
 ### arch
 
-### Package Groups
+#### Package Groups
 
 Arch has two special types of packages called meta packages and package
 groups. (See
