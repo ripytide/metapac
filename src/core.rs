@@ -43,18 +43,37 @@ impl MainArguments {
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
-        let mut required = groups
-            .to_packages()
-            .expand_group_packages(&config.backends)?;
+        let mut required = groups.to_packages()?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
                     if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
                         if !required.$lower_backend.is_empty() {
-                            log::warn!("ignoring packages from all group files for the {} backend as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
+                            log::warn!("ignoring {} packages from all group files as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
                             required.$lower_backend = Default::default();
                         }
+                    }
+                )*
+            }
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    let are_valid_packages = $upper_backend::are_valid_packages(&required.to_package_ids().$lower_backend, &config);
+
+                    let invalid_packages = are_valid_packages
+                        .iter()
+                        .filter_map(|(x, y)| if *y == Some(false) { Some(x) } else { None })
+                        .collect::<BTreeSet<_>>();
+
+                    if !invalid_packages.is_empty() {
+                        let first_part = format!("the following packages for the {} backend are invalid: {invalid_packages:?}, please fix them, or remove them from your group files", AnyBackend::$upper_backend);
+                        let second_part = <$upper_backend as Backend>::invalid_package_help_text();
+
+                        return Err(eyre!("{first_part}\n\n{second_part}"));
                     }
                 )*
             }
@@ -207,25 +226,25 @@ impl InstallCommand {
     ) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
-        AddCommand {
-            backend: self.backend,
-            packages: packages.clone().iter().cloned().collect(),
-            group: self.group,
-        }
-        .run(group_dir, group_files, groups, config)?;
-
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backends.$lower_backend)?;
+                            $upper_backend::install(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backends.$lower_backend)?;
                         },
                     )*
                 }
             };
         }
         apply_backends!(x);
+
+        AddCommand {
+            backend: self.backend,
+            packages: packages.into_iter().collect(),
+            group: self.group,
+        }
+        .run(group_dir, group_files, groups, config)?;
 
         Ok(())
     }
@@ -234,12 +253,6 @@ impl InstallCommand {
 impl UninstallCommand {
     fn run(self, groups: &Groups, config: &Config) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
-
-        RemoveCommand {
-            backend: self.backend,
-            packages: packages.clone().iter().cloned().collect(),
-        }
-        .run(groups)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -253,6 +266,12 @@ impl UninstallCommand {
             };
         }
         apply_backends!(x);
+
+        RemoveCommand {
+            backend: self.backend,
+            packages: packages.into_iter().collect(),
+        }
+        .run(groups)?;
 
         Ok(())
     }
@@ -290,14 +309,12 @@ impl CleanCommand {
             return Ok(());
         }
 
-        println!("{unmanaged}");
-
-        log::info!("these packages will be uninstalled");
+        print!("{unmanaged}");
 
         if self.no_confirm {
-            log::info!("proceeding without confirmation");
+            log::info!("proceeding to uninstall packages without confirmation");
         } else if !Confirm::new()
-            .with_prompt("do you want to continue?")
+            .with_prompt("these packages will be uninstalled, do you want to continue?")
             .default(true)
             .show_default(true)
             .interact()
@@ -315,27 +332,81 @@ impl SyncCommand {
         let missing = missing(required, config)?;
 
         if missing.is_empty() {
-            log::info!("nothing to do as there are no missing packages");
-            return Ok(());
+            log::info!("nothing to install as there are no missing packages");
         }
 
-        println!("{}", missing.to_package_ids());
-
-        log::info!("these packages will be installed");
+        if !missing.is_empty() {
+            print!("{}", missing.to_package_ids());
+        }
 
         if self.no_confirm {
-            log::info!("proceeding without confirmation");
-        } else if !Confirm::new()
-            .with_prompt("do you want to continue?")
-            .default(true)
-            .show_default(true)
-            .interact()
-            .wrap_err("getting user confirmation")?
+            log::info!("proceeding to install packages without confirmation");
+        } else if !missing.is_empty()
+            && !Confirm::new()
+                .with_prompt("these packages will be installed, do you want to continue?")
+                .default(true)
+                .show_default(true)
+                .interact()
+                .wrap_err("getting user confirmation")?
         {
             return Ok(());
         }
 
-        missing.install(self.no_confirm, &config.backends)
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in required.$lower_backend.values() {
+                            package.run_before_sync()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in missing.$lower_backend.values() {
+                            package.run_before_install()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        missing.install(self.no_confirm, &config.backends)?;
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in missing.$lower_backend.values() {
+                            package.run_after_install()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        for package in required.$lower_backend.values() {
+                            package.run_after_sync()?;
+                        }
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        Ok(())
     }
 }
 
@@ -346,7 +417,7 @@ impl UnmanagedCommand {
         if unmanaged.is_empty() {
             log::info!("no unmanaged packages");
         } else {
-            println!("{}", toml::to_string_pretty(&unmanaged)?);
+            print!("{unmanaged}");
         }
 
         Ok(())

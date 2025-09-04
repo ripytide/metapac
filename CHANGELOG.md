@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- New 🪝Hooks🪝: `before_sync` and `after_sync`. Which are always run when
+  using the `metapac sync` command regardless of whether the package is
+  already installed or not unlike `before_install` and `after_install`.
+  Only runs for enabled backends. (#136)
+
+### Changed
+
+- ‼️ Breaking Change ‼️ `arch` group files now no longer accept package
+  groups. See the [`arch`](https://github.com/ripytide/metapac#arch)
+  section part of the `README.md` for why the functionality was removed,
+  and what to do instead. (#133)
+- ❗ Breaking Change ❗ Enabled backends will now hard error if you have
+  invalid packages in your group files whereas before this was just a
+  warning. Not all backends can tell which packages are valid or invalid
+  yet, so only the `arch` backend does this so far. But I'm planning on
+  adding this validation to at least the `scoop` backend at some point and
+  possibly more. (#133)
+- ❗ Breaking Change ❗ The `flatpak` backend now only lists applications
+  and not runtimes since runtimes are only ever dependencies to
+  applications and so are intrinsically implicit packages. (#134)
+- ❗ Breaking Change ❗ Duplicate packages in group files is now a hard
+  error rather than a warning. (#136)
+
+### Fixed
+
+- Cancelling a `metapac install` or `metapac uninstall` before installing
+  the packages now does not change your group files. Reported in #130,
+  fixed in #135.
+
 ## [0.5.0] - 2025-08-09
 
 This release marks the final big part of `metapac` that has now been

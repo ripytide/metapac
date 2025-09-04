@@ -126,17 +126,7 @@ macro_rules! package_ids {
         }
         impl std::fmt::Display for PackageIds {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                $(
-                    if !self.$lower_backend.is_empty() {
-                        writeln!(f, "[{}]", AnyBackend::$upper_backend)?;
-                        for package in self.$lower_backend.iter() {
-                            writeln!(f, "{package}")?;
-                        }
-                        writeln!(f)?;
-                    }
-                )*
-
-                Ok(())
+                write!(f, "{}", toml::to_string_pretty(self).or(Err(std::fmt::Error))?)
             }
         }
     }
@@ -202,26 +192,10 @@ macro_rules! packages {
                 packages
             }
 
-            pub fn expand_group_packages(mut self, config: &BackendConfigs) -> Result<Self> {
-                $(
-                    self.$lower_backend = $upper_backend::expand_group_packages(self.$lower_backend, &config.$lower_backend)?;
-                )*
-
-                Ok(self)
-            }
-
             pub fn install(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    for package in self.$lower_backend.values() {
-                        package.run_before_install()?;
-                    }
-
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
                     $upper_backend::install(&options, no_confirm, &config.$lower_backend)?;
-
-                    for package in self.$lower_backend.values() {
-                        package.run_after_install()?;
-                    }
                 )*
 
                 Ok(())
