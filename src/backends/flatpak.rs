@@ -1,7 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -36,7 +35,7 @@ impl Backend for Flatpak {
             return Ok(BTreeMap::new());
         }
 
-        let sys_explicit_out = run_command_for_stdout(
+        let system_apps = run_command_for_stdout(
             [
                 "flatpak",
                 "list",
@@ -47,7 +46,7 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let sys_explicit = sys_explicit_out.lines().map(|x| {
+        let system_apps = system_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
                 Self::Options {
@@ -57,7 +56,7 @@ impl Backend for Flatpak {
             )
         });
 
-        let user_explicit_out = run_command_for_stdout(
+        let user_apps = run_command_for_stdout(
             [
                 "flatpak",
                 "list",
@@ -68,7 +67,7 @@ impl Backend for Flatpak {
             Perms::Same,
             false,
         )?;
-        let user_explicit = user_explicit_out.lines().map(|x| {
+        let user_apps = user_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
                 Self::Options {
@@ -78,75 +77,7 @@ impl Backend for Flatpak {
             )
         });
 
-        let sys_explicit_runtimes_installed = run_command_for_stdout(
-            [
-                "flatpak",
-                "list",
-                "--system",
-                "--runtime",
-                "--columns=application",
-            ],
-            Perms::Same,
-            false,
-        )?;
-        let sys_explicit_runtimes_out =
-            run_command_for_stdout(["flatpak", "pin", "--system"], Perms::Same, false)?;
-        let sys_explicit_runtimes = sys_explicit_runtimes_out
-            .lines()
-            .map(|x| {
-                (
-                    x.trim().split('/').nth(1).unwrap().to_owned(),
-                    Self::Options {
-                        systemwide: Some(true),
-                        remote: None,
-                    },
-                )
-            })
-            .filter(|(runtime, _)| {
-                sys_explicit_runtimes_installed
-                    .lines()
-                    .map(|x| x.trim())
-                    .contains(&runtime.as_str())
-            });
-
-        let user_explicit_runtimes_installed = run_command_for_stdout(
-            [
-                "flatpak",
-                "list",
-                "--user",
-                "--runtime",
-                "--columns=application",
-            ],
-            Perms::Same,
-            false,
-        )?;
-        let user_explicit_runtimes_out =
-            run_command_for_stdout(["flatpak", "pin", "--user"], Perms::Same, false)?;
-        let user_explicit_runtimes = user_explicit_runtimes_out
-            .lines()
-            .map(|x| {
-                (
-                    x.trim().split('/').nth(1).unwrap().to_owned(),
-                    Self::Options {
-                        systemwide: Some(false),
-                        remote: None,
-                    },
-                )
-            })
-            .filter(|(runtime, _)| {
-                user_explicit_runtimes_installed
-                    .lines()
-                    .map(|x| x.trim())
-                    .contains(&runtime.as_str())
-            });
-
-        let all = sys_explicit
-            .chain(user_explicit)
-            .chain(sys_explicit_runtimes)
-            .chain(user_explicit_runtimes)
-            .collect();
-
-        Ok(all)
+        Ok(system_apps.chain(user_apps).collect())
     }
 
     fn install(

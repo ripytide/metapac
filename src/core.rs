@@ -308,14 +308,12 @@ impl CleanCommand {
             return Ok(());
         }
 
-        println!("{unmanaged}");
-
-        log::info!("these packages will be uninstalled");
+        print!("{unmanaged}");
 
         if self.no_confirm {
-            log::info!("proceeding without confirmation");
+            log::info!("proceeding to uninstall packages without confirmation");
         } else if !Confirm::new()
-            .with_prompt("do you want to continue?")
+            .with_prompt("these packages will be uninstalled, do you want to continue?")
             .default(true)
             .show_default(true)
             .interact()
@@ -337,14 +335,12 @@ impl SyncCommand {
             return Ok(());
         }
 
-        println!("{}", missing.to_package_ids());
-
-        log::info!("these packages will be installed");
+        print!("{}", missing.to_package_ids());
 
         if self.no_confirm {
-            log::info!("proceeding without confirmation");
+            log::info!("proceeding to install packages without confirmation");
         } else if !Confirm::new()
-            .with_prompt("do you want to continue?")
+            .with_prompt("these packages will be installed, do you want to continue?")
             .default(true)
             .show_default(true)
             .interact()
@@ -364,7 +360,7 @@ impl UnmanagedCommand {
         if unmanaged.is_empty() {
             log::info!("no unmanaged packages");
         } else {
-            println!("{}", toml::to_string_pretty(&unmanaged)?);
+            print!("{unmanaged}");
         }
 
         Ok(())

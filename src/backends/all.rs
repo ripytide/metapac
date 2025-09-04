@@ -126,17 +126,7 @@ macro_rules! package_ids {
         }
         impl std::fmt::Display for PackageIds {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                $(
-                    if !self.$lower_backend.is_empty() {
-                        writeln!(f, "[{}]", AnyBackend::$upper_backend)?;
-                        for package in self.$lower_backend.iter() {
-                            writeln!(f, "{package}")?;
-                        }
-                        writeln!(f)?;
-                    }
-                )*
-
-                Ok(())
+                write!(f, "{}", toml::to_string_pretty(self).or(Err(std::fmt::Error))?)
             }
         }
     }
