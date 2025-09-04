@@ -20,7 +20,7 @@ impl<T> Package<T> {
         if let Some(hooks) = &self.hooks
             && let Some(args) = &hooks.before_install
         {
-            log::info!("running before_install hook for {} package", self.package);
+            log::info!("running before_install hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
             Ok(())
@@ -30,7 +30,7 @@ impl<T> Package<T> {
         if let Some(hooks) = &self.hooks
             && let Some(args) = &hooks.after_install
         {
-            log::info!("running after_install hook for {} package", self.package);
+            log::info!("running after_install hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
             Ok(())
@@ -40,7 +40,7 @@ impl<T> Package<T> {
         if let Some(hooks) = &self.hooks
             && let Some(args) = &hooks.after_sync
         {
-            log::info!("running after_sync hook for {} package", self.package);
+            log::info!("running after_sync hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
             Ok(())
@@ -50,7 +50,7 @@ impl<T> Package<T> {
         if let Some(hooks) = &self.hooks
             && let Some(args) = &hooks.before_sync
         {
-            log::info!("running before_sync hook for {} package", self.package);
+            log::info!("running before_sync hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
             Ok(())
