@@ -226,25 +226,25 @@ impl InstallCommand {
     ) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
-        AddCommand {
-            backend: self.backend,
-            packages: packages.clone().iter().cloned().collect(),
-            group: self.group,
-        }
-        .run(group_dir, group_files, groups, config)?;
-
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.into_iter().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
+                            $upper_backend::install(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, config)?;
                         },
                     )*
                 }
             };
         }
         apply_backends!(x);
+
+        AddCommand {
+            backend: self.backend,
+            packages: packages.into_iter().collect(),
+            group: self.group,
+        }
+        .run(group_dir, group_files, groups, config)?;
 
         Ok(())
     }
@@ -253,12 +253,6 @@ impl InstallCommand {
 impl UninstallCommand {
     fn run(self, groups: &Groups, config: &Config) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
-
-        RemoveCommand {
-            backend: self.backend,
-            packages: packages.clone().iter().cloned().collect(),
-        }
-        .run(groups)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -272,6 +266,12 @@ impl UninstallCommand {
             };
         }
         apply_backends!(x);
+
+        RemoveCommand {
+            backend: self.backend,
+            packages: packages.into_iter().collect(),
+        }
+        .run(groups)?;
 
         Ok(())
     }
