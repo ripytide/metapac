@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   groups. See the [`arch`](https://github.com/ripytide/metapac#arch)
   section part of the `README.md` for why the functionality was removed,
   and what to do instead. (#133)
-- ‼️ Breaking Change ‼️ Enabled backends will now hard error if you have
+- ❗ Breaking Change ❗ Enabled backends will now hard error if you have
   invalid packages in your group files whereas before this was just a
   warning. Not all backends can tell which packages are valid or invalid
   yet, so only the `arch` backend does this so far. But I'm planning on
   adding this validation to at least the `scoop` backend at some point and
   possibly more. (#133)
+- ❗ Breaking Change ❗ The `flatpak` backend now only lists applications
+  and not runtimes since runtimes are only ever dependencies to
+  applications and so are intrinsically implicit packages. (#134)
 
 ## [0.5.0] - 2025-08-09
 
