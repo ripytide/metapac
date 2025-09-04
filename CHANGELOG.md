@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ❗ Breaking Change ❗ The `flatpak` backend now only lists applications
   and not runtimes since runtimes are only ever dependencies to
   applications and so are intrinsically implicit packages. (#134)
+- ❗ Breaking Change ❗ Duplicate packages in group files is now a hard
+  error rather than a warning. (#136)
 
 ### Fixed
 
