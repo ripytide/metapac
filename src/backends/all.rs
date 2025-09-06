@@ -107,37 +107,6 @@ macro_rules! package_ids {
 }
 apply_backends!(package_ids);
 
-macro_rules! raw_packages {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Clone, Default, Serialize)]
-        pub struct RawGroupFilePackages {
-            $(
-                pub $lower_backend: Vec<GroupFilePackage<<$upper_backend as Backend>::Options>>,
-            )*
-        }
-        impl RawGroupFilePackages {
-            append!($(($upper_backend, $lower_backend)),*);
-
-            pub fn to_raw_package_ids(&self) -> RawPackageIds {
-                RawPackageIds {
-                    $(
-                        $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect(),
-                    )*
-                }
-            }
-
-            pub fn to_string_pretty(&self) -> Result<String> {
-                let mut document = toml_edit::ser::to_document(self)?;
-                
-                document.retain(|_, y| !y.as_array().unwrap().is_empty());
-
-                Ok(document.to_string())
-            }
-        }
-    }
-}
-apply_backends!(raw_packages);
-
 macro_rules! group_file_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
@@ -170,6 +139,61 @@ macro_rules! group_file_packages {
     }
 }
 apply_backends!(group_file_packages);
+
+macro_rules! raw_packages {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[derive(Debug, Clone, Default, Serialize)]
+        pub struct RawGroupFilePackages {
+            $(
+                pub $lower_backend: Vec<GroupFilePackage<<$upper_backend as Backend>::Options>>,
+            )*
+        }
+        impl RawGroupFilePackages {
+            append!($(($upper_backend, $lower_backend)),*);
+
+            pub fn to_string_pretty(&self) -> Result<String> {
+                let mut document = toml_edit::ser::to_document(&self)?;
+
+                $(
+                    let array = document.get_mut(&AnyBackend::$upper_backend.to_string().to_lowercase()).unwrap().as_array_mut().unwrap();
+                    for (index, package) in self.$lower_backend.iter().enumerate() {
+                        let inline_table = array.get_mut(index).unwrap().as_inline_table_mut().unwrap();
+
+                        if package.options == <$upper_backend as Backend>::Options::default() {
+                            inline_table.remove("options");
+                        }
+                        
+                        if package.hooks == Hooks::default() {
+                            inline_table.remove("hooks");
+                        }
+                        
+                        if inline_table.len() == 1 {
+                            array.replace(index, package.package.to_string());
+                        }
+                    }
+                )*
+
+                document.retain(|_, y| !y.as_array().unwrap().is_empty());
+
+                let unformatted = document.to_string();
+
+                let formatted = taplo::formatter::format(&unformatted, taplo::formatter::Options::default());
+
+                Ok(formatted)
+            }
+
+
+            pub fn to_raw_package_ids(&self) -> RawPackageIds {
+                RawPackageIds {
+                    $(
+                        $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect(),
+                    )*
+                }
+            }
+        }
+    }
+}
+apply_backends!(raw_packages);
 
 macro_rules! packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
