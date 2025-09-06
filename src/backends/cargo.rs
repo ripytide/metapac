@@ -31,8 +31,17 @@ pub struct CargoOptions {
     locked: Option<bool>,
 }
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct CargoConfig {
+    #[serde_inline_default(CargoConfig::default().locked)]
+    pub locked: bool,
+}
+
 impl Backend for Cargo {
     type Options = CargoOptions;
+    type Config = CargoConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -45,7 +54,7 @@ impl Backend for Cargo {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -66,7 +75,11 @@ impl Backend for Cargo {
         extract_packages(&contents).wrap_err("extracting packages from crates file")
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         for (package, options) in packages {
             run_command(
                 ["cargo", "install"]
@@ -74,7 +87,7 @@ impl Backend for Cargo {
                     .chain(
                         Some("--locked")
                             .into_iter()
-                            .filter(|_| options.locked.unwrap_or(config.cargo.locked)),
+                            .filter(|_| options.locked.unwrap_or(config.locked)),
                     )
                     .chain(Some("--git").into_iter().filter(|_| options.git.is_some()))
                     .chain(options.git.as_deref())
@@ -102,7 +115,7 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["cargo", "uninstall"]
@@ -115,7 +128,7 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -137,13 +150,13 @@ impl Backend for Cargo {
             .collect::<BTreeMap<String, CargoOptions>>();
 
         for options in install_options.values_mut() {
-            options.locked = Some(config.cargo.locked);
+            options.locked = Some(config.locked);
         }
 
         Self::install(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
@@ -152,13 +165,13 @@ impl Backend for Cargo {
         Self::install(&install_options, no_confirm, config)
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(_: &Self::Config) -> Result<()> {
         run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
     }
 }

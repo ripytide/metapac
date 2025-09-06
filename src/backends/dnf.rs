@@ -18,6 +18,7 @@ pub struct DnfOptions {
 
 impl Backend for Dnf {
     type Options = DnfOptions;
+    type Config = ();
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -30,7 +31,7 @@ impl Backend for Dnf {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -86,7 +87,7 @@ impl Backend for Dnf {
     fn install(
         packages: &BTreeMap<String, Self::Options>,
         no_confirm: bool,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
             // add these two repositories as these are needed for many dependencies
@@ -110,7 +111,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["dnf", "remove"]
@@ -124,7 +125,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
@@ -134,7 +135,7 @@ impl Backend for Dnf {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
@@ -143,13 +144,13 @@ impl Backend for Dnf {
         )
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["dnf", "clean", "all"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
     }
 }

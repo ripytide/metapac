@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-
 use crate::prelude::*;
 use color_eyre::Result;
+use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
+use std::collections::{BTreeMap, BTreeSet};
 
 macro_rules! append {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -41,24 +41,24 @@ macro_rules! any {
             $($upper_backend,)*
         }
         impl AnyBackend {
-            pub fn clean_cache(&self, config: &Config) -> Result<()> {
+            pub fn clean_cache(&self, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::clean_cache(&config.$lower_backend), )*
                 }
             }
-            pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update(packages, no_confirm, &config.$lower_backend), )*
                 }
             }
-            pub fn update_all(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn update_all(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::update_all(no_confirm, &config.$lower_backend), )*
                 }
             }
-            pub fn version(&self, config: &Config) -> Result<String> {
+            pub fn version(&self, config: &BackendConfigs) -> Result<String> {
                 match self {
-                    $( AnyBackend::$upper_backend => $upper_backend::version(config), )*
+                    $( AnyBackend::$upper_backend => $upper_backend::version(&config.$lower_backend), )*
                 }
             }
         }
@@ -177,18 +177,18 @@ macro_rules! packages {
                 packages
             }
 
-            pub fn install(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn install(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
                     let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
-                    $upper_backend::install(&options, no_confirm, config)?;
+                    $upper_backend::install(&options, no_confirm, &config.$lower_backend)?;
                 )*
 
                 Ok(())
             }
 
-            pub fn uninstall(&self, no_confirm: bool, config: &Config) -> Result<()> {
+            pub fn uninstall(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, config)?;
+                    $upper_backend::uninstall(&self.$lower_backend.keys().cloned().collect(), no_confirm, &config.$lower_backend)?;
                 )*
 
                 Ok(())
@@ -197,3 +197,18 @@ macro_rules! packages {
     }
 }
 apply_backends!(packages);
+
+macro_rules! configs {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[serde_inline_default]
+        #[derive(Debug, Serialize, Deserialize, Default)]
+        #[serde(deny_unknown_fields)]
+        pub struct BackendConfigs {
+            $(
+                #[serde_inline_default(BackendConfigs::default().$lower_backend)]
+                pub $lower_backend: <$upper_backend as Backend>::Config,
+            )*
+        }
+    }
+}
+apply_backends!(configs);

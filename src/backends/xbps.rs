@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -14,8 +15,14 @@ pub struct Xbps;
 #[serde(deny_unknown_fields)]
 pub struct XbpsOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct XbpsConfig {}
+
 impl Backend for Xbps {
     type Options = XbpsOptions;
+    type Config = XbpsConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -28,7 +35,7 @@ impl Backend for Xbps {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<std::collections::BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -58,7 +65,7 @@ impl Backend for Xbps {
     fn install(
         packages: &std::collections::BTreeMap<String, Self::Options>,
         no_confirm: bool,
-        _: &Config,
+        _: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
@@ -73,7 +80,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-remove", "--recursive"]
@@ -87,7 +94,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-install", "--sync", "--update"]
@@ -101,7 +108,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, _: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
         let update = || {
             run_command(
                 ["xbps-install", "--sync", "--update"]
@@ -117,7 +124,7 @@ impl Backend for Xbps {
         update()
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(
                 ["xbps-remove", "--clean-cache", "--remove-orphans"],
@@ -126,7 +133,7 @@ impl Backend for Xbps {
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
     }
 }

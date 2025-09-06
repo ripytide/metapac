@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -14,8 +15,14 @@ pub struct Scoop;
 #[serde(deny_unknown_fields)]
 pub struct ScoopGetOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopConfig {}
+
 impl Backend for Scoop {
     type Options = ScoopGetOptions;
+    type Config = ScoopConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -28,7 +35,7 @@ impl Backend for Scoop {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -50,7 +57,11 @@ impl Backend for Scoop {
         Ok(packages)
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["scoop.cmd", "install"]
@@ -63,7 +74,7 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["scoop.cmd", "uninstall", "--purge"]
@@ -76,7 +87,7 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["scoop.cmd", "update"]
@@ -89,16 +100,16 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["scoop.cmd", "update", "--all"], Perms::Same)
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(_: &Self::Config) -> Result<()> {
         run_command(["scoop.cmd", "cache", "rm", "--all"], Perms::Same)?;
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         let output = run_command_for_stdout(["scoop.cmd", "--version"], Perms::Same, false)?;
 
         Ok(output.lines().nth(1).unwrap().to_string())

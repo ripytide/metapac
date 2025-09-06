@@ -1,11 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Bun;
@@ -14,8 +14,14 @@ pub struct Bun;
 #[serde(deny_unknown_fields)]
 pub struct BunOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct BunConfig {}
+
 impl Backend for Bun {
     type Options = BunOptions;
+    type Config = BunConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -28,7 +34,7 @@ impl Backend for Bun {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -78,7 +84,11 @@ impl Backend for Bun {
         Ok(packages)
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["bun", "install", "--global"]
@@ -91,7 +101,7 @@ impl Backend for Bun {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["bun", "uninstall", "--global"]
@@ -104,7 +114,7 @@ impl Backend for Bun {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["bun", "update", "--global"]
@@ -117,17 +127,17 @@ impl Backend for Bun {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["bun", "update", "--global"], Perms::Same)
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["bun", "pm", "cache", "rm", "--global"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["bun", "--version"], Perms::Same, false)
     }
 }

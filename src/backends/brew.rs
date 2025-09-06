@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use color_eyre::Result;
-use serde::{Deserialize, Serialize};
-
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
+use color_eyre::Result;
+use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Brew;
@@ -13,8 +13,14 @@ pub struct Brew;
 #[serde(deny_unknown_fields)]
 pub struct BrewOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct BrewConfig {}
+
 impl Backend for Brew {
     type Options = BrewOptions;
+    type Config = BrewConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -27,7 +33,7 @@ impl Backend for Brew {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -44,7 +50,11 @@ impl Backend for Brew {
             .collect())
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["brew", "install"]
@@ -57,7 +67,7 @@ impl Backend for Brew {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["brew", "remove"]
@@ -70,7 +80,7 @@ impl Backend for Brew {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["brew", "upgrade"]
@@ -83,17 +93,17 @@ impl Backend for Brew {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["brew", "upgrade"], Perms::Same)
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["brew", "cleanup", "--prune-prefix"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["brew", "--version"], Perms::Same, false)
     }
 }

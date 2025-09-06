@@ -1,13 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 use serde_json::Value;
-
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Yarn;
@@ -16,8 +16,14 @@ pub struct Yarn;
 #[serde(deny_unknown_fields)]
 pub struct YarnOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct YarnConfig {}
+
 impl Backend for Yarn {
     type Options = YarnOptions;
+    type Config = YarnConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -30,7 +36,7 @@ impl Backend for Yarn {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -73,7 +79,11 @@ impl Backend for Yarn {
             .collect())
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, _: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["yarn", "global", "add"]
@@ -86,7 +96,7 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["yarn", "global", "remove"]
@@ -99,7 +109,7 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["yarn", "global", "upgrade"]
@@ -112,17 +122,17 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Config) -> Result<()> {
+    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["yarn", "global", "upgrade"], Perms::Same)
     }
 
-    fn clean_cache(config: &Config) -> Result<()> {
+    fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["yarn", "cache", "clean"], Perms::Same)
         })
     }
 
-    fn version(_: &Config) -> Result<String> {
+    fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["yarn", "--version"], Perms::Same, false)
     }
 }

@@ -1,14 +1,14 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+use crate::cmd::run_command;
+use crate::cmd::run_command_for_stdout;
+use crate::prelude::*;
 use color_eyre::Result;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::cmd::run_command;
-use crate::cmd::run_command_for_stdout;
-use crate::prelude::*;
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct VsCode;
@@ -17,8 +17,33 @@ pub struct VsCode;
 #[serde(deny_unknown_fields)]
 pub struct VsCodeOptions {}
 
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodeConfig {
+    #[serde_inline_default(VsCodeVariant::default())]
+    pub variant: VsCodeVariant,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VsCodeVariant {
+    #[default]
+    Code,
+    Codium,
+}
+impl VsCodeVariant {
+    pub fn as_command(&self) -> &'static str {
+        match self {
+            VsCodeVariant::Code => "code",
+            VsCodeVariant::Codium => "codium",
+        }
+    }
+}
+
 impl Backend for VsCode {
     type Options = VsCodeOptions;
+    type Config = VsCodeConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -31,13 +56,13 @@ impl Backend for VsCode {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
 
         let names = run_command_for_stdout(
-            [config.vscode.variant.as_command(), "--list-extensions"],
+            [config.variant.as_command(), "--list-extensions"],
             Perms::Same,
             true,
         )?
@@ -48,14 +73,14 @@ impl Backend for VsCode {
         Ok(names)
     }
 
-    fn install(packages: &BTreeMap<String, Self::Options>, _: bool, config: &Config) -> Result<()> {
+    fn install(
+        packages: &BTreeMap<String, Self::Options>,
+        _: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         for package in packages.keys() {
             run_command(
-                [
-                    config.vscode.variant.as_command(),
-                    "--install-extension",
-                    package,
-                ],
+                [config.variant.as_command(), "--install-extension", package],
                 Perms::Same,
             )?;
         }
@@ -63,11 +88,11 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
                 [
-                    config.vscode.variant.as_command(),
+                    config.variant.as_command(),
                     "--uninstall-extension",
                     package,
                 ],
@@ -78,14 +103,10 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, config: &Config) -> Result<()> {
+    fn update(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
-                [
-                    config.vscode.variant.as_command(),
-                    "--install-extension",
-                    package,
-                ],
+                [config.variant.as_command(), "--install-extension", package],
                 Perms::Same,
             )?;
         }
@@ -93,7 +114,7 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, config: &Config) -> Result<()> {
+    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
         let packages = Self::query(config)?;
         Self::update(
             &packages.keys().map(String::from).collect(),
@@ -102,13 +123,13 @@ impl Backend for VsCode {
         )
     }
 
-    fn clean_cache(_: &Config) -> Result<()> {
+    fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
     }
 
-    fn version(config: &Config) -> Result<String> {
+    fn version(config: &Self::Config) -> Result<String> {
         run_command_for_stdout(
-            [config.vscode.variant.as_command(), "--version"],
+            [config.variant.as_command(), "--version"],
             Perms::Same,
             false,
         )
