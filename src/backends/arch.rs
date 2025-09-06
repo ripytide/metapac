@@ -1,7 +1,6 @@
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -10,16 +9,14 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Arch;
 
-#[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ArchOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ArchConfig {
-    #[serde_inline_default(ArchConfig::default().package_manager)]
+    #[serde(default)]
     pub package_manager: ArchPackageManager,
 }
 

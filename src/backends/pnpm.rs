@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -16,7 +15,6 @@ pub struct Pnpm;
 #[serde(deny_unknown_fields)]
 pub struct PnpmOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct PnpmConfig {}

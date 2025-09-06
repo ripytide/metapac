@@ -2,20 +2,18 @@ use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    // Update README if fields change.
-    #[serde_inline_default(Config::default().enabled_backends)]
+    // update README if fields change.
+    #[serde(default)]
     pub enabled_backends: BTreeSet<AnyBackend>,
-    #[serde_inline_default(Config::default().hostname_groups_enabled)]
+    #[serde(default)]
     pub hostname_groups_enabled: bool,
-    #[serde_inline_default(Config::default().hostname_groups)]
+    #[serde(default)]
     pub hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
     pub backends: BackendConfigs,

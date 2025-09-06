@@ -6,20 +6,20 @@ use crate::prelude::*;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Package<T> {
+pub struct GroupFilePackage<T> {
     pub package: String,
-    pub options: Option<T>,
-    pub hooks: Option<Hooks>,
+    #[serde(default)]
+    pub options: T,
+    #[serde(default)]
+    pub hooks: Hooks,
 }
-impl<T> Package<T> {
-    pub fn into_options(self) -> Option<T> {
+impl<T> GroupFilePackage<T> {
+    pub fn into_options(self) -> T {
         self.options
     }
 
     pub fn run_before_install(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.before_install
-        {
+        if let Some(args) = &self.hooks.before_install {
             log::info!("running before_install hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
@@ -27,9 +27,7 @@ impl<T> Package<T> {
         }
     }
     pub fn run_after_install(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.after_install
-        {
+        if let Some(args) = &self.hooks.after_install {
             log::info!("running after_install hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
@@ -37,9 +35,7 @@ impl<T> Package<T> {
         }
     }
     pub fn run_after_sync(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.after_sync
-        {
+        if let Some(args) = &self.hooks.after_sync {
             log::info!("running after_sync hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {
@@ -47,9 +43,7 @@ impl<T> Package<T> {
         }
     }
     pub fn run_before_sync(&self) -> Result<()> {
-        if let Some(hooks) = &self.hooks
-            && let Some(args) = &hooks.before_sync
-        {
+        if let Some(args) = &self.hooks.before_sync {
             log::info!("running before_sync hook for package {:?}", self.package);
             run_command(args, Perms::Same)
         } else {

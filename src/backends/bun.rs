@@ -5,7 +5,6 @@ use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Bun;
@@ -14,7 +13,6 @@ pub struct Bun;
 #[serde(deny_unknown_fields)]
 pub struct BunOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct BunConfig {}

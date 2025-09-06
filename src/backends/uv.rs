@@ -4,7 +4,6 @@ use std::collections::BTreeSet;
 use color_eyre::Result;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_inline_default::serde_inline_default;
 
 use crate::cmd::run_command;
 use crate::cmd::run_command_for_stdout;
@@ -13,15 +12,13 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Uv;
 
-#[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UvOptions {
-    #[serde_inline_default(UvOptions::default().python)]
+    #[serde(default)]
     python: Option<String>,
 }
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct UvConfig {}

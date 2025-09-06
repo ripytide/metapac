@@ -4,7 +4,6 @@ use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Brew;
@@ -13,7 +12,6 @@ pub struct Brew;
 #[serde(deny_unknown_fields)]
 pub struct BrewOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct BrewConfig {}

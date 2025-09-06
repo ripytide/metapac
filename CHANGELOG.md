@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   using the `metapac sync` command regardless of whether the package is
   already installed or not unlike `before_install` and `after_install`.
   Only runs for enabled backends. (#136)
+- Options and hooks are now printed when `metapac` outputs packages. Mainly
+  useful for the `metapac unmanaged` command but is also relevant for the
+  `metapac clean` and `metapac sync` commands.
 
 ### Changed
 

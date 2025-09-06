@@ -8,7 +8,6 @@ use color_eyre::Result;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct VsCode;
@@ -17,11 +16,10 @@ pub struct VsCode;
 #[serde(deny_unknown_fields)]
 pub struct VsCodeOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct VsCodeConfig {
-    #[serde_inline_default(VsCodeVariant::default())]
+    #[serde(default)]
     pub variant: VsCodeVariant,
 }
 
