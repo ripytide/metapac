@@ -372,7 +372,7 @@ snap = [
   { package = "package6", options = { confinement = "devmode" } },
   { package = "package7", options = { confinement = "jailmode" } },
 ]
-uv = ["package1", { package = "package2", python = "3.11" }]
+uv = ["package1", { package = "package2", options = { python = "3.11" } }]
 vscode = ["package1", { package = "package2" }]
 winget = ["ripytide.package1", { package = "ripytide.package2" }]
 xbps = ["package1", { package = "package2" }]
