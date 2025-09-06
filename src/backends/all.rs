@@ -133,21 +133,6 @@ macro_rules! package_ids {
 }
 apply_backends!(package_ids);
 
-macro_rules! configs {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[serde_inline_default]
-        #[derive(Debug, Serialize, Deserialize, Default)]
-        #[serde(deny_unknown_fields)]
-        pub struct BackendConfigs {// Update README if fields change.
-            $(
-                #[serde_inline_default(BackendConfigs::default().$lower_backend)]
-                pub $lower_backend: <$upper_backend as Backend>::Config,
-            )*
-        }
-    }
-}
-apply_backends!(configs);
-
 macro_rules! raw_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
@@ -212,3 +197,18 @@ macro_rules! packages {
     }
 }
 apply_backends!(packages);
+
+macro_rules! configs {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[serde_inline_default]
+        #[derive(Debug, Serialize, Deserialize, Default)]
+        #[serde(deny_unknown_fields)]
+        pub struct BackendConfigs {
+            $(
+                #[serde_inline_default(BackendConfigs::default().$lower_backend)]
+                pub $lower_backend: <$upper_backend as Backend>::Config,
+            )*
+        }
+    }
+}
+apply_backends!(configs);
