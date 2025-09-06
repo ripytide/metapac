@@ -344,14 +344,12 @@ brew = ["package1", { package = "package2" }]
 bun = ["package1", { package = "package2" }]
 cargo = [
   "package1",
-  # see cargo docs for info on the options
   { package = "package2", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [
     "feature1",
   ], locked = true } },
 ]
 dnf = [
   "package1",
-  # see dnf docs for more info on these options
   { package = "package2", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
 ]
 flatpak = [
@@ -365,14 +363,13 @@ scoop = ["main/metapac1", { package = "main/package2" }]
 snap = [
   "package1",
   { package = "package2" },
-  # see https://snapcraft.io/docs/snap-confinement for more info on confinement
   { package = "package3", options = { confinement = "strict" } },
   { package = "package4", options = { confinement = "classic" } },
   { package = "package5", options = { confinement = "dangerous" } },
   { package = "package6", options = { confinement = "devmode" } },
   { package = "package7", options = { confinement = "jailmode" } },
 ]
-uv = ["package1", { package = "package2" }]
+uv = ["package1", { package = "package2", options = { python = "3.11" } }]
 vscode = ["package1", { package = "package2" }]
 winget = ["ripytide.package1", { package = "ripytide.package2" }]
 xbps = ["package1", { package = "package2" }]
