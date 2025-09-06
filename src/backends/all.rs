@@ -162,11 +162,11 @@ macro_rules! raw_packages {
                         if package.options == <$upper_backend as Backend>::Options::default() {
                             inline_table.remove("options");
                         }
-                        
+
                         if package.hooks == Hooks::default() {
                             inline_table.remove("hooks");
                         }
-                        
+
                         if inline_table.len() == 1 {
                             array.replace(index, package.package.to_string());
                         }
