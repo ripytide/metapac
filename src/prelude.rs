@@ -1,6 +1,7 @@
 pub use crate::backends::Backend;
 pub use crate::backends::all::{
-    AnyBackend, BackendConfigs, PackageIds, Packages, RawPackageIds, RawPackages,
+    AnyBackend, BackendConfigs, GroupFilePackages, PackageIds, Packages, RawGroupFilePackages,
+    RawPackageIds,
 };
 pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
@@ -26,5 +27,5 @@ pub use crate::cli::{
 };
 pub use crate::cmd::Perms;
 pub use crate::config::Config;
+pub use crate::group_file_package::{GroupFilePackage, Hooks};
 pub use crate::groups::Groups;
-pub use crate::package::{Hooks, Package};

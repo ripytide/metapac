@@ -301,15 +301,22 @@ impl UpdateAllCommand {
 }
 
 impl CleanCommand {
-    fn run(self, required: &Packages, config: &Config) -> Result<()> {
-        let unmanaged = unmanaged(required, config)?;
+    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
+        let installed = installed(config)?;
+        let unmanaged = unmanaged(required, &installed)?;
 
         if unmanaged.is_empty() {
             log::info!("nothing to clean since there are no unmanaged packages");
             return Ok(());
         }
 
-        print!("{unmanaged}");
+        print!(
+            "{}",
+            &unmanaged
+                .to_group_file_packages()
+                .to_raw()
+                .to_string_pretty()?
+        );
 
         if self.no_confirm {
             log::info!("proceeding to uninstall packages without confirmation");
@@ -323,12 +330,12 @@ impl CleanCommand {
             return Ok(());
         }
 
-        package_ids_to_packages(unmanaged).uninstall(self.no_confirm, &config.backends)
+        unmanaged.uninstall(self.no_confirm, &config.backends)
     }
 }
 
 impl SyncCommand {
-    fn run(self, required: &Packages, config: &Config) -> Result<()> {
+    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
         let missing = missing(required, config)?;
 
         if missing.is_empty() {
@@ -336,7 +343,7 @@ impl SyncCommand {
         }
 
         if !missing.is_empty() {
-            print!("{}", missing.to_package_ids());
+            print!("{}", &missing.to_raw().to_string_pretty()?);
         }
 
         if self.no_confirm {
@@ -378,7 +385,9 @@ impl SyncCommand {
         }
         apply_backends!(x);
 
-        missing.install(self.no_confirm, &config.backends)?;
+        missing
+            .to_packages()
+            .install(self.no_confirm, &config.backends)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -411,13 +420,20 @@ impl SyncCommand {
 }
 
 impl UnmanagedCommand {
-    fn run(self, required: &Packages, config: &Config) -> Result<()> {
-        let unmanaged = unmanaged(required, config)?;
+    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
+        let installed = installed(config)?;
+        let unmanaged = unmanaged(required, &installed)?;
 
         if unmanaged.is_empty() {
             log::info!("no unmanaged packages");
         } else {
-            print!("{unmanaged}");
+            print!(
+                "{}",
+                &unmanaged
+                    .to_group_file_packages()
+                    .to_raw()
+                    .to_string_pretty()?
+            );
         }
 
         Ok(())
@@ -455,14 +471,14 @@ impl CleanCacheCommand {
     }
 }
 
-fn installed(config: &Config) -> Result<PackageIds> {
+fn installed(config: &Config) -> Result<Packages> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-            PackageIds {
+            Packages {
                 $(
                     $lower_backend:
                         if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::query(&config.backends.$lower_backend)?.keys().cloned().collect()
+                            $upper_backend::query(&config.backends.$lower_backend)?
                         } else {
                             Default::default()
                         },
@@ -470,22 +486,37 @@ fn installed(config: &Config) -> Result<PackageIds> {
             }
         };
     }
-    Ok(apply_backends!(x).filtered(config))
+    Ok(apply_backends!(x))
 }
-fn unmanaged(required: &Packages, config: &Config) -> Result<PackageIds> {
-    installed(config).map(|x| x.difference(&required.to_package_ids()))
-}
-fn missing(required: &Packages, config: &Config) -> Result<Packages> {
-    let installed = installed(config)?;
-
-    let mut missing = Packages::default();
+fn unmanaged(required: &GroupFilePackages, installed: &Packages) -> Result<Packages> {
+    let mut output = Packages::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, missing_options) in required.$lower_backend.iter() {
-                    if !installed.$lower_backend.contains(package_id) {
-                        missing.$lower_backend.insert(package_id.clone(), missing_options.clone());
+                for (package_id, package) in installed.$lower_backend.iter() {
+                    if (!required.$lower_backend.contains_key(package_id)) {
+                        output.$lower_backend.insert(package_id.to_string(), package.clone());
+                    }
+                }
+            )*
+        };
+    }
+    apply_backends!(x);
+
+    Ok(output)
+}
+fn missing(required: &GroupFilePackages, config: &Config) -> Result<GroupFilePackages> {
+    let installed = installed(config)?;
+
+    let mut missing = GroupFilePackages::default();
+
+    macro_rules! x {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+            $(
+                for (package_id, required_package) in required.$lower_backend.iter() {
+                    if !installed.$lower_backend.contains_key(package_id) {
+                        missing.$lower_backend.insert(package_id.clone(), required_package.clone());
                     }
                 }
             )*
@@ -505,18 +536,6 @@ fn package_vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
     }
 
     packages
-}
-fn package_ids_to_packages(package_ids: PackageIds) -> Packages {
-    macro_rules! x {
-        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-            Packages {
-                $(
-                    $lower_backend: package_ids.$lower_backend.iter().map(|x| (x.to_string(), Package {package: x.to_string(), options: Default::default(), hooks: None})).collect(),
-                )*
-            }
-        };
-    }
-    apply_backends!(x)
 }
 fn parse_backends(backends: &Vec<String>, config: &Config) -> Result<BTreeSet<AnyBackend>> {
     if backends.is_empty() {

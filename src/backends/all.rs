@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use std::collections::{BTreeMap, BTreeSet};
 
 macro_rules! append {
@@ -68,7 +67,7 @@ apply_backends!(any);
 
 macro_rules! raw_package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Clone, Default)]
+        #[derive(Debug, Clone, Default, Serialize)]
         pub struct RawPackageIds {
             $(
                 pub $lower_backend: Vec<String>,
@@ -98,35 +97,10 @@ macro_rules! package_ids {
             append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
 
-            pub fn filtered(&self, config: &Config) -> PackageIds {
-                let mut packages = self.clone();
-                $(
-                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        packages.$lower_backend = Default::default();
-                    }
-                )*
-                packages
-            }
-
             pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
                 match backend {
                     $( AnyBackend::$upper_backend => self.$lower_backend.contains(package) ),*
                 }
-            }
-
-            pub fn difference(&self, other: &Self) -> Self {
-                let mut output = Self::default();
-
-                $(
-                    output.$lower_backend = self.$lower_backend.difference(&other.$lower_backend).cloned().collect();
-                )*
-
-                output
-            }
-        }
-        impl std::fmt::Display for PackageIds {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", toml::to_string_pretty(self).or(Err(std::fmt::Error))?)
             }
         }
     }
@@ -135,51 +109,82 @@ apply_backends!(package_ids);
 
 macro_rules! raw_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Clone, Default)]
-        pub struct RawPackages {
+        #[derive(Debug, Clone, Default, Serialize)]
+        pub struct RawGroupFilePackages {
             $(
-                pub $lower_backend: Vec<Package<<$upper_backend as Backend>::Options>>,
+                pub $lower_backend: Vec<GroupFilePackage<<$upper_backend as Backend>::Options>>,
             )*
         }
-        impl RawPackages {
+        impl RawGroupFilePackages {
             append!($(($upper_backend, $lower_backend)),*);
 
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
                 RawPackageIds {
-                    $( $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect() ),*
+                    $(
+                        $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect(),
+                    )*
                 }
+            }
+
+            pub fn to_string_pretty(&self) -> Result<String> {
+                let mut document = toml_edit::ser::to_document(self)?;
+                
+                document.retain(|_, y| !y.as_array().unwrap().is_empty());
+
+                Ok(document.to_string())
             }
         }
     }
 }
 apply_backends!(raw_packages);
 
+macro_rules! group_file_packages {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[derive(Debug, Clone, Default)]
+        pub struct GroupFilePackages {
+            $(
+                pub $lower_backend: BTreeMap<String, GroupFilePackage<<$upper_backend as Backend>::Options>>,
+            )*
+        }
+        impl GroupFilePackages {
+            append!($(($upper_backend, $lower_backend)),*);
+            is_empty!($(($upper_backend, $lower_backend)),*);
+            to_package_ids!($(($upper_backend, $lower_backend)),*);
+
+            pub fn to_raw(&self) -> RawGroupFilePackages {
+                RawGroupFilePackages {
+                    $(
+                        $lower_backend: self.$lower_backend.values().cloned().collect(),
+                    )*
+                }
+            }
+
+            pub fn to_packages(&self) -> Packages {
+                Packages {
+                    $(
+                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.options.clone())).collect(),
+                    )*
+                }
+            }
+        }
+    }
+}
+apply_backends!(group_file_packages);
+
 macro_rules! packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
         pub struct Packages {
             $(
-                pub $lower_backend: BTreeMap<String, Package<<$upper_backend as Backend>::Options>>,
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::Options>,
             )*
         }
         impl Packages {
-            append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
-            to_package_ids!($(($upper_backend, $lower_backend)),*);
-
-            pub fn filtered(&self, config: &Config) -> Packages {
-                let mut packages = self.clone();
-                $(
-                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        packages.$lower_backend = Default::default();
-                    }
-                )*
-                packages
-            }
 
             pub fn install(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone().into_options().unwrap_or_default())));
+                    let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
                     $upper_backend::install(&options, no_confirm, &config.$lower_backend)?;
                 )*
 
@@ -193,6 +198,14 @@ macro_rules! packages {
 
                 Ok(())
             }
+
+            pub fn to_group_file_packages(&self) -> GroupFilePackages {
+                GroupFilePackages {
+                    $(
+                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), GroupFilePackage {package: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
+                    )*
+                }
+            }
         }
     }
 }
@@ -200,12 +213,11 @@ apply_backends!(packages);
 
 macro_rules! configs {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[serde_inline_default]
         #[derive(Debug, Serialize, Deserialize, Default)]
         #[serde(deny_unknown_fields)]
         pub struct BackendConfigs {
             $(
-                #[serde_inline_default(BackendConfigs::default().$lower_backend)]
+                #[serde(default)]
                 pub $lower_backend: <$upper_backend as Backend>::Config,
             )*
         }

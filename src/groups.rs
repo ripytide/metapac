@@ -13,7 +13,7 @@ use std::{
 };
 
 #[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
-pub struct Groups(BTreeMap<PathBuf, RawPackages>);
+pub struct Groups(BTreeMap<PathBuf, RawGroupFilePackages>);
 
 impl Groups {
     pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
@@ -26,7 +26,7 @@ impl Groups {
         result
     }
 
-    pub fn to_packages(&self) -> Result<Packages> {
+    pub fn to_packages(&self) -> Result<GroupFilePackages> {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
@@ -60,14 +60,14 @@ impl Groups {
             }
         }
 
-        let mut merged_raw_packages = RawPackages::default();
+        let mut merged_raw_packages = RawGroupFilePackages::default();
         for mut raw_packages in self.values().cloned() {
             merged_raw_packages.append(&mut raw_packages);
         }
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                Packages {
+                GroupFilePackages {
                     $(
                         $lower_backend: merged_raw_packages.$lower_backend.into_iter().map(|x| (x.package.clone(), x)).collect(),
                     )*
@@ -127,8 +127,8 @@ impl Groups {
     }
 }
 
-fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawPackages> {
-    let mut raw_packages = RawPackages::default();
+fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawGroupFilePackages> {
+    let mut raw_packages = RawGroupFilePackages::default();
 
     let toml = toml::from_str::<Table>(contents)?;
 
@@ -139,12 +139,16 @@ fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawPackages> {
     Ok(raw_packages)
 }
 
-fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<RawPackages> {
+fn parse_toml_key_value(
+    group_file: &Path,
+    key: &str,
+    value: &Value,
+) -> Result<RawGroupFilePackages> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
                 if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
-                    let mut raw_packages = RawPackages::default();
+                    let mut raw_packages = RawGroupFilePackages::default();
 
                     let packages = value.as_array().ok_or(
                         eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
@@ -153,8 +157,8 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
                     for package in packages {
                         let package =
                             match package {
-                                toml::Value::String(x) => Package{ package:x.to_string(), options: Default::default(), hooks: None },
-                                toml::Value::Table(x) => x.clone().try_into::<Package<<$upper_backend as Backend>::Options>>()?,
+                                toml::Value::String(x) => GroupFilePackage { package:x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                toml::Value::Table(x) => x.clone().try_into::<GroupFilePackage<<$upper_backend as Backend>::Options>>()?,
                                 _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                             };
 
@@ -170,5 +174,5 @@ fn parse_toml_key_value(group_file: &Path, key: &str, value: &Value) -> Result<R
 
     log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
 
-    Ok(RawPackages::default())
+    Ok(RawGroupFilePackages::default())
 }

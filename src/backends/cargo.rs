@@ -4,7 +4,6 @@ use std::io::ErrorKind::NotFound;
 use color_eyre::Result;
 use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -13,29 +12,27 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
 
-#[serde_inline_default]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CargoOptions {
-    #[serde_inline_default(CargoOptions::default().version)]
+    #[serde(default)]
     version: Option<String>,
-    #[serde_inline_default(CargoOptions::default().git)]
+    #[serde(default)]
     git: Option<String>,
-    #[serde_inline_default(CargoOptions::default().all_features)]
+    #[serde(default)]
     all_features: bool,
-    #[serde_inline_default(CargoOptions::default().no_default_features)]
+    #[serde(default)]
     no_default_features: bool,
-    #[serde_inline_default(CargoOptions::default().features)]
+    #[serde(default)]
     features: Vec<String>,
-    #[serde_inline_default(CargoOptions::default().locked)]
+    #[serde(default)]
     locked: Option<bool>,
 }
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct CargoConfig {
-    #[serde_inline_default(CargoConfig::default().locked)]
+    #[serde(default)]
     pub locked: bool,
 }
 

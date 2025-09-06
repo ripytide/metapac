@@ -6,7 +6,6 @@ use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use serde_json::Value;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -16,7 +15,6 @@ pub struct Yarn;
 #[serde(deny_unknown_fields)]
 pub struct YarnOptions {}
 
-#[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct YarnConfig {}

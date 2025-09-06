@@ -8,7 +8,10 @@ repository = "https://github.com/ripytide/metapac"
 readme = "README.md"
 keywords = ["package-manager", "linux", "declarative", "cli"]
 categories = ["command-line-utilities"]
-authors = ["James Forster <james.forsterer@gmail.com>", "Md Isfarul Haque <md-isfarul-haque@proton.me"]
+authors = [
+  "James Forster <james.forsterer@gmail.com>",
+  "Md Isfarul Haque <md-isfarul-haque@proton.me",
+]
 
 [package.metadata.release]
 allow-branch = ["main"]
@@ -21,7 +24,7 @@ color-eyre = "0.6.5"
 clap = { version = "4.5.47", features = ["derive"] }
 regex = { version = "1.11.2", default-features = false, features = ["std"] }
 libc = "0.2.175"
-log = { version = "0.4.27", features = ["std"] }
+log = { version = "0.4.28", features = ["std"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 toml = "0.9.5"
@@ -34,9 +37,9 @@ dialoguer = "0.12.0"
 serde-inline-default = "1.0.0"
 hostname = "0.4.1"
 walkdir = "2.5.0"
-toml_edit = "0.23.4"
+toml_edit = { version = "0.23.4", features = ["serde", "display"] }
 tempfile = "3.21.0"
-strum = {version = "0.27.2", features = ["derive"]}
+strum = { version = "0.27.2", features = ["derive"] }
 indoc = "2.0.6"
 
 [dev-dependencies]
