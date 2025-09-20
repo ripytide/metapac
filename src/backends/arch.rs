@@ -1,5 +1,6 @@
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -58,18 +59,19 @@ impl Backend for Arch {
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
-            A package may be invalid due to one of the following issues:
+            An arch package may be invalid due to one of the following issues:
                 - the package name has a typo as written in your group files
                 - the package is in a repository that you don't have enabled in
-                    /etc/pacman.conf (such as multilib)
+                  /etc/pacman.conf (such as multilib)
                 - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
-                    and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
-                    which provide the virtual package
+                  and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
+                  which provide the virtual package
                 - the package was removed from the repositories
                 - the package was renamed to a different name
-                - the local package database is out of date and so doesn't yet contain the package:
-                    update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
-                - the package is actually a package group which is not valid in metapac group files, see <https://github.com/ripytide/metapac#arch>
+                - the local package database is out of date and so doesn't yet contain the package,
+                  update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
+                - the package is actually a package group which is not valid in metapac group files,
+                  see <https://github.com/ripytide/metapac#arch>
 
             You can check to see if the package exists via `pacman -Si <package>` or a similar command using your chosen AUR helper.
         "}
@@ -79,10 +81,33 @@ impl Backend for Arch {
         packages: &BTreeSet<String>,
         config: &Config,
     ) -> BTreeMap<String, Option<bool>> {
-        match inner_are_valid_packages(packages, config) {
-            Ok(x) => x,
-            Err(_) => packages.iter().map(|x| (x.to_string(), None)).collect(),
+        let existing_packages: Result<BTreeSet<String>, _> = run_command_for_stdout(
+            [
+                config.backends.arch.package_manager.as_command(),
+                "--sync",
+                "--list",
+                "--quiet",
+            ],
+            Perms::Same,
+            false,
+        )
+        .map(|x| x.lines().map(String::from).collect());
+
+
+        let mut output = BTreeMap::new();
+        for package in packages {
+            let valid = match existing_packages {
+                Ok(existing_packages) => Some(existing_packages.contains(package)),
+                Err(_) => 
+            }
+
+            output.insert(
+                package.to_string(),
+                Some(existing_packages.contains(package)),
+            );
         }
+
+        Ok(output)
     }
 
     fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
@@ -232,31 +257,7 @@ impl Backend for Arch {
     }
 }
 
-fn inner_are_valid_packages(
-    packages: &BTreeSet<String>,
-    config: &Config,
-) -> Result<BTreeMap<String, Option<bool>>> {
-    let available_packages: BTreeSet<String> = run_command_for_stdout(
-        [
-            config.backends.arch.package_manager.as_command(),
-            "--sync",
-            "--list",
-            "--quiet",
-        ],
-        Perms::Same,
-        false,
-    )?
-    .lines()
-    .map(String::from)
-    .collect();
-
-    let mut output = BTreeMap::new();
-    for package in packages {
-        output.insert(
-            package.to_string(),
-            Some(available_packages.contains(package)),
-        );
-    }
-
-    Ok(output)
+/// implements the valid package criteria as documented at <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
+fn is_valid_package_name(package: &str) -> bool {
+    let regex = Regex::new( l)
 }

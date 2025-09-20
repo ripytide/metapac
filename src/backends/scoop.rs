@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -23,14 +24,31 @@ impl Backend for Scoop {
     type Config = ScoopConfig;
 
     fn invalid_package_help_text() -> String {
-        String::new()
+        indoc::formatdoc! {"
+            A scoop package may be invalid due to one of the following issues:
+                - the package name does not use the explicit \"bucket/package\" format which is
+                  required by metapac
+        "}
     }
 
     fn are_valid_packages(
         packages: &BTreeSet<String>,
         _: &Config,
     ) -> BTreeMap<String, Option<bool>> {
-        packages.iter().map(|x| (x.to_string(), None)).collect()
+        let mut output = BTreeMap::new();
+        let regex = Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap();
+        for package in packages {
+            let valid = if !regex.is_match(package) {
+                Some(false)
+            } else {
+                // the package is in the right format but could still not exist
+                None
+            };
+
+            output.insert(package.to_string(), valid);
+        }
+
+        output
     }
 
     fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
