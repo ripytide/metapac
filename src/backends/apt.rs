@@ -1,5 +1,6 @@
-use color_eyre::eyre::eyre;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,11 +23,22 @@ impl Backend for Apt {
     type Config = AptConfig;
 
     fn invalid_package_help_text() -> String {
-        String::new()
+        indoc::formatdoc! {"
+            An apt package may be invalid due to one of the following issues:
+                - the package name has a typo as written in your group files or doesn't meet the packaging requirements for a
+                  valid package name: <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
+        "}
     }
 
-    fn is_valid_package_name(_: &str) -> Option<bool> {
-        None
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        // see <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
+        let regex = Regex::new("[a-z0-9+-.]+").unwrap();
+
+        Some(
+            regex.is_match(package)
+                && (package.len() >= 2)
+                && package.chars().next().unwrap().is_alphanumeric(),
+        )
     }
 
     fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
