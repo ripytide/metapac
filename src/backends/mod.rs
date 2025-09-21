@@ -25,8 +25,8 @@ use color_eyre::Result;
 macro_rules! apply_backends {
     ($macro:ident) => {
         $macro! {
-        (Arch, arch),
         (Apt, apt),
+        (Arch, arch),
         (Brew, brew),
         (Bun, bun),
         (Cargo, cargo),
