@@ -13,13 +13,13 @@ preferred packages from your preferred package managers much easier.
 
 ## Installation
 
-### Cargo
+### With Cargo
 
 ```shell
 cargo install metapac
 ```
 
-### Arch User Repository
+### With Arch User Repository
 
 ```shell
 paru -S metapac
