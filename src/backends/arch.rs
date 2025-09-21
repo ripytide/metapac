@@ -96,18 +96,24 @@ impl Backend for Arch {
 
         let mut output = BTreeMap::new();
         for package in packages {
-            let valid = match existing_packages {
+            let valid = match &existing_packages {
                 Ok(existing_packages) => Some(existing_packages.contains(package)),
-                Err(_) => 
-            }
+                Err(_) => {
+                    if is_valid_package_name(package) {
+                        None
+                    } else {
+                        Some(false)
+                    }
+                }
+            };
 
             output.insert(
                 package.to_string(),
-                Some(existing_packages.contains(package)),
+                valid
             );
         }
 
-        Ok(output)
+        output
     }
 
     fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
@@ -259,5 +265,7 @@ impl Backend for Arch {
 
 /// implements the valid package criteria as documented at <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
 fn is_valid_package_name(package: &str) -> bool {
-    let regex = Regex::new( l)
+    let regex = Regex::new("[a-z0-9@._+-]+").unwrap();
+
+    regex.is_match(package) && !package.starts_with("-") && !package.starts_with(".") 
 }
