@@ -27,7 +27,8 @@ impl Backend for Scoop {
         indoc::formatdoc! {"
             A scoop package may be invalid due to one of the following issues:
                 - the package name does not use the explicit \"bucket/package\" format which is
-                  required by metapac
+                  required by metapac in order to unambiguously match installed packages with those
+                  declared in your group files
         "}
     }
 

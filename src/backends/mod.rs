@@ -50,6 +50,7 @@ pub trait Backend {
     type Options;
     type Config;
 
+    /// Help text to display if an invalid package is given.
     fn invalid_package_help_text() -> String;
 
     /// If possible the backend will attempt to decide whether the given package name is valid.
