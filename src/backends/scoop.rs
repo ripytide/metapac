@@ -31,6 +31,10 @@ impl Backend for Scoop {
         "}
     }
 
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap().is_match(package)
+    }
+
     fn are_valid_packages(
         packages: &BTreeSet<String>,
         _: &Config,

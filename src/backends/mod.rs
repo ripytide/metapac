@@ -55,6 +55,9 @@ pub trait Backend {
     /// If possible the backend will attempt to decide whether the given package is a valid package
     /// or not.
     ///
+    /// Validity is defined as the package being able to be installed on the current system as the
+    /// package manager is currently configured.
+    ///
     /// - `Some(true)` means the package is valid
     /// - `Some(false)` means the package is invalid
     /// - `None` means the package could be valid or invalid.
@@ -62,6 +65,19 @@ pub trait Backend {
         packages: &BTreeSet<String>,
         config: &Config,
     ) -> BTreeMap<String, Option<bool>>;
+
+    /// If possible the backend will attempt to decide whether the given package name is valid.
+    ///
+    /// Validity is defined as agreeing to the documented rules for that backend, such as only
+    /// being made up of valid characters. And importantly, another rule specific to metapac is
+    /// that if there are two forms of name for the same package (such as `metapac` vs
+    /// `main/metapac`) then the implicit package names are always invalid as otherwise it would
+    /// cause ambiguity in matching installed packages against a users group files.
+    ///
+    /// - `Some(true)` means the package name is valid
+    /// - `Some(false)` means the package name is invalid
+    /// - `None` means the package name could be valid or invalid.
+    // fn is_valid_package_name(package: &str) -> Option<bool>;
 
     /// Attempts to query which packages are explicitly installed along with their options.
     ///

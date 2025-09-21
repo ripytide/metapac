@@ -77,6 +77,13 @@ impl Backend for Arch {
         "}
     }
 
+    /// implements the valid package criteria as documented at <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        let regex = Regex::new("[a-z0-9@._+-]+").unwrap();
+
+        Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
+    }
+
     fn are_valid_packages(
         packages: &BTreeSet<String>,
         config: &Config,
@@ -93,7 +100,6 @@ impl Backend for Arch {
         )
         .map(|x| x.lines().map(String::from).collect());
 
-
         let mut output = BTreeMap::new();
         for package in packages {
             let valid = match &existing_packages {
@@ -107,14 +113,13 @@ impl Backend for Arch {
                 }
             };
 
-            output.insert(
-                package.to_string(),
-                valid
-            );
+            output.insert(package.to_string(), valid);
         }
 
         output
     }
+
+
 
     fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
@@ -261,11 +266,4 @@ impl Backend for Arch {
             false,
         )
     }
-}
-
-/// implements the valid package criteria as documented at <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
-fn is_valid_package_name(package: &str) -> bool {
-    let regex = Regex::new("[a-z0-9@._+-]+").unwrap();
-
-    regex.is_match(package) && !package.starts_with("-") && !package.starts_with(".") 
 }
