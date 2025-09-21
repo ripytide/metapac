@@ -77,13 +77,13 @@ pub trait Backend {
     /// - `Some(true)` means the package name is valid
     /// - `Some(false)` means the package name is invalid
     /// - `None` means the package name could be valid or invalid.
-    // fn is_valid_package_name(package: &str) -> Option<bool>;
+    fn is_valid_package_name(package: &str) -> Option<bool>;
 
-    /// Attempts to query which packages are explicitly installed along with their options.
+    /// Attempts to return which packages are explicitly installed along with their options.
     ///
     /// If a backend cannot distinguish between explicit and implicit packages then it should
     /// return both implicit and explicit packages.
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>>;
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>>;
 
     /// Attempts to explicitly install the given `packages`, optionally without confirmation using
     /// `no_confirm`.

@@ -478,7 +478,7 @@ fn installed(config: &Config) -> Result<Packages> {
                 $(
                     $lower_backend:
                         if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::query(&config.backends.$lower_backend)?
+                            $upper_backend::get_installed(&config.backends.$lower_backend)?
                         } else {
                             Default::default()
                         },

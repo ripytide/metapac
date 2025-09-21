@@ -121,7 +121,7 @@ impl Backend for Arch {
 
 
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -216,7 +216,7 @@ impl Backend for Arch {
     }
 
     fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let installed = Self::query(config)?;
+        let installed = Self::get_installed(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages

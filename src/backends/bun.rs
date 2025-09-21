@@ -32,7 +32,7 @@ impl Backend for Bun {
         packages.iter().map(|x| (x.to_string(), None)).collect()
     }
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
