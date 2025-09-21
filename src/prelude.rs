@@ -1,4 +1,5 @@
 pub use crate::backends::Backend;
+pub use crate::backend_ex::BackendEx;
 pub use crate::backends::all::{
     AnyBackend, BackendConfigs, GroupFilePackages, PackageIds, Packages, RawGroupFilePackages,
     RawPackageIds,

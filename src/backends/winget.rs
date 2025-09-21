@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 
+use color_eyre::eyre::eyre;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -27,11 +28,12 @@ impl Backend for WinGet {
         String::new()
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        _: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        packages.iter().map(|x| (x.to_string(), None)).collect()
+    fn is_valid_package_name(_: &str) -> Option<bool> {
+        None
+    }
+
+    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+        Err(eyre!("unimplemented"))
     }
 
     fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {

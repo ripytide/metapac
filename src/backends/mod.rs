@@ -52,20 +52,6 @@ pub trait Backend {
 
     fn invalid_package_help_text() -> String;
 
-    /// If possible the backend will attempt to decide whether the given package is a valid package
-    /// or not.
-    ///
-    /// Validity is defined as the package being able to be installed on the current system as the
-    /// package manager is currently configured.
-    ///
-    /// - `Some(true)` means the package is valid
-    /// - `Some(false)` means the package is invalid
-    /// - `None` means the package could be valid or invalid.
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        config: &Config,
-    ) -> BTreeMap<String, Option<bool>>;
-
     /// If possible the backend will attempt to decide whether the given package name is valid.
     ///
     /// Validity is defined as agreeing to the documented rules for that backend, such as only
@@ -79,7 +65,11 @@ pub trait Backend {
     /// - `None` means the package name could be valid or invalid.
     fn is_valid_package_name(package: &str) -> Option<bool>;
 
-    /// Attempts to return which packages are explicitly installed along with their options.
+    /// Attempts to return all packages which can be installed by the backend as it is currently
+    /// configured.
+    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>>;
+
+    /// Attempts to return packages which are explicitly installed along with their options.
     ///
     /// If a backend cannot distinguish between explicit and implicit packages then it should
     /// return both implicit and explicit packages.

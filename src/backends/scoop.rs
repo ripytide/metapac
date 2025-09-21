@@ -32,27 +32,11 @@ impl Backend for Scoop {
     }
 
     fn is_valid_package_name(package: &str) -> Option<bool> {
-        Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap().is_match(package)
+        Some(Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap().is_match(package))
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        _: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        let mut output = BTreeMap::new();
-        let regex = Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap();
-        for package in packages {
-            let valid = if !regex.is_match(package) {
-                Some(false)
-            } else {
-                // the package is in the right format but could still not exist
-                None
-            };
-
-            output.insert(package.to_string(), valid);
-        }
-
-        output
+    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+        Err(eyre!("unimplemented"))
     }
 
     fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {

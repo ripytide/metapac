@@ -84,13 +84,10 @@ impl Backend for Arch {
         Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        config: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        let existing_packages: Result<BTreeSet<String>, _> = run_command_for_stdout(
+    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>> {
+        run_command_for_stdout(
             [
-                config.backends.arch.package_manager.as_command(),
+                config.package_manager.as_command(),
                 "--sync",
                 "--list",
                 "--quiet",
@@ -98,28 +95,8 @@ impl Backend for Arch {
             Perms::Same,
             false,
         )
-        .map(|x| x.lines().map(String::from).collect());
-
-        let mut output = BTreeMap::new();
-        for package in packages {
-            let valid = match &existing_packages {
-                Ok(existing_packages) => Some(existing_packages.contains(package)),
-                Err(_) => {
-                    if is_valid_package_name(package) {
-                        None
-                    } else {
-                        Some(false)
-                    }
-                }
-            };
-
-            output.insert(package.to_string(), valid);
-        }
-
-        output
+        .map(|x| x.lines().map(String::from).collect())
     }
-
-
 
     fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {

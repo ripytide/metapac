@@ -62,7 +62,7 @@ impl MainArguments {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    let are_valid_packages = $upper_backend::are_valid_packages(&required.to_package_ids().$lower_backend, &config);
+                    let are_valid_packages = $upper_backend::are_packages_valid(&required.to_package_ids().$lower_backend, &config.backends.$lower_backend);
 
                     let invalid_packages = are_valid_packages
                         .iter()
