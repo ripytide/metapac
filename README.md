@@ -120,10 +120,10 @@ the [`Group Files`](#group-files) section for some examples.
   `metapac sync` command.
 - `before_sync`: Run before installing any packages, regardless of whether
   the package is already installed or not. Only applies to the `metapac
-  sync` command.
+sync` command.
 - `after_sync`: Run after installing all packages, regardless of whether
   the package was already installed or not. Only applies to the `metapac
-  sync` command.
+sync` command.
 
 ### Advanced usage
 
@@ -398,12 +398,18 @@ Here is a list of package managers we would like to support along with any
 reasons why we can't yet if any. Feel free to add to this list if you know
 of any other package managers we should be aware of.
 
+- [`apk`](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper): no
+  attempt made yet
 - [`cgwin`](https://cygwin.com/): no attempt made yet
 - [`choco`](https://github.com/chocolatey/choco): no attempt made yet
 - [`deno`](https://github.com/denoland/deno): can't list installed global
   packages <https://github.com/denoland/deno/discussions/28230>
+- [`emerge`](https://wiki.gentoo.org/wiki/Emerge): no attempt made yet
 - [`guix`](https://codeberg.org/guix/guix): no attempt made yet
+- [`mise`](https://github.com/jdx/mise): no attempt made yet
+- [`nala`](https://github.com/volitank/nala): no attempt made yet
 - [`nix`](https://github.com/NixOS/nix): no attempt made yet
+- [`opkg`](https://github.com/oe-mirrors/opkg): no attempt made yet
 - [`pip`](https://pypi.org/project/pip/): we support `pipx` instead which
   only allows you to install cli programs which makes sense for a global
   package manager
@@ -417,7 +423,7 @@ of any other package managers we should be aware of.
   <https://github.com/ripytide/metapac/issues/86>
 - [`yum`](https://github.com/rpm-software-management/yum): project
   deprecated in favor of `dnf`
-- [`mise`](https://github.com/jdx/mise): no attempt made yet
+- [`zypper`](https://github.com/openSUSE/zypper): no attempt made yet
 
 ## Similar Projects
 
@@ -429,6 +435,9 @@ of any other package managers we should be aware of.
 - [pacdef](https://github.com/steven-omaha/pacdef): written in rust, custom
   file format, unmaintained, supported `pacman`, `apt`, `dnf`, `flatpak`,
   `pip`, `cargo`, `rustup` and `xbps`
+- [upt](https://github.com/sigoden/upt/tree/main): written in rust,
+  supports 28 package managers! Designed for manual package management
+  rather than declarative.
 
 ## Credits
 
