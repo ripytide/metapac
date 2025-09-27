@@ -13,13 +13,13 @@ preferred packages from your preferred package managers much easier.
 
 ## Installation
 
-### Cargo
+### With Cargo
 
 ```shell
 cargo install metapac
 ```
 
-### Arch User Repository
+### With Arch User Repository
 
 ```shell
 paru -S metapac
@@ -139,8 +139,8 @@ for additional backends are always welcome!
 
 | Backend               |
 | --------------------- |
-| [`arch`](#arch)       |
 | [`apt`](#apt)         |
+| [`arch`](#arch)       |
 | [`brew`](#brew)       |
 | [`bun`](#bun)         |
 | [`cargo`](#cargo)     |
@@ -156,6 +156,8 @@ for additional backends are always welcome!
 | [`winget`](#winget)   |
 | [`xbps`](#xbps)       |
 | [`yarn`](#yarn)       |
+
+### apt
 
 ### arch
 
@@ -183,8 +185,6 @@ the time of writing, 2025-09-03).
 Alternatively, you could create a new group file using the packages from
 the package group, which you can get from the command: `pacman -Sgq
 <group_name>`.
-
-### apt
 
 ### brew
 
@@ -308,6 +308,7 @@ variant = "code"
 #  { package = "metapac" }
 # ]
 
+apt = ["package1", { package = "package2" }]
 arch = [
   "package1",
   { package = "package2" },
@@ -339,7 +340,6 @@ arch = [
     "after_sync",
   ] } },
 ]
-apt = ["package1", { package = "package2" }]
 brew = ["package1", { package = "package2" }]
 bun = ["package1", { package = "package2" }]
 cargo = [

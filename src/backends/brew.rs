@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
@@ -24,14 +25,15 @@ impl Backend for Brew {
         String::new()
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        _: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        packages.iter().map(|x| (x.to_string(), None)).collect()
+    fn is_valid_package_name(_: &str) -> Option<bool> {
+        None
     }
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }

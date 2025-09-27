@@ -1,4 +1,6 @@
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,17 +23,28 @@ impl Backend for Apt {
     type Config = AptConfig;
 
     fn invalid_package_help_text() -> String {
-        String::new()
+        indoc::formatdoc! {"
+            An apt package may be invalid due to one of the following issues:
+                - the package name doesn't meet the packaging requirements for a valid package name: <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
+        "}
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        _: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        packages.iter().map(|x| (x.to_string(), None)).collect()
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        // see <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
+        let regex = Regex::new("[a-z0-9+-.]+").unwrap();
+
+        Some(
+            regex.is_match(package)
+                && (package.len() >= 2)
+                && package.chars().next().unwrap().is_alphanumeric(),
+        )
     }
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }

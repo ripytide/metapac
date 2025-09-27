@@ -62,7 +62,7 @@ impl MainArguments {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    let are_valid_packages = $upper_backend::are_valid_packages(&required.to_package_ids().$lower_backend, &config);
+                    let are_valid_packages = $upper_backend::are_packages_valid(&required.to_package_ids().$lower_backend, &config.backends.$lower_backend);
 
                     let invalid_packages = are_valid_packages
                         .iter()
@@ -478,7 +478,7 @@ fn installed(config: &Config) -> Result<Packages> {
                 $(
                     $lower_backend:
                         if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::query(&config.backends.$lower_backend)?
+                            $upper_backend::get_installed(&config.backends.$lower_backend)?
                         } else {
                             Default::default()
                         },

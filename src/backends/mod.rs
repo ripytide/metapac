@@ -25,8 +25,8 @@ use color_eyre::Result;
 macro_rules! apply_backends {
     ($macro:ident) => {
         $macro! {
-        (Arch, arch),
         (Apt, apt),
+        (Arch, arch),
         (Brew, brew),
         (Bun, bun),
         (Cargo, cargo),
@@ -50,24 +50,31 @@ pub trait Backend {
     type Options;
     type Config;
 
+    /// Help text to display if an invalid package is given.
     fn invalid_package_help_text() -> String;
 
-    /// If possible the backend will attempt to decide whether the given package is a valid package
-    /// or not.
+    /// If possible the backend will attempt to decide whether the given package name is valid.
     ///
-    /// - `Some(true)` means the package is valid
-    /// - `Some(false)` means the package is invalid
-    /// - `None` means the package could be valid or invalid.
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        config: &Config,
-    ) -> BTreeMap<String, Option<bool>>;
+    /// Validity is defined as agreeing to the documented rules for that backend, such as only
+    /// being made up of valid characters. And importantly, another rule specific to metapac is
+    /// that if there are two forms of name for the same package (such as `metapac` vs
+    /// `main/metapac`) then the implicit package names are always invalid as otherwise it would
+    /// cause ambiguity in matching installed packages against a users group files.
+    ///
+    /// - `Some(true)` means the package name is valid
+    /// - `Some(false)` means the package name is invalid
+    /// - `None` means the package name could be valid or invalid.
+    fn is_valid_package_name(package: &str) -> Option<bool>;
 
-    /// Attempts to query which packages are explicitly installed along with their options.
+    /// Attempts to return all packages which can be installed by the backend as it is currently
+    /// configured.
+    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>>;
+
+    /// Attempts to return packages which are explicitly installed along with their options.
     ///
     /// If a backend cannot distinguish between explicit and implicit packages then it should
     /// return both implicit and explicit packages.
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>>;
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>>;
 
     /// Attempts to explicitly install the given `packages`, optionally without confirmation using
     /// `no_confirm`.

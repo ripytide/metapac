@@ -1,5 +1,6 @@
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -58,34 +59,46 @@ impl Backend for Arch {
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
-            A package may be invalid due to one of the following issues:
-                - the package name has a typo as written in your group files
+            An arch package may be invalid due to one of the following issues:
+                - the package name doesn't meet the packaging requirements for a valid package name: <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
                 - the package is in a repository that you don't have enabled in
-                    /etc/pacman.conf (such as multilib)
+                  /etc/pacman.conf (such as multilib)
                 - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)
-                    and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
-                    which provide the virtual package
+                  and so is ambiguous. You can run `pacman -Ss <virtual_package>` to list non-virtual packages which
+                  which provide the virtual package
                 - the package was removed from the repositories
                 - the package was renamed to a different name
-                - the local package database is out of date and so doesn't yet contain the package:
-                    update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
-                - the package is actually a package group which is not valid in metapac group files, see <https://github.com/ripytide/metapac#arch>
+                - the local package database is out of date and so doesn't yet contain the package,
+                  update it with `sudo pacman -Sy` or similar command using your chosen AUR helper
+                - the package is actually a package group which is not valid in metapac group files,
+                  see <https://github.com/ripytide/metapac#arch>
 
             You can check to see if the package exists via `pacman -Si <package>` or a similar command using your chosen AUR helper.
         "}
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        config: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        match inner_are_valid_packages(packages, config) {
-            Ok(x) => x,
-            Err(_) => packages.iter().map(|x| (x.to_string(), None)).collect(),
-        }
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        // see <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
+        let regex = Regex::new("[a-z0-9@._+-]+").unwrap();
+
+        Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
     }
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>> {
+        run_command_for_stdout(
+            [
+                config.package_manager.as_command(),
+                "--sync",
+                "--list",
+                "--quiet",
+            ],
+            Perms::Same,
+            false,
+        )
+        .map(|x| x.lines().map(String::from).collect())
+    }
+
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -180,7 +193,7 @@ impl Backend for Arch {
     }
 
     fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let installed = Self::query(config)?;
+        let installed = Self::get_installed(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages
@@ -230,33 +243,4 @@ impl Backend for Arch {
             false,
         )
     }
-}
-
-fn inner_are_valid_packages(
-    packages: &BTreeSet<String>,
-    config: &Config,
-) -> Result<BTreeMap<String, Option<bool>>> {
-    let available_packages: BTreeSet<String> = run_command_for_stdout(
-        [
-            config.backends.arch.package_manager.as_command(),
-            "--sync",
-            "--list",
-            "--quiet",
-        ],
-        Perms::Same,
-        false,
-    )?
-    .lines()
-    .map(String::from)
-    .collect();
-
-    let mut output = BTreeMap::new();
-    for package in packages {
-        output.insert(
-            package.to_string(),
-            Some(available_packages.contains(package)),
-        );
-    }
-
-    Ok(output)
 }

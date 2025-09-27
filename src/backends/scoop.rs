@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::cmd::{run_command, run_command_for_stdout};
@@ -23,17 +24,27 @@ impl Backend for Scoop {
     type Config = ScoopConfig;
 
     fn invalid_package_help_text() -> String {
-        String::new()
+        indoc::formatdoc! {"
+            A scoop package may be invalid due to one of the following issues:
+                - the package name does not use the explicit \"bucket/package\" format which is
+                  required by metapac in order to unambiguously match installed packages with those
+                  declared in your group files
+        "}
     }
 
-    fn are_valid_packages(
-        packages: &BTreeSet<String>,
-        _: &Config,
-    ) -> BTreeMap<String, Option<bool>> {
-        packages.iter().map(|x| (x.to_string(), None)).collect()
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        Some(
+            Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+")
+                .unwrap()
+                .is_match(package),
+        )
     }
 
-    fn query(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
