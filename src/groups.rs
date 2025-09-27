@@ -108,7 +108,7 @@ impl Groups {
 
         if config.hostname_groups_enabled {
             let group_names = config.hostname_groups.get(hostname).wrap_err(eyre!(
-                "no hostname entry in the hostname_groups config for the hostname: {hostname}"
+                "no entry in the `hostname_groups` config for the hostname: {hostname:?}"
             ))?;
 
             Ok(group_names

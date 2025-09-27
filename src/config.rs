@@ -8,9 +8,13 @@ use std::path::Path;
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    // update README if fields change.
+    // update README.md if fields change.
     #[serde(default)]
     pub enabled_backends: BTreeSet<AnyBackend>,
+    #[serde(default)]
+    pub hostname_enabled_backends_enabled: bool,
+    #[serde(default)]
+    pub hostname_enabled_backends: BTreeMap<String, BTreeSet<AnyBackend>>,
     #[serde(default)]
     pub hostname_groups_enabled: bool,
     #[serde(default)]
