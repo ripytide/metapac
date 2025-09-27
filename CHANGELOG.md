@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Options and hooks are now printed when `metapac` outputs packages. Mainly
   useful for the `metapac unmanaged` command but is also relevant for the
   `metapac clean` and `metapac sync` commands.
+- Package validation step added for some backends to ensure that listed
+  packages are valid before starting any of the commands. This ensures that
+  common errors like using an implicit package id for backends like `scoop`
+  or `winget` are caught before they turn into undesired uninstalls.
 
 ### Changed
 
