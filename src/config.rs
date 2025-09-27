@@ -1,20 +1,24 @@
 use crate::prelude::*;
 use color_eyre::Result;
-use color_eyre::eyre::{Context, eyre};
+use color_eyre::eyre::{Context, ContextCompat, eyre};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    // update README if fields change.
+    // update README.md if fields change.
     #[serde(default)]
-    pub enabled_backends: BTreeSet<AnyBackend>,
+    hostname_enabled_backends_enabled: bool,
     #[serde(default)]
-    pub hostname_groups_enabled: bool,
+    enabled_backends: BTreeSet<AnyBackend>,
     #[serde(default)]
-    pub hostname_groups: BTreeMap<String, Vec<String>>,
+    hostname_groups_enabled: bool,
+    #[serde(default)]
+    hostname_enabled_backends: BTreeMap<String, BTreeSet<AnyBackend>>,
+    #[serde(default)]
+    hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
     pub backends: BackendConfigs,
 }
@@ -34,6 +38,47 @@ impl Config {
                     .wrap_err("reading config file")?,
             )
             .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
+        }
+    }
+
+    pub fn enabled_backends(&self, hostname: &str) -> Result<BTreeSet<AnyBackend>> {
+        if self.hostname_enabled_backends_enabled {
+            let enabled_backends = self.hostname_enabled_backends.get(hostname).wrap_err(
+                "no entry in the `hostname_enabled_backends` config for the hostname: {hostname:?}",
+            )?;
+
+            Ok(enabled_backends.clone())
+        } else {
+            Ok(self.enabled_backends.clone())
+        }
+    }
+
+    pub fn group_files(&self, group_dir: &Path, hostname: &str) -> Result<BTreeSet<PathBuf>> {
+        if self.hostname_groups_enabled {
+            let group_names = self.hostname_groups.get(hostname).wrap_err(eyre!(
+                "no entry in the `hostname_groups` config for the hostname: {hostname:?}"
+            ))?;
+
+            Ok(group_names
+                .iter()
+                .map(|group_name| group_dir.join(group_name).with_extension("toml"))
+                .collect())
+        } else {
+            if !group_dir.is_dir() {
+                log::warn!(
+                    "the groups directory: {group_dir:?}, was not found, assuming there are no group files. If this was intentional please create an empty groups folder."
+                );
+
+                return Ok(BTreeSet::new());
+            }
+
+            Ok(walkdir::WalkDir::new(group_dir)
+                .follow_links(true)
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|x| !x.file_type().is_dir())
+                .map(|x| x.path().to_path_buf())
+                .collect())
         }
     }
 }

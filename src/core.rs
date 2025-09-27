@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 use std::fs::{self, File, read_to_string};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::str::FromStr;
 
 use color_eyre::Result;
@@ -34,12 +34,15 @@ impl MainArguments {
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
 
-        if config.enabled_backends.is_empty() {
+        let enabled_backends = config.enabled_backends(&hostname)?;
+
+        if enabled_backends.is_empty() {
             log::warn!("no backends found in the enabled_backends config")
         }
 
-        let group_files =
-            Groups::group_files(&group_dir, &hostname, &config).wrap_err("finding group files")?;
+        let group_files = config
+            .group_files(&group_dir, &hostname)
+            .wrap_err("finding group files")?;
         let groups =
             Groups::load(&group_files).wrap_err("loading package options from group files")?;
 
@@ -48,7 +51,7 @@ impl MainArguments {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    if !config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if !enabled_backends.contains(&AnyBackend::$upper_backend) {
                         if !required.$lower_backend.is_empty() {
                             log::warn!("ignoring {} packages from all group files as the backend was not found in the `enabled_backends` config", AnyBackend::$upper_backend);
                             required.$lower_backend = Default::default();
@@ -81,31 +84,31 @@ impl MainArguments {
         apply_backends!(x);
 
         match self.subcommand {
-            MainSubcommand::Add(add) => add.run(&group_dir, &group_files, &groups, &config),
+            MainSubcommand::Add(add) => add.run(&group_dir, &groups),
             MainSubcommand::Remove(remove) => remove.run(&groups),
-            MainSubcommand::Install(install) => {
-                install.run(&group_dir, &group_files, &groups, &config)
+            MainSubcommand::Install(install) => install.run(&group_dir, &groups, &config.backends),
+            MainSubcommand::Uninstall(uninstall) => uninstall.run(&groups, &config.backends),
+            MainSubcommand::Update(update) => update.run(&config.backends),
+            MainSubcommand::UpdateAll(update_all) => {
+                update_all.run(&enabled_backends, &config.backends)
             }
-            MainSubcommand::Uninstall(uninstall) => uninstall.run(&groups, &config),
-            MainSubcommand::Update(update) => update.run(&config),
-            MainSubcommand::UpdateAll(update_all) => update_all.run(&config),
-            MainSubcommand::Clean(clean) => clean.run(&required, &config),
-            MainSubcommand::Sync(sync) => sync.run(&required, &config),
-            MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&required, &config),
-            MainSubcommand::Backends(backends) => backends.run(&config),
-            MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&config),
+            MainSubcommand::Clean(clean) => {
+                clean.run(&required, &enabled_backends, &config.backends)
+            }
+            MainSubcommand::Sync(sync) => sync.run(&required, &enabled_backends, &config.backends),
+            MainSubcommand::Unmanaged(unmanaged) => {
+                unmanaged.run(&required, &enabled_backends, &config.backends)
+            }
+            MainSubcommand::Backends(backends) => backends.run(&config.backends),
+            MainSubcommand::CleanCache(clean_cache) => {
+                clean_cache.run(&enabled_backends, &config.backends)
+            }
         }
     }
 }
 
 impl AddCommand {
-    fn run(
-        self,
-        group_dir: &Path,
-        group_files: &BTreeSet<PathBuf>,
-        groups: &Groups,
-        config: &Config,
-    ) -> Result<()> {
+    fn run(self, group_dir: &Path, groups: &Groups) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
         let packages = packages.iter().filter(|package| {
@@ -121,13 +124,6 @@ impl AddCommand {
         });
 
         let group_file = group_dir.join(&self.group).with_extension("toml");
-
-        if config.hostname_groups_enabled && !group_files.contains(&group_file) {
-            return Err(eyre!(
-                "hostname_groups_enabled is set to true but the group file {}@{group_file:?} is not active for the current hostname, consider choosing one of the active group files: {group_files:?} instead using the `--group` option.",
-                &self.group
-            ));
-        }
 
         if !group_file.is_file() {
             File::create_new(&group_file).wrap_err(eyre!(
@@ -220,9 +216,8 @@ impl InstallCommand {
     fn run(
         self,
         group_dir: &Path,
-        group_files: &BTreeSet<PathBuf>,
         groups: &Groups,
-        config: &Config,
+        backend_configs: &BackendConfigs,
     ) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
@@ -231,7 +226,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backends.$lower_backend)?;
+                            $upper_backend::install(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &backend_configs.$lower_backend)?;
                         },
                     )*
                 }
@@ -244,14 +239,14 @@ impl InstallCommand {
             packages: packages.into_iter().collect(),
             group: self.group,
         }
-        .run(group_dir, group_files, groups, config)?;
+        .run(group_dir, groups)?;
 
         Ok(())
     }
 }
 
 impl UninstallCommand {
-    fn run(self, groups: &Groups, config: &Config) -> Result<()> {
+    fn run(self, groups: &Groups, backend_configs: &BackendConfigs) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
         macro_rules! x {
@@ -259,7 +254,7 @@ impl UninstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::uninstall(&packages, self.no_confirm, &config.backends.$lower_backend)?;
+                            $upper_backend::uninstall(&packages, self.no_confirm, &backend_configs.$lower_backend)?;
                         },
                     )*
                 }
@@ -278,22 +273,26 @@ impl UninstallCommand {
 }
 
 impl UpdateCommand {
-    fn run(self, config: &Config) -> Result<()> {
+    fn run(self, backend_configs: &BackendConfigs) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
         self.backend
-            .update(&packages, self.no_confirm, &config.backends)
+            .update(&packages, self.no_confirm, backend_configs)
     }
 }
 
 impl UpdateAllCommand {
-    fn run(self, config: &Config) -> Result<()> {
-        let backends = parse_backends(&self.backends, config)?;
+    fn run(
+        self,
+        enabled_backends: &BTreeSet<AnyBackend>,
+        backend_configs: &BackendConfigs,
+    ) -> Result<()> {
+        let backends = parse_backends(&self.backends, enabled_backends)?;
 
         for backend in backends.iter() {
             log::info!("updating all packages for {backend} backend");
 
-            backend.update_all(self.no_confirm, &config.backends)?
+            backend.update_all(self.no_confirm, backend_configs)?
         }
 
         Ok(())
@@ -301,8 +300,13 @@ impl UpdateAllCommand {
 }
 
 impl CleanCommand {
-    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
-        let installed = installed(config)?;
+    fn run(
+        self,
+        required: &GroupFilePackages,
+        enabled_backends: &BTreeSet<AnyBackend>,
+        backend_configs: &BackendConfigs,
+    ) -> Result<()> {
+        let installed = installed(enabled_backends, backend_configs)?;
         let unmanaged = unmanaged(required, &installed)?;
 
         if unmanaged.is_empty() {
@@ -330,13 +334,18 @@ impl CleanCommand {
             return Ok(());
         }
 
-        unmanaged.uninstall(self.no_confirm, &config.backends)
+        unmanaged.uninstall(self.no_confirm, backend_configs)
     }
 }
 
 impl SyncCommand {
-    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
-        let missing = missing(required, config)?;
+    fn run(
+        self,
+        required: &GroupFilePackages,
+        enabled_backends: &BTreeSet<AnyBackend>,
+        backend_configs: &BackendConfigs,
+    ) -> Result<()> {
+        let missing = missing(required, enabled_backends, backend_configs)?;
 
         if missing.is_empty() {
             log::info!("nothing to install as there are no missing packages");
@@ -362,7 +371,7 @@ impl SyncCommand {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
                         for package in required.$lower_backend.values() {
                             package.run_before_sync()?;
                         }
@@ -375,7 +384,7 @@ impl SyncCommand {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
                         for package in missing.$lower_backend.values() {
                             package.run_before_install()?;
                         }
@@ -387,12 +396,12 @@ impl SyncCommand {
 
         missing
             .to_packages()
-            .install(self.no_confirm, &config.backends)?;
+            .install(self.no_confirm, backend_configs)?;
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
                         for package in missing.$lower_backend.values() {
                             package.run_after_install()?;
                         }
@@ -405,7 +414,7 @@ impl SyncCommand {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
                         for package in required.$lower_backend.values() {
                             package.run_after_sync()?;
                         }
@@ -420,8 +429,13 @@ impl SyncCommand {
 }
 
 impl UnmanagedCommand {
-    fn run(self, required: &GroupFilePackages, config: &Config) -> Result<()> {
-        let installed = installed(config)?;
+    fn run(
+        self,
+        required: &GroupFilePackages,
+        enabled_backends: &BTreeSet<AnyBackend>,
+        backend_configs: &BackendConfigs,
+    ) -> Result<()> {
+        let installed = installed(enabled_backends, backend_configs)?;
         let unmanaged = unmanaged(required, &installed)?;
 
         if unmanaged.is_empty() {
@@ -441,12 +455,12 @@ impl UnmanagedCommand {
 }
 
 impl BackendsCommand {
-    fn run(self, config: &Config) -> Result<()> {
+    fn run(self, backend_configs: &BackendConfigs) -> Result<()> {
         for backend in AnyBackend::iter() {
             println!(
                 "{backend}: {}",
                 backend
-                    .version(&config.backends)
+                    .version(backend_configs)
                     .as_deref()
                     .unwrap_or("Not Found")
                     .trim()
@@ -458,27 +472,34 @@ impl BackendsCommand {
 }
 
 impl CleanCacheCommand {
-    fn run(&self, config: &Config) -> Result<()> {
-        let backends = parse_backends(&self.backends, config)?;
+    fn run(
+        &self,
+        enabled_backends: &BTreeSet<AnyBackend>,
+        backend_configs: &BackendConfigs,
+    ) -> Result<()> {
+        let backends = parse_backends(&self.backends, enabled_backends)?;
 
         for backend in backends.iter() {
             log::info!("cleaning cache for {backend} backend");
 
-            backend.clean_cache(&config.backends)?
+            backend.clean_cache(backend_configs)?
         }
 
         Ok(())
     }
 }
 
-fn installed(config: &Config) -> Result<Packages> {
+fn installed(
+    enabled_backends: &BTreeSet<AnyBackend>,
+    backend_configs: &BackendConfigs,
+) -> Result<Packages> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             Packages {
                 $(
                     $lower_backend:
-                        if config.enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::get_installed(&config.backends.$lower_backend)?
+                        if enabled_backends.contains(&AnyBackend::$upper_backend) {
+                            $upper_backend::get_installed(&backend_configs.$lower_backend)?
                         } else {
                             Default::default()
                         },
@@ -506,8 +527,12 @@ fn unmanaged(required: &GroupFilePackages, installed: &Packages) -> Result<Packa
 
     Ok(output)
 }
-fn missing(required: &GroupFilePackages, config: &Config) -> Result<GroupFilePackages> {
-    let installed = installed(config)?;
+fn missing(
+    required: &GroupFilePackages,
+    enabled_backends: &BTreeSet<AnyBackend>,
+    backend_configs: &BackendConfigs,
+) -> Result<GroupFilePackages> {
+    let installed = installed(enabled_backends, backend_configs)?;
 
     let mut missing = GroupFilePackages::default();
 
@@ -537,9 +562,12 @@ fn package_vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
 
     packages
 }
-fn parse_backends(backends: &Vec<String>, config: &Config) -> Result<BTreeSet<AnyBackend>> {
+fn parse_backends(
+    backends: &Vec<String>,
+    enabled_backends: &BTreeSet<AnyBackend>,
+) -> Result<BTreeSet<AnyBackend>> {
     if backends.is_empty() {
-        Ok(config.enabled_backends.clone())
+        Ok(enabled_backends.clone())
     } else if backends == &Vec::from(["all".to_string()]) {
         Ok(AnyBackend::iter().collect())
     } else {

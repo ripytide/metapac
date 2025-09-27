@@ -51,9 +51,8 @@ and so can be tracked with version control.
 ### Enable backends
 
 By default all backends are disabled. Enable the backends you want
-`metapac` to manage by adding them to the `enabled_backends` config in
-`metapac`'s config file. See the [`Config`](#config) section for more
-details.
+`metapac` to manage in the config file. See the [`Config`](#config) section
+for more details.
 
 ### Migrating a default system into `metapac`
 
@@ -74,7 +73,7 @@ when you run `metapac clean`.
 > [!CAUTION]
 > If you run `metapac clean` without first configuring your group files
 > with the packages you want installed then `metapac` will attempt to
-> remove all of your packages from your `enabled_backends`.
+> remove all of your packages from your enabled backends.
 >
 > `metapac clean` will always show you which packages it intends to remove
 > and ask for confirmation, so make sure to double check that the expected
@@ -236,23 +235,40 @@ your group files. See
 # | macOS    | $HOME/Library/Application Support/metapac/config.toml | /Users/Alice/Library/Application Support/metapac/config.toml |
 # | Windows  | {FOLDERID_RoamingAppData}\metapac\config.toml         | C:\Users\Alice\AppData\Roaming\metapac\config.toml           |
 
-# Backends to enable for most of metapac's behavior. See the README.md or
-# run `metapac backends` for the list of backend names
-# Default: []
-enabled_backends = ["arch"]
-
-# Whether to use the [hostname_groups] config table to decide which
-# group files to use or to use all files in the groups folder.
+# If this is `false` then the enabled backends will be found by using the value of
+# the `enabled_backends` config.
+# If this is `true` then the enabled backends will be found by using the
+# [hostname_enabled_backends] config table.
+#
+# See the README.md or run `metapac backends` for the list of backend names.
 # Default: false
-hostname_groups_enabled = true
+hostname_enabled_backends_enabled = false
 
-# Which group files apply for which hostnames
-# paths starting without a / are relative to the groups folder
+# Backends to enable. Subject to `hostname_enabled_backends_enabled`.
+# Default: []
+enabled_backends = ["arch", "cargo"]
+
+# If this is `false` all toml files recursively found in the groups folder
+# will be used as group files.
+# If this is `true` then the [hostname_groups] config table will be used to
+# decide which group files to use per hostname.
+# Default: false
+hostname_groups_enabled = false
+
+# Backends to enable per hostname. Subject to `hostname_enabled_backends_enabled`.
+# Default: None
+[hostname_enabled_backends]
+pc = ["winget", "cargo"]
+laptop = ["arch", "cargo"]
+server = ["apt"]
+
+# Which group files will be used per hostname. Subject to `hostname_groups_enabled`.
+# Relative paths are relative to the groups folder.
 # Default: None
 [hostname_groups]
-pc = ["example_group"]
-laptop = ["example_group"]
-server = ["example_group"]
+pc = ["relative_group", "/etc/absolute_group"]
+laptop = ["relative_group"]
+server = ["relative_group"]
 
 [arch]
 # Since pacman, pamac, paru, pikaur and yay all operate on the same package database
@@ -265,7 +281,7 @@ package_manager = "paru"
 [cargo]
 # Whether to default to installing cargo packages with the --locked option.
 # Default: false
-locked = true
+locked = false
 
 [flatpak]
 # Whether to default to installing flatpak packages systemwide or for the
