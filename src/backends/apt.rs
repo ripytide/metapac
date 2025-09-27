@@ -25,8 +25,7 @@ impl Backend for Apt {
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
             An apt package may be invalid due to one of the following issues:
-                - the package name has a typo as written in your group files or doesn't meet the packaging requirements for a
-                  valid package name: <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
+                - the package name doesn't meet the packaging requirements for a valid package name: <https://www.debian.org/doc/debian-policy/ch-controlfields.html#source>
         "}
     }
 

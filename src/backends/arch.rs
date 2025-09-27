@@ -60,8 +60,7 @@ impl Backend for Arch {
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
             An arch package may be invalid due to one of the following issues:
-                - the package name has a typo as written in your group files or doesn't meet the packaging requirements for a
-                  valid package name: <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
+                - the package name doesn't meet the packaging requirements for a valid package name: <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
                 - the package is in a repository that you don't have enabled in
                   /etc/pacman.conf (such as multilib)
                 - the package is a virtual package (https://wiki.archlinux.org/title/Pacman#Virtual_packages)

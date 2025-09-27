@@ -25,11 +25,21 @@ impl Backend for WinGet {
     type Config = WinGetConfig;
 
     fn invalid_package_help_text() -> String {
-        String::new()
+        indoc::formatdoc! {"
+            A winget package may be invalid due to one of the following issues:
+                - the package name does not use the explicit \"publisher.package\" format which is
+                  required by metapac in order to unambiguously match installed packages with those
+                  declared in your group files
+        "}
     }
 
-    fn is_valid_package_name(_: &str) -> Option<bool> {
-        None
+    fn is_valid_package_name(package: &str) -> Option<bool> {
+        // metapac requires the explicit form of a package which is `publisher.package`
+        if package.chars().filter(|x| *x == '.').count() == 0 {
+            Some(false)
+        } else {
+            None
+        }
     }
 
     fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
