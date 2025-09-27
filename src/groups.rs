@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use color_eyre::{
     Result,
-    eyre::{Context, ContextCompat, eyre},
+    eyre::{Context, eyre},
 };
 use toml::{Table, Value};
 
@@ -91,39 +91,6 @@ impl Groups {
         }
 
         Ok(groups)
-    }
-
-    pub fn group_files(
-        group_dir: &Path,
-        hostname: &str,
-        config: &Config,
-    ) -> Result<BTreeSet<PathBuf>> {
-        if !group_dir.is_dir() {
-            log::warn!(
-                "the groups directory: {group_dir:?}, was not found, assuming there are no group files. If this was intentional please create an empty groups folder."
-            );
-
-            return Ok(BTreeSet::new());
-        }
-
-        if config.hostname_groups_enabled {
-            let group_names = config.hostname_groups.get(hostname).wrap_err(eyre!(
-                "no entry in the `hostname_groups` config for the hostname: {hostname:?}"
-            ))?;
-
-            Ok(group_names
-                .iter()
-                .map(|group_name| group_dir.join(group_name).with_extension("toml"))
-                .collect())
-        } else {
-            Ok(walkdir::WalkDir::new(group_dir)
-                .follow_links(true)
-                .into_iter()
-                .filter_map(Result::ok)
-                .filter(|x| !x.file_type().is_dir())
-                .map(|x| x.path().to_path_buf())
-                .collect())
-        }
     }
 }
 
