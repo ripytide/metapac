@@ -2,8 +2,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
-use color_eyre::eyre::eyre;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 

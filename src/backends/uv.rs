@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use color_eyre::eyre::eyre;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use serde::Deserialize;
 use serde::Serialize;
 

@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use color_eyre::eyre::eyre;
 use color_eyre::Result;
+use color_eyre::eyre::eyre;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -35,7 +35,9 @@ impl Backend for Xbps {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    fn get_installed(
+        config: &Self::Config,
+    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }

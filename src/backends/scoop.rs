@@ -33,7 +33,11 @@ impl Backend for Scoop {
     }
 
     fn is_valid_package_name(package: &str) -> Option<bool> {
-        Some(Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+").unwrap().is_match(package))
+        Some(
+            Regex::new("[a-zA-Z0-9]+/[a-zA-Z0-9]+")
+                .unwrap()
+                .is_match(package),
+        )
     }
 
     fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
