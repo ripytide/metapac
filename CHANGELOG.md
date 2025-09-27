@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.0] - 2025-09-27
+
 ### Added
 
 - New configs: `hostname_enabled_backends_enabled` and
