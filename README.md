@@ -248,19 +248,19 @@ hostname_enabled_backends_enabled = false
 # Default: []
 enabled_backends = ["arch", "cargo"]
 
-# Backends to enable per hostname. Subject to `hostname_enabled_backends_enabled`.
-# Default: None
-[hostname_enabled_backends]
-pc = ["winget", "cargo"]
-laptop = ["arch", "cargo"]
-server = ["apt"]
-
 # If this is `false` all toml files recursively found in the groups folder
 # will be used as group files.
 # If this is `true` then the [hostname_groups] config table will be used to
 # decide which group files to use per hostname.
 # Default: false
 hostname_groups_enabled = false
+
+# Backends to enable per hostname. Subject to `hostname_enabled_backends_enabled`.
+# Default: None
+[hostname_enabled_backends]
+pc = ["winget", "cargo"]
+laptop = ["arch", "cargo"]
+server = ["apt"]
 
 # Which group files will be used per hostname. Subject to `hostname_groups_enabled`.
 # Relative paths are relative to the groups folder.

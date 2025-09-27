@@ -10,13 +10,13 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     // update README.md if fields change.
     #[serde(default)]
-    enabled_backends: BTreeSet<AnyBackend>,
-    #[serde(default)]
     hostname_enabled_backends_enabled: bool,
     #[serde(default)]
-    hostname_enabled_backends: BTreeMap<String, BTreeSet<AnyBackend>>,
+    enabled_backends: BTreeSet<AnyBackend>,
     #[serde(default)]
     hostname_groups_enabled: bool,
+    #[serde(default)]
+    hostname_enabled_backends: BTreeMap<String, BTreeSet<AnyBackend>>,
     #[serde(default)]
     hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
