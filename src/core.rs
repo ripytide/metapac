@@ -65,18 +65,20 @@ impl MainArguments {
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
-                    let are_valid_packages = $upper_backend::are_packages_valid(&required.to_package_ids().$lower_backend, &config.backends.$lower_backend);
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        let are_valid_packages = $upper_backend::are_packages_valid(&required.to_package_ids().$lower_backend, &config.backends.$lower_backend);
 
-                    let invalid_packages = are_valid_packages
-                        .iter()
-                        .filter_map(|(x, y)| if *y == Some(false) { Some(x) } else { None })
-                        .collect::<BTreeSet<_>>();
+                        let invalid_packages = are_valid_packages
+                            .iter()
+                            .filter_map(|(x, y)| if *y == Some(false) { Some(x) } else { None })
+                            .collect::<BTreeSet<_>>();
 
-                    if !invalid_packages.is_empty() {
-                        let first_part = format!("the following packages for the {} backend are invalid: {invalid_packages:?}, please fix them, or remove them from your group files", AnyBackend::$upper_backend);
-                        let second_part = <$upper_backend as Backend>::invalid_package_help_text();
+                        if !invalid_packages.is_empty() {
+                            let first_part = format!("the following packages for the {} backend are invalid: {invalid_packages:?}, please fix them, or remove them from your group files", AnyBackend::$upper_backend);
+                            let second_part = <$upper_backend as Backend>::invalid_package_help_text();
 
-                        return Err(eyre!("{first_part}\n\n{second_part}"));
+                            return Err(eyre!("{first_part}\n\n{second_part}"));
+                        }
                     }
                 )*
             }
