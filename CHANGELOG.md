@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.1] - 2025-09-29
+
+### Changed
+
+- Duplicate packages are now back to being a warning rather than a hard
+  error after it was excellently pointed out that there is a great use-case
+  for them. (reported in #149, fixed in #151)
+
 ## [0.6.0] - 2025-09-27
 
 ### Added

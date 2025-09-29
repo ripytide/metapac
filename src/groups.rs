@@ -54,9 +54,12 @@ impl Groups {
             if group_files_counts.len() > 1 || group_files_counts.values().any(|y| *y > 1) {
                 let group_files = group_files_counts.keys().cloned().collect::<Vec<_>>();
 
-                return Err(eyre!(
+                // this is only a warning and not a hard error since there is a valid use-case for
+                // repeating shared optional dependencies for better atomnicity when adding and
+                // removing packages, see <https://github.com/ripytide/metapac/discussions/149>
+                log::warn!(
                     "duplicate package: {package:?} found in group files: {group_files:?} for the {backend} backend"
-                ));
+                );
             }
         }
 
