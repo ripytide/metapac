@@ -5,17 +5,29 @@ use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Brew;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct BrewOptions {}
+pub struct BrewOptions {
+    quarantine: Option<bool>,
+}
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde_inline_default]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct BrewConfig {}
+pub struct BrewConfig {
+    #[serde_inline_default(FlatpakConfig::default().systemwide)]
+    quarantine: bool,
+}
+impl Default for BrewConfig {
+    fn default() -> Self {
+        Self { quarantine: true }
+    }
+}
 
 impl Backend for Brew {
     type Options = BrewOptions;
@@ -38,28 +50,43 @@ impl Backend for Brew {
             return Ok(BTreeMap::new());
         }
 
-        let explicit = run_command_for_stdout(
+        let formulae = run_command_for_stdout(
             ["brew", "list", "-1", "--quiet", "--installed-on-request"],
             Perms::Same,
             false,
         )?;
 
-        Ok(explicit
+        let casks = run_command_for_stdout(
+            ["brew", "list", "-1", "--cask", "--quiet"],
+            Perms::Same,
+            false,
+        )?;
+
+        Ok(formulae
             .lines()
-            .map(|x| (x.to_string(), Self::Options {}))
+            .chain(casks.lines())
+            .map(|x| (x.to_string(), Self::Options { quarantine: None }))
             .collect())
     }
 
     fn install(
         packages: &BTreeMap<String, Self::Options>,
         _: bool,
-        _: &Self::Config,
+        config: &Self::Config,
     ) -> Result<()> {
-        if !packages.is_empty() {
+        for (package, options) in packages {
             run_command(
-                ["brew", "install"]
-                    .into_iter()
-                    .chain(packages.keys().map(String::as_str)),
+                [
+                    "brew",
+                    "install",
+                    if options.quarantine.unwrap_or(config.quarantine) {
+                        "--quarantine"
+                    } else {
+                        "--no-quarantine"
+                    },
+                    package.as_str(),
+                ]
+                .into_iter(),
                 Perms::Same,
             )?;
         }

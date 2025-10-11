@@ -288,14 +288,24 @@ server = ["relative_group"]
 # Default: "pacman"
 package_manager = "paru"
 
+[brew]
+# If this is `true` then brew packages default to using the `--quarantine`
+# option.
+# If this is `false` then brew packages default to using the `--no-quarantine`
+# option.
+# Default: true
+quarantine = true
+
 [cargo]
-# Whether to default to installing cargo packages with the --locked option.
+# Whether to default to installing cargo packages with the `--locked` option.
 # Default: false
 locked = false
 
 [flatpak]
-# Whether to default to installing flatpak packages systemwide or for the
-# current user. This setting can be overridden on a per-package basis.
+# If this is `true` then flatpak packages default to using the `--system`
+# option.
+# If this is `false` then flatpak packages default to using the `--user`
+# option.
 # Default: true
 systemwide = true
 
@@ -366,7 +376,7 @@ arch = [
     "after_sync",
   ] } },
 ]
-brew = ["package1", { package = "package2" }]
+brew = ["package1", { package = "package2", options = { quarantine = false } }]
 bun = ["package1", { package = "package2" }]
 cargo = [
   "package1",
