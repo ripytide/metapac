@@ -335,7 +335,7 @@ the `0.3.x` journey for `metapac` :ship: and farewell `0.2.x` :wave:
   which you want installed only if another package is installed
   consider using a comment and whitespace to separate them
   visually in your group files so that it is obvious when reading or
-  modififying them that they are linked. You could even separate the
+  modifying them that they are linked. You could even separate the
   packages out into another group file and include or uninclude the
   entire group via symlinking or the `hostname_groups` config feature. (#62)
 

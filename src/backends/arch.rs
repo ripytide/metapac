@@ -85,7 +85,7 @@ impl Backend for Arch {
     }
 
     fn get_all(config: &Self::Config) -> Result<BTreeSet<String>> {
-        run_command_for_stdout(
+        let all = run_command_for_stdout(
             [
                 config.package_manager.as_command(),
                 "--sync",
@@ -94,8 +94,19 @@ impl Backend for Arch {
             ],
             Perms::Same,
             false,
-        )
-        .map(|x| x.lines().map(String::from).collect())
+        )?;
+
+        let installed = run_command_for_stdout(
+            [config.package_manager.as_command(), "--query", "--quiet"],
+            Perms::Same,
+            false,
+        )?;
+
+        Ok(all
+            .lines()
+            .chain(installed.lines())
+            .map(String::from)
+            .collect())
     }
 
     fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
