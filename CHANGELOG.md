@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.2] - 2025-10-11
+
+### Added
+
+- The `brew` backend and packages now have a `quarantine` option. (#156)
+
+### Fixed
+
+- The `brew` backend can now properly list both casks and formulae
+  (reported in #154, fixed in #156)
+- The `arch` backend now no longer complains that installed AUR packages are
+  invalid when using `pacman`. (reported in #153, fixed in #155)
+
 ## [0.6.1] - 2025-09-29
 
 ### Changed
