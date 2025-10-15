@@ -19,9 +19,7 @@ use color_eyre::Result;
 use metapac::MainArguments;
 
 fn main() -> Result<()> {
-    pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Info)
-        .init();
+    pretty_env_logger::init();
     color_eyre::install()?;
 
     MainArguments::parse().run()
