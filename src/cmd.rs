@@ -1,4 +1,7 @@
-use std::process::{Command, Stdio};
+use std::{
+    process::{Command, Stdio},
+    time::Instant,
+};
 
 use color_eyre::{Result, eyre::eyre};
 use itertools::Itertools;
@@ -30,6 +33,11 @@ where
     let (first_arg, remaining_args) = args.split_first().unwrap();
 
     let mut command = Command::new(first_arg);
+
+    log::debug!("running command: {command:?} with args: {remaining_args:?}");
+
+    let start = Instant::now();
+
     let output = command
         .args(remaining_args)
         .stdin(Stdio::inherit())
@@ -40,6 +48,8 @@ where
             Stdio::null()
         })
         .output();
+
+    log::trace!("command took {:.2} seconds", start.elapsed().as_secs_f64());
 
     match output {
         Ok(output) if output.status.success() => Ok(String::from_utf8(output.stdout)?),
@@ -77,12 +87,19 @@ where
     let (first_arg, remaining_args) = args.split_first().unwrap();
 
     let mut command = Command::new(first_arg);
+
+    log::debug!("running command: {command:?} with args: {remaining_args:?}");
+
+    let start = Instant::now();
+
     let status = command
         .args(remaining_args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status();
+
+    log::trace!("command took {:.2} seconds", start.elapsed().as_secs_f64());
 
     match status {
         Ok(status) if status.success() => Ok(()),
