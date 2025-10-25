@@ -127,7 +127,7 @@ impl Backend for WinGet {
     }
 
     fn update_all(_: bool, _: &Self::Config) -> Result<()> {
-        run_command(["winget", "update"], Perms::Same)
+        run_command(["winget", "update", "--recurse"], Perms::Same)
     }
 
     // currently there is no way to do it for winget, see
