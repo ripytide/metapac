@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.3] - 2025-10-28
+
+### Added
+
+- Added more logging for which commands get run and allowed debug logging to be
+  enabled via an environment variable.
+
+### Fixed
+
+- The `metpac update-all` commands for the `winget` backend have been fixed
+  so that it now actually tries to update all packages (#162), thanks
+  @davidlindenbaum!.
+
 ## [0.6.2] - 2025-10-11
 
 ### Added

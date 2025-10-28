@@ -125,6 +125,13 @@ sync` command.
   the package was already installed or not. Only applies to the `metapac
 sync` command.
 
+### Enable more logs for debugging
+
+You can enable additional log levels by setting the `RUST_LOG` environment
+variable, this can be useful to see which commands are being run on the
+backends by `metapac`. For example, `RUST_LOG=trace metapac unmanaged`. See
+<https://docs.rs/env_logger> for more information.
+
 ### Advanced usage
 
 For more advanced usage read through the remaining sections, especially the
