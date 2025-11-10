@@ -308,6 +308,12 @@ quarantine = true
 # Default: false
 locked = false
 
+# Whether to use `cargo-binstall` instead of `cargo install` for installing packages.
+# When `true`, metapac will use `cargo binstall --no-confirm` instead of `cargo install`.
+# This can be faster for installing packages as it downloads pre-built binaries.
+# Default: false
+binstall = false
+
 [flatpak]
 # If this is `true` then flatpak packages default to using the `--system`
 # option.
