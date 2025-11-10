@@ -152,6 +152,7 @@ for additional backends are always welcome!
 | [`cargo`](#cargo)     |
 | [`dnf`](#dnf)         |
 | [`flatpak`](#flatpak) |
+| [`mise`](#mise)       |
 | [`npm`](#npm)         |
 | [`pipx`](#pipx)       |
 | [`pnpm`](#pnpm)       |
@@ -211,6 +212,24 @@ Reported in #152.
 ### dnf
 
 ### flatpak
+
+### mise
+
+`mise` packages can be specified using either short-form (string) or long-form (table) syntax. Short-form syntax is only available when you want the latest version, as it's equivalent to `{ package = "name", options = { requested_version = "latest" } }`. For any other version specification or options, you must use the long-form syntax.
+
+Available options:
+- `requested_version`: A version specifier like `"latest"`, `"lts"`, or a specific version string (e.g., `"24.11.0"`, `"3.11"`). If not specified, defaults to `"latest"`.
+- `active`: Whether to use `mise use` (active) or `mise install` (inactive). When `true`, uses `mise use` which activates the tool version. When `false`, uses `mise install` which only installs without activating. Defaults to `true`.
+
+Example:
+```toml
+mise = [
+  { package = "node", options = { requested_version = "lts" } },
+  { package = "python", options = { requested_version = "3.11" } },
+  { package = "rust", options = { requested_version = "latest", active = false } },
+  "fzf", # equivalent to { package = "fzf", options = { requested_version = "latest" } }
+]
+```
 
 ### npm
 
@@ -405,6 +424,11 @@ flatpak = [
   "package1",
   { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
+mise = [
+  "package1", # equivalent to { package = "package1", options = { requested_version = "latest" } }
+  { package = "package2", options = { requested_version = "1.0.0" } },
+  { package = "package3", options = { requested_version = "lts", active = false } },
+]
 npm = ["package1", { package = "package2" }]
 pipx = ["package1", { package = "package2" }]
 pnpm = ["package1", { package = "package2" }]
@@ -439,7 +463,6 @@ of any other package managers we should be aware of.
   packages <https://github.com/denoland/deno/discussions/28230>
 - [`emerge`](https://wiki.gentoo.org/wiki/Emerge): no attempt made yet
 - [`guix`](https://codeberg.org/guix/guix): no attempt made yet
-- [`mise`](https://github.com/jdx/mise): no attempt made yet
 - [`nala`](https://github.com/volitank/nala): no attempt made yet
 - [`nix`](https://github.com/NixOS/nix): no attempt made yet
 - [`opkg`](https://github.com/oe-mirrors/opkg): no attempt made yet
