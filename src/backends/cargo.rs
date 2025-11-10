@@ -34,6 +34,8 @@ pub struct CargoOptions {
 pub struct CargoConfig {
     #[serde(default)]
     pub locked: bool,
+    #[serde(default)]
+    pub binstall: bool,
 }
 
 impl Backend for Cargo {
@@ -80,8 +82,13 @@ impl Backend for Cargo {
     ) -> Result<()> {
         for (package, options) in packages {
             run_command(
-                ["cargo", "install"]
+                ["cargo"]
                     .into_iter()
+                    .chain(if !config.binstall {
+                        vec!["install"]
+                    } else {
+                        vec!["binstall", "--no-confirm"]
+                    })
                     .chain(
                         Some("--locked")
                             .into_iter()
