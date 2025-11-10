@@ -84,12 +84,11 @@ impl Backend for Cargo {
             run_command(
                 ["cargo"]
                     .into_iter()
-                    .chain(Some("install").into_iter().filter(|_| !config.binstall))
-                    .chain(
-                        ["binstall", "--no-confirm"]
-                            .into_iter()
-                            .filter(|_| config.binstall),
-                    )
+                    .chain(if !config.binstall {
+                        vec!["install"]
+                    } else {
+                        vec!["binstall", "--no-confirm"]
+                    })
                     .chain(
                         Some("--locked")
                             .into_iter()
