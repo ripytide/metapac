@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added a `binstall` option to the `cargo` backend to allow using
+  `cargo-binstall` to install packages instead of `cargo install` (#165),
+  thanks @Mikel-Landa!
+
 ## [0.6.3] - 2025-10-28
 
 ### Added
