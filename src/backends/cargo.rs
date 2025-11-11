@@ -59,20 +59,43 @@ impl Backend for Cargo {
             return Ok(BTreeMap::new());
         }
 
-        let file = home::cargo_home()
-            .wrap_err("getting the cargo home directory")?
-            .join(".crates2.json");
+        let cargo_home = home::cargo_home().wrap_err("getting the cargo home directory")?;
 
-        let contents = match std::fs::read_to_string(file) {
-            Ok(string) => string,
+        let json_file = cargo_home.join(".crates2.json");
+        let toml_file = cargo_home.join(".crates.toml");
+
+        // Read packages from JSON file
+        let mut packages = match std::fs::read_to_string(&json_file) {
+            Ok(contents) => {
+                extract_packages(&contents).wrap_err("extracting packages from crates file")?
+            }
             Err(err) if err.kind() == NotFound => {
-                log::warn!("no crates file found for cargo, assuming no crates installed yet");
-                return Ok(BTreeMap::new());
+                log::warn!(
+                    "no .crates2.json file found for cargo, assuming no crates installed yet"
+                );
+                BTreeMap::new()
             }
             Err(err) => return Err(err.into()),
         };
 
-        extract_packages(&contents).wrap_err("extracting packages from crates file")
+        // Read packages from TOML file and add any missing ones
+        match std::fs::read_to_string(&toml_file) {
+            Ok(contents) => {
+                let toml_packages = extract_packages_from_toml(&contents)?;
+                for (package_name, options) in toml_packages {
+                    packages.entry(package_name).or_insert(options);
+                }
+            }
+            Err(err) if err.kind() == NotFound => {
+                log::warn!(
+                    "no .crates.toml file found for cargo, can be ignored if not using cargo-binstall"
+                );
+                return Ok(packages);
+            }
+            Err(err) => return Err(err.into()),
+        }
+
+        Ok(packages)
     }
 
     fn install(
@@ -234,4 +257,52 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
         .collect();
 
     Ok(result)
+}
+
+fn extract_packages_from_toml(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
+    let toml: toml::Table =
+        toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
+
+    let v1_section = toml
+        .get("v1")
+        .ok_or(eyre!("missing 'v1' section in .crates.toml"))?
+        .as_table()
+        .ok_or(eyre!("'v1' section should be a table"))?;
+
+    let mut packages = BTreeMap::new();
+
+    for (key, _value) in v1_section {
+        // Key format: "package_name version (source)"
+        // Extract package name (everything before the first space)
+        if let Some((package_name, version_source)) = key.split_once(' ') {
+            let (version, source) = version_source.split_once(' ').unwrap();
+
+            let git = if source.starts_with("(git+") {
+                Some(
+                    source.split("+").collect::<Vec<_>>()[1]
+                        .split("#")
+                        .next()
+                        .unwrap()
+                        .to_string(),
+                )
+            } else {
+                None
+            };
+
+            packages.insert(
+                package_name.to_string(),
+                CargoOptions {
+                    version: Some(version.to_string()),
+                    git,
+                    // All of these are not specified
+                    all_features: false,
+                    no_default_features: false,
+                    features: Vec::new(),
+                    locked: None,
+                },
+            );
+        }
+    }
+
+    Ok(packages)
 }
