@@ -215,16 +215,6 @@ Reported in #152.
 
 ### mise
 
-Example:
-```toml
-mise = [
-  { package = "node", options = { requested_version = "lts" } },
-  { package = "python", options = { requested_version = "3.11" } },
-  { package = "rust", options = { requested_version = "latest", active = false } },
-  "fzf", # equivalent to { package = "fzf", options = { requested_version = "latest" } }
-]
-```
-
 ### npm
 
 If on linux you might need to first run `npm config set prefix ~/.local`.
