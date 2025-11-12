@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New backend: `mise` (#78), thanks @Mikel-Landa!
+- New backend: `mise` (requested in #127, implemented in #166), thanks
+  @Mikel-Landa!
 
 ### Fixed
 
