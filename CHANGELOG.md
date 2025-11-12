@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- New backend: `mise` (#78), thanks @Mikel-Landa!
+
+### Fixed
+
+- Issue with the `cargo` `binstall` option not tracking installed packages
+  has been fixed by switching from using the `.crates2.json` file to using
+  the `.crates.toml` file (#167), thanks @Mikel-Landa!
+
 ## [0.6.4] - 2025-11-10
 
 ### Added
