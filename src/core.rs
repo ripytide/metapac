@@ -34,7 +34,7 @@ impl MainArguments {
 
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
 
-        let enabled_backends = config.enabled_backends(&hostname)?;
+        let enabled_backends = config.enabled_backends(&hostname);
 
         if enabled_backends.is_empty() {
             log::warn!("no backends found in the enabled_backends config")
