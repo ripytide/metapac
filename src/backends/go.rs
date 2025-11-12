@@ -58,13 +58,14 @@ impl Backend for Go {
             let entry = entry.wrap_err("reading directory entry")?;
             let path = entry.path();
 
-            if path.is_file() && is_executable(&path) {
-                if let Some(binary_name) = path.file_name().and_then(|n| n.to_str()) {
-                    // Go doesn't track which import path created which binary,
-                    // so we store by binary name. Users should use import paths in
-                    // group files, and we'll extract the binary name for matching.
-                    packages.insert(binary_name.to_string(), GoOptions { version: None });
-                }
+            if path.is_file()
+                && is_executable(&path)
+                && let Some(binary_name) = path.file_name().and_then(|n| n.to_str())
+            {
+                // Go doesn't track which import path created which binary,
+                // so we store by binary name. Users should use import paths in
+                // group files, and we'll extract the binary name for matching.
+                packages.insert(binary_name.to_string(), GoOptions { version: None });
             }
         }
 
@@ -150,20 +151,18 @@ impl Backend for Go {
 }
 
 fn get_gobin() -> Result<PathBuf> {
-    std::env::var("GOBIN")
-        .map(PathBuf::from)
-        .or_else(|_| {
-            let gopath = std::env::var("GOPATH")
-                .or_else(|_| {
-                    // If GOPATH is not set, default to $HOME/go
-                    home::home_dir()
-                        .map(|p| p.join("go").to_string_lossy().to_string())
-                        .ok_or(std::env::VarError::NotPresent)
-                })
-                .wrap_err("getting GOPATH")?;
+    std::env::var("GOBIN").map(PathBuf::from).or_else(|_| {
+        let gopath = std::env::var("GOPATH")
+            .or_else(|_| {
+                // If GOPATH is not set, default to $HOME/go
+                home::home_dir()
+                    .map(|p| p.join("go").to_string_lossy().to_string())
+                    .ok_or(std::env::VarError::NotPresent)
+            })
+            .wrap_err("getting GOPATH")?;
 
-            Ok(PathBuf::from(gopath).join("bin"))
-        })
+        Ok(PathBuf::from(gopath).join("bin"))
+    })
 }
 
 /// Check if a file is an executable binary.
