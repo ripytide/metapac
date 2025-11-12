@@ -215,12 +215,6 @@ Reported in #152.
 
 ### mise
 
-`mise` packages can be specified using either short-form (string) or long-form (table) syntax. Short-form syntax is only available when you want the latest version, as it's equivalent to `{ package = "name", options = { requested_version = "latest" } }`. For any other version specification or options, you must use the long-form syntax.
-
-Available options:
-- `requested_version`: A version specifier like `"latest"`, `"lts"`, or a specific version string (e.g., `"24.11.0"`, `"3.11"`). If not specified, defaults to `"latest"`.
-- `active`: Whether to use `mise use` (active) or `mise install` (inactive). When `true`, uses `mise use` which activates the tool version. When `false`, uses `mise install` which only installs without activating. Defaults to `true`.
-
 Example:
 ```toml
 mise = [
@@ -425,9 +419,9 @@ flatpak = [
   { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
 mise = [
-  "package1", # equivalent to { package = "package1", options = { requested_version = "latest" } }
-  { package = "package2", options = { requested_version = "1.0.0" } },
-  { package = "package3", options = { requested_version = "lts", active = false } },
+  "package1",
+  { package = "package2", options = { version = "1.0.0" } },
+  { package = "package3", options = { version = "lts" } },
 ]
 npm = ["package1", { package = "package2" }]
 pipx = ["package1", { package = "package2" }]
