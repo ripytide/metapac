@@ -4,7 +4,6 @@ use std::io::ErrorKind::NotFound;
 use color_eyre::Result;
 use color_eyre::eyre::{Context, eyre};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -20,9 +19,9 @@ pub struct CargoOptions {
     #[serde(default)]
     git: Option<String>,
     #[serde(default)]
-    all_features: bool,
+    all_features: Option<bool>,
     #[serde(default)]
-    no_default_features: bool,
+    no_default_features: Option<bool>,
     #[serde(default)]
     features: Vec<String>,
     #[serde(default)]
@@ -59,43 +58,20 @@ impl Backend for Cargo {
             return Ok(BTreeMap::new());
         }
 
-        let cargo_home = home::cargo_home().wrap_err("getting the cargo home directory")?;
+        let toml_file = home::cargo_home()
+            .wrap_err("getting the cargo home directory")?
+            .join(".crates.toml");
 
-        let json_file = cargo_home.join(".crates2.json");
-        let toml_file = cargo_home.join(".crates.toml");
-
-        // Read packages from JSON file
-        let mut packages = match std::fs::read_to_string(&json_file) {
-            Ok(contents) => {
-                extract_packages(&contents).wrap_err("extracting packages from crates file")?
-            }
-            Err(err) if err.kind() == NotFound => {
-                log::warn!(
-                    "no .crates2.json file found for cargo, assuming no crates installed yet"
-                );
-                BTreeMap::new()
-            }
-            Err(err) => return Err(err.into()),
-        };
-
-        // Read packages from TOML file and add any missing ones
         match std::fs::read_to_string(&toml_file) {
-            Ok(contents) => {
-                let toml_packages = extract_packages_from_toml(&contents)?;
-                for (package_name, options) in toml_packages {
-                    packages.entry(package_name).or_insert(options);
-                }
-            }
+            Ok(contents) => extract_packages(&contents),
             Err(err) if err.kind() == NotFound => {
                 log::warn!(
-                    "no .crates.toml file found for cargo, can be ignored if not using cargo-binstall"
+                    "no .crates.toml file found for cargo, assuming no crates installed yet"
                 );
-                return Ok(packages);
+                Ok(BTreeMap::new())
             }
-            Err(err) => return Err(err.into()),
+            Err(err) => Err(err.into()),
         }
-
-        Ok(packages)
     }
 
     fn install(
@@ -122,12 +98,12 @@ impl Backend for Cargo {
                     .chain(
                         Some("--all-features")
                             .into_iter()
-                            .filter(|_| options.all_features),
+                            .filter(|_| options.all_features.is_some_and(|x| x)),
                     )
                     .chain(
                         Some("--no-default-features")
                             .into_iter()
-                            .filter(|_| options.no_default_features),
+                            .filter(|_| options.no_default_features.is_some_and(|x| x)),
                     )
                     .chain(
                         Some("--features")
@@ -205,61 +181,6 @@ impl Backend for Cargo {
 }
 
 fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
-    let json: Value = serde_json::from_str(contents).wrap_err("parsing JSON from crates file")?;
-
-    let result: BTreeMap<String, CargoOptions> = json
-        .get("installs")
-        .ok_or(eyre!("get 'installs' field from json"))?
-        .as_object()
-        .ok_or(eyre!("getting object"))?
-        .into_iter()
-        .map(|(name, value)| {
-            let value = value.as_object().unwrap();
-
-            let (name, version_source) = name.split_once(' ').unwrap();
-            let (version, source) = version_source.split_once(' ').unwrap();
-
-            let git = if source.starts_with("(git+") {
-                Some(
-                    source.split("+").collect::<Vec<_>>()[1]
-                        .split("#")
-                        .next()
-                        .unwrap()
-                        .to_string(),
-                )
-            } else {
-                None
-            };
-
-            let all_features = value.get("all_features").unwrap().as_bool().unwrap();
-            let no_default_features = value.get("no_default_features").unwrap().as_bool().unwrap();
-            let features = value
-                .get("features")
-                .unwrap()
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|value| value.as_str().unwrap().to_string())
-                .collect();
-
-            (
-                name.to_string(),
-                CargoOptions {
-                    version: Some(version.to_string()),
-                    git,
-                    all_features,
-                    no_default_features,
-                    features,
-                    locked: None, //cargo does not track if the install happened with --locked
-                },
-            )
-        })
-        .collect();
-
-    Ok(result)
-}
-
-fn extract_packages_from_toml(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
     let toml: toml::Table =
         toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
 
@@ -295,8 +216,8 @@ fn extract_packages_from_toml(contents: &str) -> Result<BTreeMap<String, CargoOp
                     version: Some(version.to_string()),
                     git,
                     // All of these are not specified
-                    all_features: false,
-                    no_default_features: false,
+                    all_features: None,
+                    no_default_features: None,
                     features: Vec::new(),
                     locked: None,
                 },
