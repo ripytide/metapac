@@ -1,20 +1,21 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::cmd::{run_command, run_command_for_stdout};
-use crate::prelude::*;
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::cmd::{run_command, run_command_for_stdout};
+use crate::prelude::*;
+
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Mise;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct MiseOptions {
-    requested_version: Option<String>,
-    active: Option<bool>,
+    #[serde(default)]
+    version: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -34,7 +35,21 @@ impl Backend for Mise {
     }
 
     fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
-        Err(eyre!("unimplemented"))
+        let search = run_command_for_stdout(
+            ["mise", "search", "--no-headers", "--quiet"],
+            Perms::Same,
+            true,
+        )?;
+
+        Ok(search
+            .lines()
+            .map(|line| {
+                line.split_whitespace()
+                    .next()
+                    .expect("mise search lines should not be empty")
+                    .to_string()
+            })
+            .collect())
     }
 
     fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
@@ -42,32 +57,34 @@ impl Backend for Mise {
             return Ok(BTreeMap::new());
         }
 
-        let stdout = run_command_for_stdout(
-            ["mise", "ls", "--global", "--json", "--installed"],
+        let packages = run_command_for_stdout(
+            ["mise", "ls", "--installed", "--json", "--quiet"],
             Perms::Same,
             true,
         )?;
 
-        let value: Value = serde_json::from_str(&stdout)?;
-        let mise_conf = match value {
+        let packages_json = match serde_json::from_str(&packages)? {
             Value::Object(x) => x,
-            _ => return Err(eyre!("json should be an object,")),
+            _ => return Err(eyre!("json should be an object")),
         };
 
         let mut packages = BTreeMap::new();
-        for (key, value) in mise_conf {
+        for (key, value) in packages_json {
             // Each package maps to an array of version objects
             let versions = value
                 .as_array()
                 .ok_or(eyre!("mise package {key:?} should be an array"))?;
 
-            // Take the first version (or we could handle multiple versions)
+            // Take the first version and ignore any others
             if let Some(first_version) = versions.first() {
                 packages.insert(
                     key.clone(),
-                    serde_json::from_value(first_version.clone()).map_err(|err| {
-                        eyre!("mise package deserialization error for {key:?}, got {err}")
-                    })?,
+                    MiseOptions {
+                        version: first_version
+                            .get("version")
+                            .and_then(|x| x.as_str())
+                            .map(|x| x.to_string()),
+                    },
                 );
             }
         }
@@ -77,25 +94,16 @@ impl Backend for Mise {
 
     fn install(
         packages: &BTreeMap<String, Self::Options>,
-        _: bool,
+        no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
         for (package, options) in packages {
-            let version = options
-                .requested_version
-                .as_ref()
-                .map(|requested_version| format!("@{requested_version}"));
+            let package = format!("{package}@{}", options.version.as_deref().unwrap_or(""));
             run_command(
-                ["mise"]
+                ["mise", "install"]
                     .into_iter()
-                    .chain(if options.active.unwrap_or(true) {
-                        ["use"]
-                    } else {
-                        ["install"]
-                    })
-                    .chain(["--global", "--yes"])
-                    .chain([package.as_str()])
-                    .chain(version.iter().map(|s| s.as_str())),
+                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(std::iter::once(package.as_str())),
                 Perms::Same,
             )?;
         }
@@ -124,7 +132,6 @@ impl Backend for Mise {
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
-        // mise doesn't have a direct cache clean command
         Ok(())
     }
 
