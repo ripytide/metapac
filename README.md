@@ -152,6 +152,7 @@ for additional backends are always welcome!
 | [`cargo`](#cargo)     |
 | [`dnf`](#dnf)         |
 | [`flatpak`](#flatpak) |
+| [`mise`](#mise)       |
 | [`npm`](#npm)         |
 | [`pipx`](#pipx)       |
 | [`pnpm`](#pnpm)       |
@@ -211,6 +212,8 @@ Reported in #152.
 ### dnf
 
 ### flatpak
+
+### mise
 
 ### npm
 
@@ -405,6 +408,11 @@ flatpak = [
   "package1",
   { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
+mise = [
+  "package1",
+  { package = "package2", options = { version = "1.0.0" } },
+  { package = "package3", options = { version = "lts" } },
+]
 npm = ["package1", { package = "package2" }]
 pipx = ["package1", { package = "package2" }]
 pnpm = ["package1", { package = "package2" }]
@@ -439,7 +447,6 @@ of any other package managers we should be aware of.
   packages <https://github.com/denoland/deno/discussions/28230>
 - [`emerge`](https://wiki.gentoo.org/wiki/Emerge): no attempt made yet
 - [`guix`](https://codeberg.org/guix/guix): no attempt made yet
-- [`mise`](https://github.com/jdx/mise): no attempt made yet
 - [`nala`](https://github.com/volitank/nala): no attempt made yet
 - [`nix`](https://github.com/NixOS/nix): no attempt made yet
 - [`opkg`](https://github.com/oe-mirrors/opkg): no attempt made yet
