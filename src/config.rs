@@ -41,13 +41,13 @@ impl Config {
 
     pub fn enabled_backends(&self, hostname: &str) -> BTreeSet<AnyBackend> {
         let mut backends = self.enabled_backends.clone();
-        if let Some(host_backends) = self.hostname_enabled_backends.get(hostname) {
-            for host_backend in host_backends {
-                if !backends.contains(host_backend) {
-                    backends.insert(*host_backend);
-                }
-            }
-        }
+        backends.extend(
+            self.hostname_enabled_backends
+                .get(hostname)
+                .cloned()
+                .into_iter()
+                .flatten(),
+        );
         backends
     }
 
