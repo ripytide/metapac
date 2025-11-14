@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New backend: `mise` (requested in #127, implemented in #166), thanks
   @Mikel-Landa!
 
+### Changed
+
+- ❗ Breaking Change ❗ the `hostname_enabled_backends_enabled` config has
+  been removed and now the `enabled_backends` will be merged with any
+  matching entries in the `hostname_enabled_backends` table rather than being
+  mutually exclusive. (#163)
+
 ### Fixed
 
 - Issue with the `cargo` `binstall` option not tracking installed packages
@@ -25,13 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `binstall` option to the `cargo` backend to allow using
   `cargo-binstall` to install packages instead of `cargo install` (#165),
   thanks @Mikel-Landa!
-
-### Changed
-
-- ❗ Breaking Change ❗ the `hostname_enabled_backends_enabled` config has
-  been removed and now the `enabled_backends` will be merged with any
-  matching entries in the `hostname_enabled_backends` table rather than being
-  mutually exclusive. (#163)
 
 ## [0.6.3] - 2025-10-28
 
