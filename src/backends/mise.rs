@@ -58,7 +58,15 @@ impl Backend for Mise {
         }
 
         let packages = run_command_for_stdout(
-            ["mise", "ls", "--installed", "--json", "--quiet"],
+            [
+                "mise",
+                "ls",
+                "--current",
+                "--installed",
+                "--global",
+                "--json",
+                "--quiet",
+            ],
             Perms::Same,
             true,
         )?;
@@ -75,13 +83,13 @@ impl Backend for Mise {
                 .as_array()
                 .ok_or(eyre!("mise package {key:?} should be an array"))?;
 
-            // Take the first version and ignore any others
+            // Only one version in the array (the one in use)
             if let Some(first_version) = versions.first() {
                 packages.insert(
                     key.clone(),
                     MiseOptions {
                         version: first_version
-                            .get("version")
+                            .get("requested_version")
                             .and_then(|x| x.as_str())
                             .map(|x| x.to_string()),
                     },
@@ -100,7 +108,7 @@ impl Backend for Mise {
         for (package, options) in packages {
             let package = format!("{package}@{}", options.version.as_deref().unwrap_or(""));
             run_command(
-                ["mise", "install"]
+                ["mise", "use", "--global"]
                     .into_iter()
                     .chain(Some("--yes").filter(|_| no_confirm))
                     .chain(std::iter::once(package.as_str())),
