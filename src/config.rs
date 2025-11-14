@@ -10,8 +10,6 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     // update README.md if fields change.
     #[serde(default)]
-    hostname_enabled_backends_enabled: bool,
-    #[serde(default)]
     enabled_backends: BTreeSet<AnyBackend>,
     #[serde(default)]
     hostname_groups_enabled: bool,
@@ -41,16 +39,16 @@ impl Config {
         }
     }
 
-    pub fn enabled_backends(&self, hostname: &str) -> Result<BTreeSet<AnyBackend>> {
-        if self.hostname_enabled_backends_enabled {
-            let enabled_backends = self.hostname_enabled_backends.get(hostname).wrap_err(
-                "no entry in the `hostname_enabled_backends` config for the hostname: {hostname:?}",
-            )?;
-
-            Ok(enabled_backends.clone())
-        } else {
-            Ok(self.enabled_backends.clone())
-        }
+    pub fn enabled_backends(&self, hostname: &str) -> BTreeSet<AnyBackend> {
+        let mut backends = self.enabled_backends.clone();
+        backends.extend(
+            self.hostname_enabled_backends
+                .get(hostname)
+                .cloned()
+                .into_iter()
+                .flatten(),
+        );
+        backends
     }
 
     pub fn group_files(&self, group_dir: &Path, hostname: &str) -> Result<BTreeSet<PathBuf>> {

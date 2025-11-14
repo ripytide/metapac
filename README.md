@@ -255,16 +255,8 @@ your group files. See
 # | macOS    | $HOME/Library/Application Support/metapac/config.toml | /Users/Alice/Library/Application Support/metapac/config.toml |
 # | Windows  | {FOLDERID_RoamingAppData}\metapac\config.toml         | C:\Users\Alice\AppData\Roaming\metapac\config.toml           |
 
-# If this is `false` then the enabled backends will be found by using the value of
-# the `enabled_backends` config.
-# If this is `true` then the enabled backends will be found by using the
-# [hostname_enabled_backends] config table.
-#
-# See the README.md or run `metapac backends` for the list of backend names.
-# Default: false
-hostname_enabled_backends_enabled = false
-
-# Backends to enable. Subject to `hostname_enabled_backends_enabled`.
+# Backends to enable. These will be merged with any hostname-specific backends
+# from the [hostname_enabled_backends] config table.
 # Default: []
 enabled_backends = ["arch", "cargo"]
 
@@ -275,7 +267,8 @@ enabled_backends = ["arch", "cargo"]
 # Default: false
 hostname_groups_enabled = false
 
-# Backends to enable per hostname. Subject to `hostname_enabled_backends_enabled`.
+# Backends to enable per hostname. These will be merged with the base
+# `enabled_backends` config.
 # Default: None
 [hostname_enabled_backends]
 pc = ["winget", "cargo"]
