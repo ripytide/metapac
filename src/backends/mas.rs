@@ -57,7 +57,7 @@ impl Backend for Mas {
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        for (package, _) in packages {
+        for package in packages.keys() {
             run_command(["mas", "install", package.as_str()], Perms::Same)?;
         }
 
