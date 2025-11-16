@@ -152,6 +152,7 @@ for additional backends are always welcome!
 | [`cargo`](#cargo)     |
 | [`dnf`](#dnf)         |
 | [`flatpak`](#flatpak) |
+| [`mas`](#mas)         |
 | [`mise`](#mise)       |
 | [`npm`](#npm)         |
 | [`pipx`](#pipx)       |
@@ -212,6 +213,8 @@ Reported in #152.
 ### dnf
 
 ### flatpak
+
+### mas
 
 ### mise
 

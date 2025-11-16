@@ -12,6 +12,7 @@ pub use crate::backends::bun::{Bun, BunOptions};
 pub use crate::backends::cargo::{Cargo, CargoConfig, CargoOptions};
 pub use crate::backends::dnf::{Dnf, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakConfig, FlatpakOptions};
+pub use crate::backends::mas::{Mas, MasConfig, MasOptions};
 pub use crate::backends::mise::{Mise, MiseConfig, MiseOptions};
 pub use crate::backends::npm::{Npm, NpmOptions};
 pub use crate::backends::pipx::{Pipx, PipxOptions};
