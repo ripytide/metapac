@@ -10,6 +10,7 @@ use strum::IntoEnumIterator;
 use toml_edit::{DocumentMut, Entry, Item, Value};
 
 use crate::cli::{BackendsCommand, CleanCacheCommand};
+use crate::config::resolve_config_dir;
 use crate::prelude::*;
 
 impl MainArguments {
@@ -25,9 +26,7 @@ impl MainArguments {
         let config_dir = if let Some(x) = self.config_dir {
             x
         } else {
-            dirs::config_dir()
-                .map(|path| path.join("metapac/"))
-                .ok_or(eyre!("getting the default metapac config directory"))?
+            resolve_config_dir().wrap_err("determining the default metapac config directory")?
         };
 
         let group_dir = config_dir.join("groups/");

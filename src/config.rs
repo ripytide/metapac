@@ -3,7 +3,39 @@ use color_eyre::Result;
 use color_eyre::eyre::{Context, ContextCompat, eyre};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use std::env;
 use std::path::{Path, PathBuf};
+
+/// Resolve the config directory with XDG Base Directory Specification support.
+///
+/// Check in order:
+/// 1. $XDG_CONFIG_HOME/metapac if XDG_CONFIG_HOME is set and the dir exists
+/// 2. ~/.config/metapac if it exists
+/// 3. Platform default (macOS Application Support, Linux ~/.config, etc.)
+pub fn resolve_config_dir() -> Result<PathBuf> {
+    // Check XDG_CONFIG_HOME environment variable first
+    if let Ok(xdg_config_home) = env::var("XDG_CONFIG_HOME") {
+        let xdg_config = PathBuf::from(xdg_config_home).join("metapac");
+        if xdg_config.exists() {
+            log::debug!("Using XDG_CONFIG_HOME config directory: {xdg_config:?}");
+            return Ok(xdg_config);
+        }
+    }
+
+    // Check ~/.config/metapac
+    if let Some(home) = home::home_dir() {
+        let xdg_config = home.join(".config/metapac");
+        if xdg_config.exists() {
+            log::debug!("Using XDG config directory: {xdg_config:?}");
+            return Ok(xdg_config);
+        }
+    }
+
+    // Fall back to platform default
+    dirs::config_dir()
+        .map(|path| path.join("metapac/"))
+        .ok_or_else(|| eyre!("unable to determine config directory"))
+}
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
