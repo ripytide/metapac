@@ -404,6 +404,7 @@ flatpak = [
   "package1",
   { package = "package2", options = { remote = "flathub", systemwide = false } },
 ]
+mas = ["package1", { package = "package2" }]
 mise = [
   "package1",
   { package = "package2", options = { version = "1.0.0" } },
