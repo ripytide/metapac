@@ -21,7 +21,6 @@ pub mod yarn;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::prelude::*;
 use color_eyre::Result;
 
 macro_rules! apply_backends {
