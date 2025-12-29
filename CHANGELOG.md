@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Issue with the `pipx` backend using a wrong command when updating all
   packages, thanks @Deuchnord!
+- Issue with `xbps` backend managing all installed packages instead of only
+  those that were installed manually by the user (#179), thanks @teoc98!
 
 ## [0.7.0] - 2025-12-13
 
