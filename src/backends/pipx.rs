@@ -91,7 +91,7 @@ impl Backend for Pipx {
     }
 
     fn update_all(_: bool, _: &Self::Config) -> Result<()> {
-        run_command(["pipx", "update-all"], Perms::Same)
+        run_command(["pipx", "upgrade-all"], Perms::Same)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {

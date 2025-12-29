@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Issue with the `pipx` backend using a wrong command when updating all
+  packages, thanks @Deuchnord!
+
 ## [0.7.0] - 2025-12-13
 
 ### Added
