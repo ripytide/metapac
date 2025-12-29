@@ -42,20 +42,16 @@ impl Backend for Xbps {
             return Ok(BTreeMap::new());
         }
 
-        let stdout = run_command_for_stdout(["xbps-query", "--list-pkgs"], Perms::Same, false)?;
+        let stdout = run_command_for_stdout(["xbps-query", "--list-manual-pkgs"], Perms::Same, false)?;
 
-        // Removes the package status and description from output
-        let re1 = Regex::new(r"^ii |^uu |^hr |^\?\? | .*")?;
         // Removes the package version from output
-        let re2 = Regex::new(r"-[^-]*$")?;
+        let re = Regex::new(r"-[^-]*$")?;
 
         let packages = stdout
             .lines()
             .map(|line| {
-                let mid_result = re1.replace_all(line, "");
-
                 (
-                    re2.replace_all(&mid_result, "").to_string(),
+                    re.replace_all(line, "").to_string(),
                     Self::Options {},
                 )
             })
