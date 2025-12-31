@@ -18,6 +18,7 @@ pub mod vscode;
 pub mod winget;
 pub mod xbps;
 pub mod yarn;
+pub mod zypper;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -44,7 +45,8 @@ macro_rules! apply_backends {
         (VsCode, vscode),
         (WinGet, winget),
         (Xbps, xbps),
-        (Yarn, yarn) }
+        (Yarn, yarn) ,
+        (Zypper, zypper) }
     };
 }
 pub(crate) use apply_backends;

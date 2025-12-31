@@ -164,6 +164,7 @@ for additional backends are always welcome!
 | [`winget`](#winget)   |
 | [`xbps`](#xbps)       |
 | [`yarn`](#yarn)       |
+| [`zypper`](#zypper)       |
 
 ### apt
 
@@ -247,6 +248,8 @@ your group files. See
 
 ### yarn
 
+### zypper
+
 ## Config
 
 ```toml
@@ -328,6 +331,16 @@ systemwide = true
 # Must be one of: ["code", "codium"]
 # Default: "code"
 variant = "code"
+
+[zypper]
+# Since OpenSUSE Leap and Tumbleweed should be updated with different commands
+# (see https://en.opensuse.org/System_Updates for more details), you can set how
+# metapac updates system packages.
+# If this is `false` then the system is updated with the subcommand `update` (`up`).
+# If this is `true` then the system is updated with the subcommand `dist-upgrade` (`dup`).
+# Default: false
+distribution_upgrade = false
+
 ```
 
 ## Group Files
@@ -428,6 +441,7 @@ vscode = ["package1", { package = "package2" }]
 winget = ["ripytide.package1", { package = "ripytide.package2" }]
 xbps = ["package1", { package = "package2" }]
 yarn = ["package1", { package = "package2" }]
+zypper = ["package1", { package = "package2" }]
 ```
 
 ## Wishlist
@@ -460,7 +474,6 @@ of any other package managers we should be aware of.
   <https://github.com/ripytide/metapac/issues/86>
 - [`yum`](https://github.com/rpm-software-management/yum): project
   deprecated in favor of `dnf`
-- [`zypper`](https://github.com/openSUSE/zypper): no attempt made yet
 
 ## Similar Projects
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added the `zypper` backend (#181), thanks @teoc98!
+
 ## [0.7.1] - 2025-12-29
 
 ### Fixed
