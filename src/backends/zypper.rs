@@ -1,6 +1,5 @@
 use color_eyre::Result;
 use color_eyre::eyre::eyre;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -50,21 +49,21 @@ impl Backend for Zypper {
             false,
         )?;
 
-        // Extract the package name from output
-        let re = Regex::new(r"^(?:[^ |]+ *\| *){2}([^ |]+)(?: *\| *[^ |]+){2}")?;
-
-        let packages = stdout
+        let packages: Result<_> = stdout
             .lines()
-            .filter_map(|line| {
-                if line.starts_with("i+") {
-                    Some((re.replace_all(line, "$1").to_string(), Self::Options {}))
-                } else {
-                    None
-                }
+            .filter(|line| line.starts_with("i+"))
+            .map(|line| -> Result<(String, Self::Options)> {
+                let mut parts = line.split('|');
+                let package = parts
+                    .nth(2)
+                    .ok_or(eyre!("unexpected output"))?
+                    .trim()
+                    .to_string();
+                Ok((package, Self::Options {}))
             })
             .collect();
 
-        Ok(packages)
+        Ok(packages?)
     }
 
     fn install(
