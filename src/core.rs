@@ -4,12 +4,12 @@ use std::path::Path;
 use std::str::FromStr;
 
 use color_eyre::Result;
-use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
+use color_eyre::eyre::{Context, ContextCompat, Ok, bail, eyre};
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
 use toml_edit::{DocumentMut, Entry, Item, Value};
 
-use crate::cli::{BackendsCommand, CleanCacheCommand};
+use crate::cli::{BackendsCommand, CleanCacheCommand, EditCommand};
 use crate::prelude::*;
 
 impl MainArguments {
@@ -103,6 +103,7 @@ impl MainArguments {
             MainSubcommand::CleanCache(clean_cache) => {
                 clean_cache.run(&enabled_backends, &config.backends)
             }
+            MainSubcommand::Edit(edit) => edit.run(&group_dir),
         }
     }
 }
@@ -484,6 +485,27 @@ impl CleanCacheCommand {
 
             backend.clean_cache(backend_configs)?
         }
+
+        Ok(())
+    }
+}
+
+impl EditCommand {
+    fn run(self, group_dir: &Path) -> Result<()> {
+        let editor = std::env::var("VISUAL")
+            .or_else(|_| std::env::var("EDITOR"))
+            .map_err(|_| eyre!("EDITOR or VISUAL must be set in the user's environment"))?;
+
+        let group_file = group_dir.join(&self.group).with_extension("toml");
+
+        if !group_file.is_file() {
+            bail!("Group '{}' does not exist.", self.group);
+        }
+
+        std::process::Command::new(editor)
+            .arg(group_file)
+            .status()
+            .context("Failed to edit group configuration file")?;
 
         Ok(())
     }

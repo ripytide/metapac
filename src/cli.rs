@@ -36,6 +36,7 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
+    Edit(EditCommand),
 }
 
 #[derive(Args)]
@@ -180,4 +181,13 @@ pub struct CleanCacheCommand {
     ///
     /// - otherwise the list will be parsed as a list of backends to be used
     pub backends: Vec<String>,
+}
+
+#[derive(Args)]
+#[command(visible_alias("d"))]
+/// edit group configuration files
+pub struct EditCommand {
+    #[arg(short, long, default_value = "default")]
+    /// the group name
+    pub group: String,
 }
