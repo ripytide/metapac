@@ -24,6 +24,7 @@ pub use crate::backends::vscode::{VsCode, VsCodeConfig, VsCodeOptions};
 pub use crate::backends::winget::{WinGet, WinGetOptions};
 pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::yarn::{Yarn, YarnOptions};
+pub use crate::backends::zypper::{Zypper, ZypperOptions};
 pub use crate::cli::{
     AddCommand, CleanCommand, InstallCommand, MainArguments, MainSubcommand, RemoveCommand,
     SyncCommand, UninstallCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
