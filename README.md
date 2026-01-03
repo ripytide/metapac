@@ -110,9 +110,10 @@ install` is `metapac uninstall` and the opposite of `metapac sync` is
 Hooks are commands that you can add per-package in your group files. They
 get run by `metapac` at various stages in some of `metapac`'s commands.
 
-One of the main use-case is to allow you to declaratively maintain your
-enabled `systemd` services alongside each package in your group files. See
-the [`Group Files`](#group-files) section for some examples.
+One of the main use-cases for hooks is to allow you to declaratively
+maintain your enabled `systemd` services alongside each package in your
+group files. See the [`Group Files`](#group-files) section for some
+examples.
 
 - `before_install`: Run before a package is installed. Only applies to the
   `metapac sync` command.
