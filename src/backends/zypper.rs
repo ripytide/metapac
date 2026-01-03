@@ -49,7 +49,7 @@ impl Backend for Zypper {
             false,
         )?;
 
-        let packages: Result<_> = stdout
+        stdout
             .lines()
             .filter(|line| line.starts_with("i+"))
             .map(|line| -> Result<(String, Self::Options)> {
@@ -61,9 +61,7 @@ impl Backend for Zypper {
                     .to_string();
                 Ok((package, Self::Options {}))
             })
-            .collect();
-
-        Ok(packages?)
+            .collect()
     }
 
     fn install(
