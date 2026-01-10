@@ -49,7 +49,10 @@ where
     log::trace!("command took {:.2} seconds", start.elapsed().as_secs_f64());
 
     match output {
-        Ok(output) if output.status.success() => Ok(String::from_utf8(output.stdout)?),
+        Ok(output) if output.status.success() => {
+            log::trace!("command succeeded, status: {}", output.status);
+            Ok(String::from_utf8(output.stdout)?)
+        },
         Ok(output) => Err(eyre!(
             "command failed: {:?}, exit_status_code: {:?}",
             args.into_iter().join(" "),
@@ -95,7 +98,10 @@ where
     log::trace!("command took {:.2} seconds", start.elapsed().as_secs_f64());
 
     match status {
-        Ok(status) if status.success() => Ok(()),
+        Ok(status) if status.success() => {
+            log::trace!("command succeeded, status: {}", status);
+            Ok(())
+        },
         Ok(status) => Err(eyre!(
             "command failed: {:?}, exit_status_code: {:?}",
             args.into_iter().join(" "),
@@ -124,10 +130,8 @@ fn get_args(mut args: VecDeque<String>, perms: Perms) -> Result<VecDeque<String>
     match perms {
         // to enable .pw1 and .cmd files being executed such as npm.ps1, (see #184)
         Perms::Same => {
-            if unsafe { libc::geteuid() } != 0 {
-                args.push_front("/C".to_string());
-                args.push_front("cmd".to_string());
-            }
+            args.push_front("/C".to_string());
+            args.push_front("cmd".to_string());
             Ok(args)
         }
         Perms::Sudo => {
