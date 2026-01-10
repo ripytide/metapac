@@ -1,4 +1,5 @@
 use std::{
+    collections::VecDeque,
     process::{Command, Stdio},
     time::Instant,
 };
@@ -17,18 +18,14 @@ where
     S: Into<String>,
     I: IntoIterator<Item = S>,
 {
-    let args: Vec<String> = args.into_iter().map(Into::into).collect::<Vec<_>>();
+    let args: VecDeque<String> = args.into_iter().map(Into::into).collect();
 
     if args.is_empty() {
         return Err(eyre!("cannot run an empty command"));
     }
 
-    let use_sudo = use_sudo(perms)?;
-    let args = Some("sudo".to_string())
-        .filter(|_| use_sudo)
-        .into_iter()
-        .chain(args)
-        .collect::<Vec<_>>();
+    let args = get_args(args, perms)?;
+    let args = args.into_iter().collect::<Vec<_>>();
 
     let (first_arg, remaining_args) = args.split_first().unwrap();
 
@@ -71,18 +68,14 @@ where
     S: Into<String>,
     I: IntoIterator<Item = S>,
 {
-    let args: Vec<String> = args.into_iter().map(Into::into).collect::<Vec<_>>();
+    let args: VecDeque<String> = args.into_iter().map(Into::into).collect();
 
     if args.is_empty() {
         return Err(eyre!("cannot run an empty command"));
     }
 
-    let use_sudo = use_sudo(perms)?;
-    let args = Some("sudo".to_string())
-        .filter(|_| use_sudo)
-        .into_iter()
-        .chain(args)
-        .collect::<Vec<_>>();
+    let args = get_args(args, perms)?;
+    let args = args.into_iter().collect::<Vec<_>>();
 
     let (first_arg, remaining_args) = args.split_first().unwrap();
 
@@ -116,17 +109,31 @@ where
     }
 }
 
-fn use_sudo(perms: Perms) -> Result<bool> {
+fn get_args(mut args: VecDeque<String>, perms: Perms) -> Result<VecDeque<String>> {
     #[cfg(unix)]
     match perms {
-        Perms::Same => Ok(false),
-        Perms::Sudo => Ok(unsafe { libc::geteuid() } != 0),
+        Perms::Same => Ok(args),
+        Perms::Sudo => {
+            if unsafe { libc::geteuid() } != 0 {
+                args.push_front("sudo".to_string());
+            }
+            Ok(args)
+        }
     }
     #[cfg(windows)]
     match perms {
-        Perms::Same => Ok(false),
-        Perms::Sudo => Err(eyre!(
-            "sudo for privilege escalation is not supported on windows"
-        )),
+        // to enable .pw1 and .cmd files being executed such as npm.ps1, (see #184)
+        Perms::Same => {
+            if unsafe { libc::geteuid() } != 0 {
+                args.push_front("/C".to_string());
+                args.push_front("cmd".to_string());
+            }
+            Ok(args)
+        }
+        Perms::Sudo => {
+            return Err(eyre!(
+                "sudo for privilege escalation is not supported on windows"
+            ));
+        }
     }
 }

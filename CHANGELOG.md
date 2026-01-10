@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ‼️ Breaking Change ‼️ All short-forms and single letter sub-command
   aliases have been removed. This is due to my preference for explicitness
   and that as the cli api surface has grown with more sub-commands it is no
-  longer easy to remember which letter goes with which sub-command.
+  longer easy to remember which letter goes with which sub-command (#187).
 
   As an example `metapac s` is no longer valid, use the explicit `metapac
   sync` instead. The same goes for options so instead of `metapac -n
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ❗ Breaking Change ❗ the `dnf` backend has been massively simplified and
   now has no package options. Previously there was a `repo` and `user`
   options which didn't make any sense. The backend now behaves much
-  similarly to the other backends.
+  similarly to the other backends (#185).
 
 ### Fixed
 
@@ -29,7 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into only those sub-commands that require that rather than being done for
   all sub-commands which should result is a gargantuan speedup for those
   sub-commands that didn't and don't need the group files such as `metapac
-  upgrade-all` and `metapac backends`.
+  upgrade-all` and `metapac backends` (#187).
+- Fixed running non-`.exe` executables on windows such as `.ps1` and `.cmd`
+  files which aren't normally executable by rust's `Command` by wrapping
+  all commands executed on windows in `cmd /C` which enables them.
+  (reported in #184, fixed in #186)
 
 ## [0.7.2] - 2026-01-03
 
