@@ -10,7 +10,7 @@ pub use crate::backends::arch::{Arch, ArchConfig, ArchOptions};
 pub use crate::backends::brew::{Brew, BrewOptions};
 pub use crate::backends::bun::{Bun, BunOptions};
 pub use crate::backends::cargo::{Cargo, CargoConfig, CargoOptions};
-pub use crate::backends::dnf::{Dnf, DnfOptions};
+pub use crate::backends::dnf::{Dnf, DnfConfig, DnfOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakConfig, FlatpakOptions};
 pub use crate::backends::mas::{Mas, MasConfig, MasOptions};
 pub use crate::backends::mise::{Mise, MiseConfig, MiseOptions};
