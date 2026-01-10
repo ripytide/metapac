@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed running non-`.exe` executables on windows such as `.ps1` and `.cmd`
+  files which aren't normally executable by rust's `Command` by wrapping
+  all commands executed on windows in `cmd /C` which enables them.
+  (reported in #184, fixed in #186)
+
 ## [0.7.2] - 2026-01-03
 
 ### Added
