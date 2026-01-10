@@ -52,7 +52,7 @@ where
         Ok(output) if output.status.success() => {
             log::trace!("command succeeded, status: {}", output.status);
             Ok(String::from_utf8(output.stdout)?)
-        },
+        }
         Ok(output) => Err(eyre!(
             "command failed: {:?}, exit_status_code: {:?}",
             args.into_iter().join(" "),
@@ -101,7 +101,7 @@ where
         Ok(status) if status.success() => {
             log::trace!("command succeeded, status: {}", status);
             Ok(())
-        },
+        }
         Ok(status) => Err(eyre!(
             "command failed: {:?}, exit_status_code: {:?}",
             args.into_iter().join(" "),
