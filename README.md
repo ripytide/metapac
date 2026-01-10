@@ -410,10 +410,7 @@ cargo = [
     "feature1",
   ], locked = true } },
 ]
-dnf = [
-  "package1",
-  { package = "package2", options = { repo = "/etc/yum.repos.d/fedora_extras.repo" } },
-]
+dnf = ["package1", { package = "package2" }]
 flatpak = [
   "package1",
   { package = "package2", options = { remote = "flathub", systemwide = false } },

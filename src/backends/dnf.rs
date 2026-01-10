@@ -12,14 +12,15 @@ pub struct Dnf;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct DnfOptions {
-    pub repo: Option<String>,
-    pub user: Option<bool>,
-}
+pub struct DnfOptions {}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct DnfConfig {}
 
 impl Backend for Dnf {
     type Options = DnfOptions;
-    type Config = ();
+    type Config = DnfConfig;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -38,51 +39,21 @@ impl Backend for Dnf {
             return Ok(BTreeMap::new());
         }
 
-        let system_packages = run_command_for_stdout(
-            [
-                "dnf",
-                "repoquery",
-                "--installed",
-                "--queryformat",
-                "%{from_repo}/%{name}\n",
-            ],
-            Perms::Same,
-            false,
-        )?;
-        let system_packages = system_packages.lines().map(parse_package);
-
-        let user_packages = run_command_for_stdout(
+        let packages = run_command_for_stdout(
             [
                 "dnf",
                 "repoquery",
                 "--userinstalled",
                 "--queryformat",
-                "%{from_repo}/%{name}\n",
+                "%{name}\n",
             ],
             Perms::Same,
             false,
         )?;
-        let user_packages = user_packages.lines().map(parse_package);
 
-        Ok(system_packages
-            .map(|x| {
-                (
-                    x,
-                    Self::Options {
-                        user: Some(false),
-                        repo: None,
-                    },
-                )
-            })
-            .chain(user_packages.map(|x| {
-                (
-                    x,
-                    Self::Options {
-                        user: Some(true),
-                        repo: None,
-                    },
-                )
-            }))
+        Ok(packages
+            .lines()
+            .map(|x| (x.to_string(), Self::Options {}))
             .collect())
     }
 
@@ -92,20 +63,11 @@ impl Backend for Dnf {
         _: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
-            // add these two repositories as these are needed for many dependencies
-            #[allow(clippy::option_if_let_else)]
             run_command(
-                ["dnf", "install", "--repo", "updates", "--repo", "fedora"]
+                ["dnf", "install"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
-                    .chain(
-                        packages
-                            .iter()
-                            .flat_map(|(package, options)| match &options.repo {
-                                Some(repo) => vec![package, "--repo", repo.as_str()],
-                                None => vec![package.as_str()],
-                            }),
-                    ),
+                    .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
         }
@@ -154,23 +116,5 @@ impl Backend for Dnf {
 
     fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
-    }
-}
-
-fn parse_package(package: &str) -> String {
-    // These repositories are ignored when storing the packages
-    // as these are present by default on any sane fedora system
-    if ["koji", "fedora", "updates", "anaconda", "@"]
-        .iter()
-        .any(|repo| package.contains(repo))
-        && !package.contains("copr")
-    {
-        package
-            .split('/')
-            .nth(1)
-            .expect("Cannot be empty!")
-            .to_string()
-    } else {
-        package.to_string()
     }
 }

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- ❗ Breaking Change ❗ the `dnf` backend has been massively simplified and
+  now has no package options. Previously there was a `repo` and `user`
+  options which didn't make any sense. The backend now behaves much
+  similarly to the other backends.
+
 ## [0.7.2] - 2026-01-03
 
 ### Added
