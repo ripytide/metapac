@@ -1,8 +1,8 @@
 pub use crate::backend_ex::BackendEx;
 pub use crate::backends::Backend;
 pub use crate::backends::all::{
-    AnyBackend, BackendConfigs, GroupFilePackages, PackageIds, Packages, RawGroupFilePackages,
-    RawPackageIds,
+    AnyBackend, BackendConfigs, BackendRepos, GroupFilePackages, PackageIds, Packages,
+    RawGroupFilePackages, RawPackageIds,
 };
 pub(crate) use crate::backends::apply_backends;
 pub use crate::backends::apt::{Apt, AptOptions};
@@ -26,9 +26,9 @@ pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::yarn::{Yarn, YarnOptions};
 pub use crate::backends::zypper::{Zypper, ZypperOptions};
 pub use crate::cli::{
-    AddCommand, BackendsCommand, CleanCacheCommand, CleanCommand, InstallCommand, MainArguments,
-    MainSubcommand, RemoveCommand, SyncCommand, UninstallCommand, UnmanagedCommand,
-    UpdateAllCommand, UpdateCommand,
+    AddCommand, BackendsCommand, CleanCacheCommand, CleanCommand, CleanReposCommand,
+    InstallCommand, MainArguments, MainSubcommand, RemoveCommand, SyncCommand, SyncReposCommand,
+    UninstallCommand, UnmanagedCommand, UnmanagedReposCommand, UpdateAllCommand, UpdateCommand,
 };
 pub use crate::cmd::Perms;
 pub use crate::config::Config;

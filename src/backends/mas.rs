@@ -17,9 +17,14 @@ pub struct MasOptions {}
 #[serde(deny_unknown_fields)]
 pub struct MasConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MasRepo {}
+
 impl Backend for Mas {
     type Options = MasOptions;
     type Config = MasConfig;
+    type Repo = MasRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -97,6 +102,14 @@ impl Backend for Mas {
     fn clean_cache(config: &Self::Config) -> Result<()> {
         // mas does not provide a cache cleaning mechanism
         Self::version(config).map(|_| ())
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

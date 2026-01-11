@@ -20,9 +20,14 @@ pub struct WinGetOptions {}
 #[serde(deny_unknown_fields)]
 pub struct WinGetConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WinGetRepo {}
+
 impl Backend for WinGet {
     type Options = WinGetOptions;
     type Config = WinGetConfig;
+    type Repo = WinGetRepo;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -134,6 +139,14 @@ impl Backend for WinGet {
     // https://github.com/microsoft/winget-cli/issues/343
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

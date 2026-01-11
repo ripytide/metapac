@@ -22,9 +22,14 @@ pub struct PipxOptions {}
 #[serde(deny_unknown_fields)]
 pub struct PipxConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PipxRepo {}
+
 impl Backend for Pipx {
     type Options = PipxOptions;
     type Config = PipxConfig;
+    type Repo = PipxRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -96,6 +101,14 @@ impl Backend for Pipx {
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

@@ -30,9 +30,14 @@ impl Default for FlatpakConfig {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakRepo {}
+
 impl Backend for Flatpak {
     type Options = FlatpakOptions;
     type Config = FlatpakConfig;
+    type Repo = FlatpakRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -160,6 +165,14 @@ impl Backend for Flatpak {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["flatpak", "remove", "--unused"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

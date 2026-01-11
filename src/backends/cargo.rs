@@ -37,9 +37,14 @@ pub struct CargoConfig {
     pub binstall: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CargoRepo {}
+
 impl Backend for Cargo {
     type Options = CargoOptions;
     type Config = CargoConfig;
+    type Repo = CargoRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -173,6 +178,14 @@ impl Backend for Cargo {
         run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

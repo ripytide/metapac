@@ -18,9 +18,14 @@ pub struct NpmOptions {}
 #[serde(deny_unknown_fields)]
 pub struct NpmConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NpmRepo {}
+
 impl Backend for Npm {
     type Options = NpmOptions;
     type Config = NpmConfig;
+    type Repo = NpmRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -112,6 +117,14 @@ impl Backend for Npm {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["npm", "cache", "clean", "--force"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

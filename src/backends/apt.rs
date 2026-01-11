@@ -18,9 +18,14 @@ pub struct AptOptions {}
 #[serde(deny_unknown_fields)]
 pub struct AptConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AptRepo {}
+
 impl Backend for Apt {
     type Options = AptOptions;
     type Config = AptConfig;
+    type Repo = AptRepo;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -121,6 +126,14 @@ impl Backend for Apt {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["apt-get", "autoclean"], Perms::Sudo)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

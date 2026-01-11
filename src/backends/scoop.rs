@@ -19,9 +19,14 @@ pub struct ScoopGetOptions {}
 #[serde(deny_unknown_fields)]
 pub struct ScoopConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopRepo {}
+
 impl Backend for Scoop {
     type Options = ScoopGetOptions;
     type Config = ScoopConfig;
+    type Repo = ScoopRepo;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -116,6 +121,14 @@ impl Backend for Scoop {
     fn clean_cache(_: &Self::Config) -> Result<()> {
         run_command(["scoop.cmd", "cache", "rm", "--all"], Perms::Same)?;
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

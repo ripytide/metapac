@@ -18,9 +18,18 @@ pub struct DnfOptions {}
 #[serde(deny_unknown_fields)]
 pub struct DnfConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DnfRepo {
+    // only copr is supported at the moment as dnf config-manager has no support for removing
+    // repositories yet, only adding them
+    project_id: String,
+}
+
 impl Backend for Dnf {
     type Options = DnfOptions;
     type Config = DnfConfig;
+    type Repo = DnfRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -112,6 +121,28 @@ impl Backend for Dnf {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["dnf", "clean", "all"], Perms::Same)
         })
+    }
+
+    fn add_repos(repos: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        for repo in repos.iter() {
+            run_command(
+                ["dnf", "copr", "enable", repo.project_id.as_str()],
+                Perms::Sudo,
+            )?
+        }
+
+        Ok(())
+    }
+
+    fn remove_repos(repos: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        for repo in repos.iter() {
+            run_command(
+                ["dnf", "copr", "remove", repo.project_id.as_str()],
+                Perms::Sudo,
+            )?
+        }
+
+        Ok(())
     }
 
     fn version(_: &Self::Config) -> Result<String> {

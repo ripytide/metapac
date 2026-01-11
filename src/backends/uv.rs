@@ -24,9 +24,14 @@ pub struct UvOptions {
 #[serde(deny_unknown_fields)]
 pub struct UvConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UvRepo {}
+
 impl Backend for Uv {
     type Options = UvOptions;
     type Config = UvConfig;
+    type Repo = UvRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -114,6 +119,14 @@ impl Backend for Uv {
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

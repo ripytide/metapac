@@ -49,6 +49,9 @@ impl MainArguments {
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&hostname, &group_dir, &config),
             MainSubcommand::Backends(backends) => backends.run(&config),
             MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&hostname, &config),
+            MainSubcommand::CleanRepos(clean_repos) => clean_repos.run(),
+            MainSubcommand::SyncRepos(sync_repos) => sync_repos.run(),
+            MainSubcommand::UnmanagedRepos(unmanaged_repos) => unmanaged_repos.run(),
         }
     }
 }
@@ -415,6 +418,24 @@ impl CleanCacheCommand {
             backend.clean_cache(config.backend_configs())?
         }
 
+        Ok(())
+    }
+}
+
+impl CleanReposCommand {
+    fn run(&self) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl SyncReposCommand {
+    fn run(&self) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl UnmanagedReposCommand {
+    fn run(&self) -> Result<()> {
         Ok(())
     }
 }

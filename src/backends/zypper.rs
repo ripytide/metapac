@@ -20,9 +20,14 @@ pub struct ZypperConfig {
     pub distribution_upgrade: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ZypperRepo {}
+
 impl Backend for Zypper {
     type Options = ZypperOptions;
     type Config = ZypperConfig;
+    type Repo = ZypperRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -128,6 +133,14 @@ impl Backend for Zypper {
 
     fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| run_command(["zypper", "clean"], Perms::Sudo))
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

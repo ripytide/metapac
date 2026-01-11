@@ -19,9 +19,14 @@ pub struct XbpsOptions {}
 #[serde(deny_unknown_fields)]
 pub struct XbpsConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct XbpsRepo {}
+
 impl Backend for Xbps {
     type Options = XbpsOptions;
     type Config = XbpsConfig;
+    type Repo = XbpsRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -125,6 +130,14 @@ impl Backend for Xbps {
                 Perms::Sudo,
             )
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

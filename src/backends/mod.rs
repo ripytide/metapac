@@ -54,6 +54,7 @@ pub(crate) use apply_backends;
 pub trait Backend {
     type Options;
     type Config;
+    type Repo;
 
     /// Help text to display if an invalid package is given.
     fn invalid_package_help_text() -> String;
@@ -125,6 +126,12 @@ pub trait Backend {
 
     /// Attempts to clean all cache.
     fn clean_cache(config: &Self::Config) -> Result<()>;
+
+    /// Attempts to add the given repos to the backend.
+    fn add_repos(repos: &BTreeSet<Self::Repo>, config: &Self::Config) -> Result<()>;
+
+    /// Attempts to remove the given repos to the backend.
+    fn remove_repos(repos: &BTreeSet<Self::Repo>, config: &Self::Config) -> Result<()>;
 
     /// Attempts to return the version of the backend.
     ///

@@ -247,3 +247,17 @@ macro_rules! backend_configs {
     }
 }
 apply_backends!(backend_configs);
+
+macro_rules! backend_repos {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[derive(Debug, Serialize, Deserialize, Default)]
+        #[serde(deny_unknown_fields)]
+        pub struct BackendRepos {
+            $(
+                #[serde(default)]
+                pub $lower_backend: BTreeSet<<$upper_backend as Backend>::Repo>,
+            )*
+        }
+    }
+}
+apply_backends!(backend_repos);

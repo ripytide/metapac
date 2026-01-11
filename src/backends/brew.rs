@@ -29,9 +29,14 @@ impl Default for BrewConfig {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BrewRepo {}
+
 impl Backend for Brew {
     type Options = BrewOptions;
     type Config = BrewConfig;
+    type Repo = BrewRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -128,6 +133,14 @@ impl Backend for Brew {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["brew", "cleanup", "--prune-prefix"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

@@ -40,9 +40,14 @@ impl VsCodeVariant {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodeRepo {}
+
 impl Backend for VsCode {
     type Options = VsCodeOptions;
     type Config = VsCodeConfig;
+    type Repo = VsCodeRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -125,6 +130,14 @@ impl Backend for VsCode {
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(config: &Self::Config) -> Result<String> {

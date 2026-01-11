@@ -21,6 +21,10 @@ pub struct ArchConfig {
     pub package_manager: ArchPackageManager,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ArchRepo {}
+
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ArchPackageManager {
@@ -56,6 +60,7 @@ impl ArchPackageManager {
 impl Backend for Arch {
     type Options = ArchOptions;
     type Config = ArchConfig;
+    type Repo = ArchRepo;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -245,6 +250,14 @@ impl Backend for Arch {
                 Perms::Same,
             )
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(config: &Self::Config) -> Result<String> {

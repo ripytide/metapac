@@ -19,9 +19,14 @@ pub struct YarnOptions {}
 #[serde(deny_unknown_fields)]
 pub struct YarnConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct YarnRepo {}
+
 impl Backend for Yarn {
     type Options = YarnOptions;
     type Config = YarnConfig;
+    type Repo = YarnRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -129,6 +134,14 @@ impl Backend for Yarn {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["yarn", "cache", "clean"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

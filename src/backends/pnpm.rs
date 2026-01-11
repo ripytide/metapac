@@ -19,9 +19,14 @@ pub struct PnpmOptions {}
 #[serde(deny_unknown_fields)]
 pub struct PnpmConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PnpmRepo {}
+
 impl Backend for Pnpm {
     type Options = PnpmOptions;
     type Config = PnpmConfig;
+    type Repo = PnpmRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -115,6 +120,14 @@ impl Backend for Pnpm {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["pnpm", "store", "prune"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

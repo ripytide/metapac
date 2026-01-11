@@ -57,9 +57,14 @@ impl SnapConfinement {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SnapRepo {}
+
 impl Backend for Snap {
     type Options = SnapOptions;
     type Config = SnapConfig;
+    type Repo = SnapRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -138,6 +143,14 @@ impl Backend for Snap {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["rm", "-rf", "/var/lib/snapd/cache/*"], Perms::Sudo)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

@@ -17,9 +17,14 @@ pub struct BunOptions {}
 #[serde(deny_unknown_fields)]
 pub struct BunConfig {}
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BunRepo {}
+
 impl Backend for Bun {
     type Options = BunOptions;
     type Config = BunConfig;
+    type Repo = BunRepo;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -134,6 +139,14 @@ impl Backend for Bun {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["bun", "pm", "cache", "rm", "--global"], Perms::Same)
         })
+    }
+
+    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {
