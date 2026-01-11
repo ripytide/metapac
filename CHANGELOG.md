@@ -9,10 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- ‼️ Breaking Change ‼️ All short-forms and single letter sub-command
+  aliases have been removed. This is due to my preference for explicitness
+  and that as the cli api surface has grown with more sub-commands it is no
+  longer easy to remember which letter goes with which sub-command.
+
+  As an example `metapac s` is no longer valid, use the explicit `metapac
+  sync` instead. The same goes for options so instead of `metapac -n
+  hostname` use `metapac --hostname hostname`.
+
 - ❗ Breaking Change ❗ the `dnf` backend has been massively simplified and
   now has no package options. Previously there was a `repo` and `user`
   options which didn't make any sense. The backend now behaves much
   similarly to the other backends.
+
+### Fixed
+
+- A lot of the complicated group file parsing and validation has been moved
+  into only those sub-commands that require that rather than being done for
+  all sub-commands which should result is a gargantuan speedup for those
+  sub-commands that didn't and don't need the group files such as `metapac
+  upgrade-all` and `metapac backends`.
 
 ## [0.7.2] - 2026-01-03
 

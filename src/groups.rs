@@ -6,7 +6,7 @@ use color_eyre::{
 use toml::{Table, Value};
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fs::read_to_string,
     ops::AddAssign,
     path::{Path, PathBuf},
@@ -26,7 +26,7 @@ impl Groups {
         result
     }
 
-    pub fn to_packages(&self) -> Result<GroupFilePackages> {
+    pub fn to_group_file_packages(&self) -> GroupFilePackages {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
@@ -77,13 +77,17 @@ impl Groups {
                 }
             };
         }
-        Ok(apply_backends!(x))
+        apply_backends!(x)
     }
 
-    pub fn load(group_files: &BTreeSet<PathBuf>) -> Result<Groups> {
+    pub fn load(hostname: &str, group_dir: &Path, config: &Config) -> Result<Groups> {
+        let group_files = config
+            .group_files(group_dir, hostname)
+            .wrap_err("finding group files")?;
+
         let mut groups = Self::default();
 
-        for group_file in group_files {
+        for group_file in group_files.iter() {
             let file_contents =
                 read_to_string(group_file).wrap_err(eyre!("reading group file {group_file:?}"))?;
 
