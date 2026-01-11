@@ -26,8 +26,9 @@ pub use crate::backends::xbps::{Xbps, XbpsOptions};
 pub use crate::backends::yarn::{Yarn, YarnOptions};
 pub use crate::backends::zypper::{Zypper, ZypperOptions};
 pub use crate::cli::{
-    AddCommand, CleanCommand, InstallCommand, MainArguments, MainSubcommand, RemoveCommand,
-    SyncCommand, UninstallCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
+    AddCommand, BackendsCommand, CleanCacheCommand, CleanCommand, InstallCommand, MainArguments,
+    MainSubcommand, RemoveCommand, SyncCommand, UninstallCommand, UnmanagedCommand,
+    UpdateAllCommand, UpdateCommand,
 };
 pub use crate::cmd::Perms;
 pub use crate::config::Config;

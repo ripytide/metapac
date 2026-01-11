@@ -18,9 +18,13 @@ pub struct Config {
     #[serde(default)]
     hostname_groups: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
-    pub backends: BackendConfigs,
+    backend_configs: BackendConfigs,
 }
 impl Config {
+    pub fn backend_configs(&self) -> &BackendConfigs {
+        &self.backend_configs
+    }
+
     pub fn load(config_dir: &Path) -> Result<Self> {
         let config_file_path = config_dir.join("config.toml");
 

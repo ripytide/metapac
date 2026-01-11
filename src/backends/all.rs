@@ -32,7 +32,7 @@ macro_rules! to_package_ids {
     };
 }
 
-macro_rules! any {
+macro_rules! any_backend {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter, Serialize, Deserialize)]
         #[serde(rename_all = "lowercase")]
@@ -63,7 +63,7 @@ macro_rules! any {
         }
     };
 }
-apply_backends!(any);
+apply_backends!(any_backend);
 
 macro_rules! raw_package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -140,7 +140,7 @@ macro_rules! group_file_packages {
 }
 apply_backends!(group_file_packages);
 
-macro_rules! raw_packages {
+macro_rules! raw_group_file_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default, Serialize)]
         pub struct RawGroupFilePackages {
@@ -182,7 +182,6 @@ macro_rules! raw_packages {
                 Ok(formatted)
             }
 
-
             pub fn to_raw_package_ids(&self) -> RawPackageIds {
                 RawPackageIds {
                     $(
@@ -193,7 +192,7 @@ macro_rules! raw_packages {
         }
     }
 }
-apply_backends!(raw_packages);
+apply_backends!(raw_group_file_packages);
 
 macro_rules! packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -235,7 +234,7 @@ macro_rules! packages {
 }
 apply_backends!(packages);
 
-macro_rules! configs {
+macro_rules! backend_configs {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Serialize, Deserialize, Default)]
         #[serde(deny_unknown_fields)]
@@ -247,4 +246,4 @@ macro_rules! configs {
         }
     }
 }
-apply_backends!(configs);
+apply_backends!(backend_configs);
