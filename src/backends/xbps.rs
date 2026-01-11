@@ -11,17 +11,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Xbps;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct XbpsOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct XbpsConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct XbpsPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct XbpsRepoOptions {}
+
 impl Backend for Xbps {
-    type Options = XbpsOptions;
     type Config = XbpsConfig;
+    type PackageOptions = XbpsPackageOptions;
+    type RepoOptions = XbpsRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -31,13 +36,13 @@ impl Backend for Xbps {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(
+    fn get_installed_packages(
         config: &Self::Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    ) -> Result<std::collections::BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -50,14 +55,19 @@ impl Backend for Xbps {
 
         let packages = stdout
             .lines()
-            .map(|line| (re.replace_all(line, "").to_string(), Self::Options {}))
+            .map(|line| {
+                (
+                    re.replace_all(line, "").to_string(),
+                    Self::PackageOptions {},
+                )
+            })
             .collect();
 
         Ok(packages)
     }
 
-    fn install(
-        packages: &std::collections::BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &std::collections::BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -74,7 +84,11 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-remove", "--recursive"]
@@ -88,7 +102,11 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-install", "--sync", "--update"]
@@ -102,7 +120,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         let update = || {
             run_command(
                 ["xbps-install", "--sync", "--update"]
@@ -125,6 +143,18 @@ impl Backend for Xbps {
                 Perms::Sudo,
             )
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

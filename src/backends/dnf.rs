@@ -10,17 +10,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Dnf;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct DnfOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct DnfConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DnfPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DnfRepoOptions {}
+
 impl Backend for Dnf {
-    type Options = DnfOptions;
     type Config = DnfConfig;
+    type PackageOptions = DnfPackageOptions;
+    type RepoOptions = DnfRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -30,11 +35,13 @@ impl Backend for Dnf {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -53,12 +60,12 @@ impl Backend for Dnf {
 
         Ok(packages
             .lines()
-            .map(|x| (x.to_string(), Self::Options {}))
+            .map(|x| (x.to_string(), Self::PackageOptions {}))
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -75,7 +82,11 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["dnf", "remove"]
@@ -89,7 +100,11 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
@@ -99,7 +114,7 @@ impl Backend for Dnf {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
@@ -112,6 +127,37 @@ impl Backend for Dnf {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["dnf", "clean", "all"], Perms::Same)
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        let repos = run_command_for_stdout(["dnf", "copr", "list"], Perms::Sudo, false)?;
+
+        let repos = repos
+            .lines()
+            .map(|repo| (repo.to_string(), DnfRepoOptions {}))
+            .collect();
+
+        Ok(repos)
+    }
+
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        for repo in repos.keys() {
+            run_command(["dnf", "copr", "enable", repo.as_str()], Perms::Sudo)?
+        }
+
+        Ok(())
+    }
+
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        for repo in repos.iter() {
+            run_command(["dnf", "copr", "remove", repo.as_str()], Perms::Sudo)?
+        }
+
+        Ok(())
     }
 
     fn version(_: &Self::Config) -> Result<String> {

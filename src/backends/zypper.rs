@@ -9,10 +9,6 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Zypper;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ZypperOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ZypperConfig {
@@ -20,9 +16,18 @@ pub struct ZypperConfig {
     pub distribution_upgrade: bool,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ZypperPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ZypperRepoOptions {}
+
 impl Backend for Zypper {
-    type Options = ZypperOptions;
     type Config = ZypperConfig;
+    type PackageOptions = ZypperPackageOptions;
+    type RepoOptions = ZypperRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -32,13 +37,13 @@ impl Backend for Zypper {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(
+    fn get_installed_packages(
         config: &Self::Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    ) -> Result<std::collections::BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -52,20 +57,20 @@ impl Backend for Zypper {
         stdout
             .lines()
             .filter(|line| line.starts_with("i+"))
-            .map(|line| -> Result<(String, Self::Options)> {
+            .map(|line| -> Result<(String, Self::PackageOptions)> {
                 let mut parts = line.split('|');
                 let package = parts
                     .nth(2)
                     .ok_or(eyre!("unexpected output"))?
                     .trim()
                     .to_string();
-                Ok((package, Self::Options {}))
+                Ok((package, Self::PackageOptions {}))
             })
             .collect()
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -82,7 +87,11 @@ impl Backend for Zypper {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["zypper", "remove"]
@@ -96,7 +105,11 @@ impl Backend for Zypper {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["zypper", "update"]
@@ -110,7 +123,7 @@ impl Backend for Zypper {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
         run_command(
             [
                 "zypper",
@@ -128,6 +141,18 @@ impl Backend for Zypper {
 
     fn clean_cache(config: &Self::Config) -> Result<()> {
         Self::version(config).map_or(Ok(()), |_| run_command(["zypper", "clean"], Perms::Sudo))
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

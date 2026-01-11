@@ -6,8 +6,9 @@ mod cli;
 mod cmd;
 mod config;
 mod core;
-mod group_file_package;
 mod groups;
+mod hooks;
+mod items;
 mod prelude;
 
 pub use prelude::*;

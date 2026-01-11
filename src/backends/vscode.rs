@@ -13,10 +13,6 @@ use serde::Serialize;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct VsCode;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct VsCodeOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct VsCodeConfig {
@@ -40,9 +36,18 @@ impl VsCodeVariant {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodePackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodeRepoOptions {}
+
 impl Backend for VsCode {
-    type Options = VsCodeOptions;
     type Config = VsCodeConfig;
+    type PackageOptions = VsCodePackageOptions;
+    type RepoOptions = VsCodeRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -52,11 +57,13 @@ impl Backend for VsCode {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -67,14 +74,14 @@ impl Backend for VsCode {
             true,
         )?
         .lines()
-        .map(|x| (x.to_string(), Self::Options {}))
+        .map(|x| (x.to_string(), Self::PackageOptions {}))
         .collect();
 
         Ok(names)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -88,7 +95,11 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
+    fn uninstall_packages(
+        packages: &BTreeSet<String>,
+        _: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         for package in packages {
             run_command(
                 [
@@ -103,7 +114,7 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
                 [config.variant.as_command(), "--install-extension", package],
@@ -114,9 +125,9 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let packages = Self::get_installed(config)?;
-        Self::update(
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
+        let packages = Self::get_installed_packages(config)?;
+        Self::update_packages(
             &packages.keys().map(String::from).collect(),
             no_confirm,
             config,
@@ -125,6 +136,18 @@ impl Backend for VsCode {
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(config: &Self::Config) -> Result<String> {

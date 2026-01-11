@@ -6,39 +6,48 @@ use color_eyre::{
 use toml::{Table, Value};
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs::read_to_string,
     ops::AddAssign,
     path::{Path, PathBuf},
 };
 
 #[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
-pub struct Groups(BTreeMap<PathBuf, RawGroupFilePackages>);
+pub struct Groups(BTreeMap<PathBuf, AllRawComplexBackendItems>);
 
 impl Groups {
-    pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
-        let mut result = Vec::new();
-        for (group_file, raw_packages) in self.0.iter() {
-            if raw_packages.to_raw_package_ids().contains(backend, package) {
-                result.push(group_file.clone());
+    pub fn contains(&self, backend: AnyBackend, package: &str) -> BTreeSet<PathBuf> {
+        let mut results = BTreeSet::new();
+        for (group_file, all_items) in self.0.iter() {
+            macro_rules! x {
+                ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                    match backend {
+                        $(
+                            AnyBackend::$upper_backend => {
+                                if all_items.$lower_backend.packages.iter().any(|x| x.name == package) {
+                                    results.insert(group_file.clone());
+                                }
+                            },
+                        )*
+                    }
+                };
             }
+            apply_backends!(x);
         }
-        result
+        results
     }
 
-    pub fn to_group_file_packages(&self) -> GroupFilePackages {
+    pub fn to_combined(&self) -> AllComplexBackendItems {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
-        for (group_file, raw_packages) in self.iter() {
-            let raw_package_ids = raw_packages.to_raw_package_ids();
-
+        for (group_file, all_raw_complex_backend_items) in self.iter() {
             macro_rules! x {
                 ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                     $(
-                        for package in raw_package_ids.$lower_backend {
+                        for package in all_raw_complex_backend_items.$lower_backend.packages.iter() {
                             reoriented
-                                .entry((AnyBackend::$upper_backend, package.clone()))
+                                .entry((AnyBackend::$upper_backend, package.name.clone()))
                                 .or_default()
                                 .entry(group_file.clone())
                                 .or_default()
@@ -63,16 +72,16 @@ impl Groups {
             }
         }
 
-        let mut merged_raw_packages = RawGroupFilePackages::default();
+        let mut merged_raw_packages = AllRawComplexBackendItems::default();
         for mut raw_packages in self.values().cloned() {
             merged_raw_packages.append(&mut raw_packages);
         }
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                GroupFilePackages {
+                AllComplexBackendItems {
                     $(
-                        $lower_backend: merged_raw_packages.$lower_backend.into_iter().map(|x| (x.package.clone(), x)).collect(),
+                        $lower_backend: merged_raw_packages.$lower_backend.to_non_raw(),
                     )*
                 }
             };
@@ -101,8 +110,8 @@ impl Groups {
     }
 }
 
-fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawGroupFilePackages> {
-    let mut raw_packages = RawGroupFilePackages::default();
+fn parse_group_file(group_file: &Path, contents: &str) -> Result<AllRawComplexBackendItems> {
+    let mut raw_packages = AllRawComplexBackendItems::default();
 
     let toml = toml::from_str::<Table>(contents)?;
 
@@ -117,36 +126,66 @@ fn parse_toml_key_value(
     group_file: &Path,
     key: &str,
     value: &Value,
-) -> Result<RawGroupFilePackages> {
+) -> Result<AllRawComplexBackendItems> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
-                    let mut raw_packages = RawGroupFilePackages::default();
+                let backend_property = $upper_backend.to_string().to_lowercase();
+                if key.to_lowercase() == backend_property {
+                    let mut items = AllRawComplexBackendItems::default();
 
-                    let packages = value.as_array().ok_or(
-                        eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
+                    let backend = value.as_table().ok_or(
+                        eyre!("the {backend_property:?} property in the {group_file:?} group file has a non-table value")
                     )?;
 
-                    for package in packages {
-                        let package =
-                            match package {
-                                toml::Value::String(x) => GroupFilePackage { package:x.to_string(), options: Default::default(), hooks: Hooks::default() },
-                                toml::Value::Table(x) => x.clone().try_into::<GroupFilePackage<<$upper_backend as Backend>::Options>>()?,
-                                _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
-                            };
-
-                        raw_packages.$lower_backend.push(package);
+                    for (key, _) in backend.iter() {
+                        if key != "packages" && key != "repos" {
+                            return Err(eyre!("unrecognised property: \"{backend_property}.{key}\" in group file: {group_file:?}"))
+                        }
                     }
 
-                    return Ok(raw_packages);
+                    if let Some(packages) = backend.get("packages") {
+                        let packages = packages.as_array().ok_or(
+                            eyre!("the \"{backend_property}.packages\" property in the {group_file:?} group file has a non-array value")
+                        )?;
+
+                        for package in packages {
+                            let package =
+                                match package {
+                                    toml::Value::String(x) => ComplexItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                    toml::Value::Table(x) => x.clone().try_into::<ComplexItem<<$upper_backend as Backend>::PackageOptions>>()?,
+                                    _ => return Err(eyre!("the \"{backend_property}.packages\" array in the {group_file:?} group file has a package which is neither a string or a table")),
+                                };
+
+                            items.$lower_backend.packages.push(package);
+                        }
+                    }
+
+                    if let Some(repos) = backend.get("repos") {
+                        let repos = repos.as_array().ok_or(
+                            eyre!("the \"{backend_property}.repos\" property in the {group_file:?} group file has a non-array value")
+                        )?;
+
+                        for repo in repos {
+                            let repo =
+                                match repo {
+                                    toml::Value::String(x) => ComplexItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                    toml::Value::Table(x) => x.clone().try_into::<ComplexItem<<$upper_backend as Backend>::RepoOptions>>()?,
+                                    _ => return Err(eyre!("the \"{backend_property}.repos\" array in the {group_file:?} group file has a repo which is neither a string or a table")),
+                                };
+
+                            items.$lower_backend.repos.push(repo);
+                        }
+                    }
+
+                    return Ok(items);
                 }
             )*
         };
     }
     apply_backends!(x);
 
-    log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
-
-    Ok(RawGroupFilePackages::default())
+    Err(eyre!(
+        "unrecognised property: {key:?} in group file: {group_file:?}"
+    ))
 }

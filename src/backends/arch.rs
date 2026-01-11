@@ -10,10 +10,6 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Arch;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ArchOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ArchConfig {
@@ -53,9 +49,18 @@ impl ArchPackageManager {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ArchPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ArchRepoOptions {}
+
 impl Backend for Arch {
-    type Options = ArchOptions;
     type Config = ArchConfig;
+    type PackageOptions = ArchPackageOptions;
+    type RepoOptions = ArchRepoOptions;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -84,7 +89,7 @@ impl Backend for Arch {
         Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
     }
 
-    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(config: &Self::Config) -> Result<BTreeSet<String>> {
         let all = run_command_for_stdout(
             [
                 config.package_manager.as_command(),
@@ -109,7 +114,9 @@ impl Backend for Arch {
             .collect())
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -128,14 +135,14 @@ impl Backend for Arch {
         let mut result = BTreeMap::new();
 
         for package in explicit_packages.lines() {
-            result.insert(package.to_string(), Self::Options {});
+            result.insert(package.to_string(), Self::PackageOptions {});
         }
 
         Ok(result)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -156,7 +163,7 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn uninstall(
+    fn uninstall_packages(
         packages: &BTreeSet<String>,
         no_confirm: bool,
         config: &Self::Config,
@@ -203,8 +210,12 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let installed = Self::get_installed(config)?;
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
+        let installed = Self::get_installed_packages(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages
@@ -221,10 +232,10 @@ impl Backend for Arch {
             .filter(|(x, _)| packages.contains(x))
             .collect();
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
         run_command(
             [
                 config.package_manager.as_command(),
@@ -245,6 +256,18 @@ impl Backend for Arch {
                 Perms::Same,
             )
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(config: &Self::Config) -> Result<String> {
