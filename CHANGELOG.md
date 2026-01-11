@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.8.0] - 2026-01-11
+
 ### Changed
 
 - ‼️ Breaking Change ‼️ All short-forms and single letter sub-command
@@ -17,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   As an example `metapac s` is no longer valid, use the explicit `metapac
   sync` instead. The same goes for options so instead of `metapac -n
   hostname` use `metapac --hostname hostname`.
-
 - ❗ Breaking Change ❗ the `dnf` backend has been massively simplified and
   now has no package options. Previously there was a `repo` and `user`
   options which didn't make any sense. The backend now behaves much
