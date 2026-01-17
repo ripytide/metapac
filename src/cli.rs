@@ -36,6 +36,9 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
+    CleanRepos(CleanReposCommand),
+    SyncRepos(SyncReposCommand),
+    UnmanagedRepos(UnmanagedReposCommand),
 }
 
 #[derive(Args)]
@@ -170,3 +173,15 @@ pub struct CleanCacheCommand {
     /// - otherwise the list will be parsed as a list of backends to be used
     pub backends: Vec<String>,
 }
+
+#[derive(Args)]
+/// remove unmanaged repos
+pub struct CleanReposCommand {}
+
+#[derive(Args)]
+/// add missing repos from the config file
+pub struct SyncReposCommand {}
+
+#[derive(Args)]
+/// show repos not required by metapac
+pub struct UnmanagedReposCommand {}

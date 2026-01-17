@@ -21,7 +21,7 @@ In order to release a new version of `metapac`:
 
 - update the `CHANGELOG.md` file with the changes
 - run `cargo release x.y.z --execute`
-- update the AUR packages (`metapac` and `metapac-bin`):
+- update the AUR package (`metapac`):
   - update the version numbers in the `PKGBUILD` files
   - run `updpkgsums`
   - run `makepkg --printsrcinfo > .SRCINFO`

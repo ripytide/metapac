@@ -6,7 +6,8 @@ mod cli;
 mod cmd;
 mod config;
 mod core;
-mod group_file_package;
+mod hooks;
+mod items;
 mod groups;
 mod prelude;
 
