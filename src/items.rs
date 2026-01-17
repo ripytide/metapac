@@ -49,7 +49,7 @@ impl<P, R> ComplexBackendItems<P, R> {
     pub fn is_empty(&self) -> bool {
         self.packages.is_empty() && self.repos.is_empty()
     }
-    pub fn to_simple(self) -> BackendItems<P, R> {
+    pub fn to_non_complex(self) -> BackendItems<P, R> {
         BackendItems {
             packages: self
                 .packages
@@ -90,6 +90,11 @@ pub struct BackendItems<P, R> {
     pub packages: BTreeMap<String, P>,
     #[serde(default)]
     pub repos: BTreeMap<String, R>,
+}
+impl<P, R> BackendItems<P, R> {
+    pub fn is_empty(&self) -> bool {
+        self.packages.is_empty() && self.repos.is_empty()
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]

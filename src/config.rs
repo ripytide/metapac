@@ -17,8 +17,6 @@ pub struct Config {
     hostname_enabled_backends: BTreeMap<String, BTreeSet<AnyBackend>>,
     #[serde(default)]
     hostname_groups: BTreeMap<String, Vec<String>>,
-    #[serde(default)]
-    backend_repos: BackendRepos,
     #[serde(flatten)]
     backend_configs: BackendConfigs,
 }

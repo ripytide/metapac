@@ -123,10 +123,10 @@ impl Backend for Dnf {
         })
     }
 
-    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        for repo in repos.iter() {
+    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        for repo in repos.keys() {
             run_command(
-                ["dnf", "copr", "enable", repo.project_id.as_str()],
+                ["dnf", "copr", "enable", repo.as_str()],
                 Perms::Sudo,
             )?
         }
@@ -134,10 +134,10 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
             run_command(
-                ["dnf", "copr", "remove", repo.project_id.as_str()],
+                ["dnf", "copr", "remove", repo.as_str()],
                 Perms::Sudo,
             )?
         }

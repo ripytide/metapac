@@ -486,7 +486,7 @@ fn required(hostname: &str, group_dir: &Path, config: &Config) -> Result<GroupFi
 fn installed(
     enabled_backends: &BTreeSet<AnyBackend>,
     backend_configs: &BackendConfigs,
-) -> Result<Packages> {
+) -> Result<AllBackendItems> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             Packages {
@@ -503,9 +503,21 @@ fn installed(
     }
     Ok(apply_backends!(x))
 }
-fn unmanaged(required: &GroupFilePackages, installed: &Packages) -> Result<Packages> {
+fn unmanaged(required: &AllComplexBackendItems, installed: &Packages) -> Result<Packages> {
     let mut output = Packages::default();
 
+    macro_rules! x {
+        ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+            $(
+                for (package_id, package) in installed.$lower_backend.iter() {
+                    if (!required.$lower_backend.contains_key(package_id)) {
+                        output.$lower_backend.insert(package_id.to_string(), package.clone());
+                    }
+                }
+            )*
+        };
+    }
+    apply_backends!(x);
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
