@@ -135,11 +135,11 @@ impl Backend for Zypper {
         Self::version(config).map_or(Ok(()), |_| run_command(["zypper", "clean"], Perms::Sudo))
     }
 
-    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

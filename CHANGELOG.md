@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- ❗ Breaking Change ❗ Invalid properties at the top level of a group file
+  are now no longer a soft warning but a hard error.
+
+- Packages are no longer validated as the validation code was quite
+  complicated and not worth it in my opinion as it provided very little
+  benefit.
+
 ## [0.8.0] - 2026-01-11
 
 ### Changed

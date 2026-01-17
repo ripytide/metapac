@@ -121,11 +121,11 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

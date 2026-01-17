@@ -129,7 +129,7 @@ fn parse_toml_key_value(
                                     _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                                 };
 
-                            items.$lower_backend.push(package);
+                            items.$lower_backend.packages.push(package);
                         }
                     }
 
@@ -138,7 +138,7 @@ fn parse_toml_key_value(
                             eyre!("the {}.repos property in the {group_file:?} group file has a non-array value", $upper_backend)
                         )?;
 
-                        for repo in ackages {
+                        for repo in repos {
                             let repo =
                                 match repo {
                                     toml::Value::String(x) => ComplexItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
@@ -146,7 +146,7 @@ fn parse_toml_key_value(
                                     _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a repo which is neither a string or a table", $upper_backend)),
                                 };
 
-                            items.$lower_backend.push(repo);
+                            items.$lower_backend.repos.push(repo);
                         }
                     }
 

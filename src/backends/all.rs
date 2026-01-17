@@ -22,16 +22,6 @@ macro_rules! is_empty {
     };
 }
 
-macro_rules! to_package_ids {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        pub fn to_package_ids(&self) -> PackageIds {
-            PackageIds {
-                $( $lower_backend: self.$lower_backend.keys().cloned().collect() ),*
-            }
-        }
-    };
-}
-
 macro_rules! any_backend {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::FromStr, derive_more::Display, strum::EnumIter, Serialize, Deserialize)]
@@ -97,9 +87,13 @@ macro_rules! all_complex_backend_items {
             )*
         }
         impl AllComplexBackendItems {
-            append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
-            to_package_ids!($(($upper_backend, $lower_backend)),*);
+
+            pub fn to_package_ids(&self) -> PackageIds {
+                PackageIds {
+                    $( $lower_backend: self.$lower_backend.to_packages().into_keys().collect() ),*
+                }
+            }
 
             pub fn to_raw(self) -> AllRawComplexBackendItems {
                 AllRawComplexBackendItems {
@@ -227,7 +221,7 @@ macro_rules! repos {
 
             pub fn add(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    let options = BTreeMap::<String, <$upper_backend as Backend>::ReposOptions>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
+                    let options = BTreeMap::<String, <$upper_backend as Backend>::RepoOptions>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
                     $upper_backend::add_repos(&options, no_confirm, &config.$lower_backend)?;
                 )*
 
@@ -242,10 +236,10 @@ macro_rules! repos {
                 Ok(())
             }
 
-            pub fn to_group_file_packages(&self) -> GroupFilePackages {
-                GroupFilePackages {
+            pub fn to_all_complex_backend_items(&self) -> AllComplexBackendItems {
+                AllComplexBackendItems {
                     $(
-                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), GroupFileItem {name: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
+                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), ComplexItem {name: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
                     )*
                 }
             }
@@ -267,17 +261,3 @@ macro_rules! backend_configs {
     }
 }
 apply_backends!(backend_configs);
-
-macro_rules! backend_repos {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Serialize, Deserialize, Default)]
-        #[serde(deny_unknown_fields)]
-        pub struct BackendRepos {
-            $(
-                #[serde(default)]
-                pub $lower_backend: BTreeSet<<$upper_backend as Backend>::Repo>,
-            )*
-        }
-    }
-}
-apply_backends!(backend_repos);

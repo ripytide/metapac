@@ -123,7 +123,7 @@ impl Backend for Dnf {
         })
     }
 
-    fn add_repos(repos: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
             run_command(
                 ["dnf", "copr", "enable", repo.project_id.as_str()],
@@ -134,7 +134,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn remove_repos(repos: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
             run_command(
                 ["dnf", "copr", "remove", repo.project_id.as_str()],

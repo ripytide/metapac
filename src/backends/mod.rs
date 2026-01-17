@@ -128,10 +128,10 @@ pub trait Backend {
     fn clean_cache(config: &Self::Config) -> Result<()>;
 
     /// Attempts to add the given repos to the backend.
-    fn add_repos(repos: &BTreeSet<Self::RepoOptions>, config: &Self::Config) -> Result<()>;
+    fn add_repos(repos: &BTreeSet<Self::RepoOptions>, no_confirm: bool, config: &Self::Config) -> Result<()>;
 
     /// Attempts to remove the given repos to the backend.
-    fn remove_repos(repos: &BTreeSet<Self::RepoOptions>, config: &Self::Config) -> Result<()>;
+    fn remove_repos(repos: &BTreeSet<Self::RepoOptions>, no_confirm: bool, config: &Self::Config) -> Result<()>;
 
     /// Attempts to return the version of the backend.
     ///

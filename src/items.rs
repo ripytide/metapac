@@ -46,6 +46,9 @@ pub struct ComplexBackendItems<P, R> {
     pub repos: BTreeMap<String, ComplexItem<R>>,
 }
 impl<P, R> ComplexBackendItems<P, R> {
+    pub fn is_empty(&self) -> bool {
+        self.packages.is_empty() && self.repos.is_empty()
+    }
     pub fn to_simple(self) -> BackendItems<P, R> {
         BackendItems {
             packages: self

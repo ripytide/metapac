@@ -123,11 +123,11 @@ impl Backend for Scoop {
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
     }
 
-    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
