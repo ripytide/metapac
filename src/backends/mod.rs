@@ -74,20 +74,20 @@ pub trait Backend {
 
     /// Attempts to return all packages which can be installed by the backend as it is currently
     /// configured.
-    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>>;
+    fn get_all_packages(config: &Self::Config) -> Result<BTreeSet<String>>;
 
     /// Attempts to return packages which are explicitly installed along with their options.
     ///
     /// If a backend cannot distinguish between explicit and implicit packages then it should
     /// return both implicit and explicit packages.
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>>;
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>>;
 
     /// Attempts to explicitly install the given `packages`, optionally without confirmation using
     /// `no_confirm`.
     ///
     /// If any of the `packages` are already installed then this method should return an error without
     /// installing any packages.
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
@@ -101,7 +101,7 @@ pub trait Backend {
     ///
     /// If the backend supports it this method should also remove any implicit dependencies that
     /// are no longer required by any explicitly installed packages.
-    fn uninstall(
+    fn uninstall_packages(
         packages: &BTreeSet<String>,
         no_confirm: bool,
         config: &Self::Config,
@@ -115,14 +115,14 @@ pub trait Backend {
     ///
     /// If the backend supports it this method should try to preserve the existing options that
     /// each package is currently installed with.
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()>;
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()>;
 
     /// Attempts to update all packages currently installed, optionally without confirmation using
     /// `no_confirm`.
     ///
     /// If the backend supports it this method should try to preserve the existing options that
     /// each package is currently installed with.
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()>;
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()>;
 
     /// Attempts to clean all cache.
     fn clean_cache(config: &Self::Config) -> Result<()>;

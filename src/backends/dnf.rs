@@ -39,11 +39,11 @@ impl Backend for Dnf {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -66,7 +66,7 @@ impl Backend for Dnf {
             .collect())
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
@@ -84,7 +84,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["dnf", "remove"]
@@ -98,7 +98,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
@@ -108,7 +108,7 @@ impl Backend for Dnf {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()

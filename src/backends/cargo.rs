@@ -54,11 +54,11 @@ impl Backend for Cargo {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -79,7 +79,7 @@ impl Backend for Cargo {
         }
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
@@ -124,7 +124,7 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["cargo", "uninstall"]
@@ -137,11 +137,11 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
-        let installed = Self::get_installed(config)?;
+        let installed = Self::get_installed_packages(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages
@@ -162,16 +162,16 @@ impl Backend for Cargo {
             options.locked = Some(config.locked);
         }
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
-        let install_options = Self::get_installed(config)?;
+        let install_options = Self::get_installed_packages(config)?;
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {

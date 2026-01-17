@@ -36,11 +36,11 @@ impl Backend for Xbps {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(
+    fn get_installed_packages(
         config: &Self::Config,
     ) -> Result<std::collections::BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
@@ -61,7 +61,7 @@ impl Backend for Xbps {
         Ok(packages)
     }
 
-    fn install(
+    fn install_packages(
         packages: &std::collections::BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
@@ -79,7 +79,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-remove", "--recursive"]
@@ -93,7 +93,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["xbps-install", "--sync", "--update"]
@@ -107,7 +107,7 @@ impl Backend for Xbps {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         let update = || {
             run_command(
                 ["xbps-install", "--sync", "--update"]

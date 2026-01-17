@@ -1,1 +1,0 @@
-rename install and uninstall to install_packages and uninstall_packages

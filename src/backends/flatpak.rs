@@ -47,11 +47,11 @@ impl Backend for Flatpak {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -101,7 +101,7 @@ impl Backend for Flatpak {
         Ok(system_apps.chain(user_apps).collect())
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
@@ -128,7 +128,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["flatpak", "uninstall"]
@@ -142,7 +142,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
@@ -152,7 +152,7 @@ impl Backend for Flatpak {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()

@@ -35,11 +35,11 @@ impl Backend for Npm {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -66,7 +66,7 @@ impl Backend for Npm {
             .collect())
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
@@ -83,7 +83,7 @@ impl Backend for Npm {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["npm", "uninstall", "--global"]
@@ -96,7 +96,7 @@ impl Backend for Npm {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["npm", "update", "--global"]
@@ -109,7 +109,7 @@ impl Backend for Npm {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["npm", "update", "--global"], Perms::Same)
     }
 

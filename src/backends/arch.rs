@@ -89,7 +89,7 @@ impl Backend for Arch {
         Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
     }
 
-    fn get_all(config: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(config: &Self::Config) -> Result<BTreeSet<String>> {
         let all = run_command_for_stdout(
             [
                 config.package_manager.as_command(),
@@ -114,7 +114,7 @@ impl Backend for Arch {
             .collect())
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -139,7 +139,7 @@ impl Backend for Arch {
         Ok(result)
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
@@ -161,7 +161,7 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn uninstall(
+    fn uninstall_packages(
         packages: &BTreeSet<String>,
         no_confirm: bool,
         config: &Self::Config,
@@ -208,8 +208,8 @@ impl Backend for Arch {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let installed = Self::get_installed(config)?;
+    fn update_packages(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
+        let installed = Self::get_installed_packages(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages
@@ -226,10 +226,10 @@ impl Backend for Arch {
             .filter(|(x, _)| packages.contains(x))
             .collect();
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
         run_command(
             [
                 config.package_manager.as_command(),

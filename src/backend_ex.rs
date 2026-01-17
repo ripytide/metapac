@@ -26,7 +26,7 @@ where
         packages: &BTreeSet<String>,
         config: &Self::Config,
     ) -> BTreeMap<String, Option<bool>> {
-        let existing_packages: Result<BTreeSet<String>, _> = Self::get_all(config);
+        let existing_packages: Result<BTreeSet<String>, _> = Self::get_all_packages(config);
 
         let mut output = BTreeMap::new();
         for package in packages {

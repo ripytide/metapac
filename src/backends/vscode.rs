@@ -57,11 +57,11 @@ impl Backend for VsCode {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
+    fn get_installed_packages(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -78,7 +78,7 @@ impl Backend for VsCode {
         Ok(names)
     }
 
-    fn install(
+    fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
@@ -93,7 +93,7 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
                 [
@@ -108,7 +108,7 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(
                 [config.variant.as_command(), "--install-extension", package],
@@ -119,9 +119,9 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
-        let packages = Self::get_installed(config)?;
-        Self::update(
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
+        let packages = Self::get_installed_packages(config)?;
+        Self::update_packages(
             &packages.keys().map(String::from).collect(),
             no_confirm,
             config,
