@@ -3,10 +3,7 @@ use color_eyre::{
     Result,
     eyre::{Context, eyre},
 };
-use serde::{Deserialize, Serialize};
 use toml::{Table, Value};
-
-use crate::cmd::run_command;
 
 use std::{
     collections::BTreeMap,
@@ -16,98 +13,20 @@ use std::{
 };
 
 #[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
-pub struct Groups(BTreeMap<PathBuf, RawGroupFile>);
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct BackendItems<P, R> {
-    #[serde(default)]
-    packages: Vec<GroupFileItem<P>>,
-    #[serde(default)]
-    repos: Vec<GroupFileItem<R>>,
-}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct GroupFileItem<T> {
-    pub name: String,
-    #[serde(default)]
-    pub options: T,
-    #[serde(default)]
-    pub hooks: Hooks,
-}
-impl<T> GroupFileItem<T> {
-    pub fn into_options(self) -> T {
-        self.options
-    }
-
-    pub fn run_before_install(&self) -> Result<()> {
-        if let Some(args) = &self.hooks.before_install {
-            log::info!("running before_install hook for item: {:?}", self.name);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
-    pub fn run_after_install(&self) -> Result<()> {
-        if let Some(args) = &self.hooks.after_install {
-            log::info!("running after_install hook for item: {:?}", self.name);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
-    pub fn run_after_sync(&self) -> Result<()> {
-        if let Some(args) = &self.hooks.after_sync {
-            log::info!("running after_sync hook for item: {:?}", self.name);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
-    pub fn run_before_sync(&self) -> Result<()> {
-        if let Some(args) = &self.hooks.before_sync {
-            log::info!("running before_sync hook for item: {:?}", self.name);
-            run_command(args, Perms::Same)
-        } else {
-            Ok(())
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Hooks {
-    pub before_install: Option<Vec<String>>,
-    pub after_install: Option<Vec<String>>,
-    pub after_sync: Option<Vec<String>>,
-    pub before_sync: Option<Vec<String>>,
-}
+pub struct Groups(BTreeMap<PathBuf, AllRawComplexBackendItems>);
 
 impl Groups {
-    pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
-        let mut result = Vec::new();
-        for (group_file, raw_packages) in self.0.iter() {
-            if raw_packages.to_raw_package_ids().contains(backend, package) {
-                result.push(group_file.clone());
-            }
-        }
-        result
-    }
-
-    pub fn to_group_file_packages(&self) -> GroupFilePackages {
+    pub fn to_combined(&self) -> AllComplexBackendItems {
         let mut reoriented: BTreeMap<(AnyBackend, String), BTreeMap<PathBuf, u32>> =
             BTreeMap::new();
 
-        for (group_file, raw_packages) in self.iter() {
-            let raw_package_ids = raw_packages.to_raw_package_ids();
-
+        for (group_file, all_raw_complex_backend_items) in self.iter() {
             macro_rules! x {
                 ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                     $(
-                        for package in raw_package_ids.$lower_backend {
+                        for package in all_raw_complex_backend_items.$lower_backend.packages.iter() {
                             reoriented
-                                .entry((AnyBackend::$upper_backend, package.clone()))
+                                .entry((AnyBackend::$upper_backend, package.name.clone()))
                                 .or_default()
                                 .entry(group_file.clone())
                                 .or_default()
@@ -132,16 +51,16 @@ impl Groups {
             }
         }
 
-        let mut merged_raw_packages = RawGroupFilePackages::default();
+        let mut merged_raw_packages = AllRawComplexBackendItems::default();
         for mut raw_packages in self.values().cloned() {
             merged_raw_packages.append(&mut raw_packages);
         }
 
         macro_rules! x {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                GroupFilePackages {
+                AllComplexBackendItems {
                     $(
-                        $lower_backend: merged_raw_packages.$lower_backend.into_iter().map(|x| (x.package.clone(), x)).collect(),
+                        $lower_backend: merged_raw_packages.$lower_backend.to_non_raw(),
                     )*
                 }
             };
@@ -170,8 +89,8 @@ impl Groups {
     }
 }
 
-fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawGroupFile> {
-    let mut raw_packages = RawGroupFile::default();
+fn parse_group_file(group_file: &Path, contents: &str) -> Result<AllRawComplexBackendItems> {
+    let mut raw_packages = AllRawComplexBackendItems::default();
 
     let toml = toml::from_str::<Table>(contents)?;
 
@@ -186,7 +105,7 @@ fn parse_toml_key_value(
     group_file: &Path,
     key: &str,
     value: &Value,
-) -> Result<RawGroupFile> {
+) -> Result<AllRawComplexBackendItems> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(

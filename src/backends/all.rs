@@ -65,25 +65,6 @@ macro_rules! any_backend {
 }
 apply_backends!(any_backend);
 
-macro_rules! raw_package_ids {
-    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-        #[derive(Debug, Clone, Default, Serialize)]
-        pub struct RawPackageIds {
-            $(
-                pub $lower_backend: Vec<String>,
-            )*
-        }
-        impl RawPackageIds {
-            pub fn contains(&self, backend: AnyBackend, package: &str) -> bool {
-                match backend {
-                    $( AnyBackend::$upper_backend => self.$lower_backend.iter().any(|p| p == package) ),*
-                }
-            }
-        }
-    }
-}
-apply_backends!(raw_package_ids);
-
 macro_rules! package_ids {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default, Serialize)]
@@ -107,48 +88,55 @@ macro_rules! package_ids {
 }
 apply_backends!(package_ids);
 
-macro_rules! group_file_packages {
+macro_rules! all_complex_backend_items {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
-        pub struct GroupFilePackages {
+        pub struct AllComplexBackendItems {
             $(
-                pub $lower_backend: BTreeMap<String, GroupFileItem<<$upper_backend as Backend>::Options>>,
+                pub $lower_backend: ComplexBackendItems<<$upper_backend as Backend>::PackageOptions, <$upper_backend as Backend>::RepoOptions>,
             )*
         }
-        impl GroupFilePackages {
+        impl AllComplexBackendItems {
             append!($(($upper_backend, $lower_backend)),*);
             is_empty!($(($upper_backend, $lower_backend)),*);
             to_package_ids!($(($upper_backend, $lower_backend)),*);
 
-            pub fn to_raw(&self) -> RawGroupFile {
-                RawGroupFile {
+            pub fn to_raw(self) -> AllRawComplexBackendItems {
+                AllRawComplexBackendItems {
                     $(
-                        $lower_backend: self.$lower_backend.values().cloned().collect(),
+                        $lower_backend: self.$lower_backend.to_raw(),
                     )*
                 }
             }
 
-            pub fn to_packages(&self) -> Packages {
+            pub fn to_packages(self) -> Packages {
                 Packages {
                     $(
-                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.options.clone())).collect(),
+                        $lower_backend: self.$lower_backend.to_packages(),
+                    )*
+                }
+            }
+            pub fn to_repos(self) -> Repos {
+                Repos {
+                    $(
+                        $lower_backend: self.$lower_backend.to_repos(),
                     )*
                 }
             }
         }
     }
 }
-apply_backends!(group_file_packages);
+apply_backends!(all_complex_backend_items);
 
-macro_rules! raw_group_file_packages {
+macro_rules! all_raw_complex_backend_items {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default, Serialize)]
-        pub struct RawGroupFile {
+        pub struct AllRawComplexBackendItems {
             $(
-                pub $lower_backend: BackendItems<<$upper_backend as Backend>::Options, <$upper_backend as Backend>::Repo>,
+                pub $lower_backend: RawComplexBackendItems<<$upper_backend as Backend>::PackageOptions, <$upper_backend as Backend>::RepoOptions>,
             )*
         }
-        impl RawGroupFilePackages {
+        impl AllRawComplexBackendItems {
             append!($(($upper_backend, $lower_backend)),*);
 
             pub fn to_string_pretty(&self) -> Result<String> {
@@ -159,7 +147,7 @@ macro_rules! raw_group_file_packages {
                     for (index, package) in self.$lower_backend.iter().enumerate() {
                         let inline_table = array.get_mut(index).unwrap().as_inline_table_mut().unwrap();
 
-                        if package.options == <$upper_backend as Backend>::Options::default() {
+                        if package.options == <$upper_backend as Backend>::PackageOptions::default() {
                             inline_table.remove("options");
                         }
 
@@ -181,25 +169,17 @@ macro_rules! raw_group_file_packages {
 
                 Ok(formatted)
             }
-
-            pub fn to_raw_package_ids(&self) -> RawPackageIds {
-                RawPackageIds {
-                    $(
-                        $lower_backend: self.$lower_backend.iter().map(|x| x.package.clone()).collect(),
-                    )*
-                }
-            }
         }
     }
 }
-apply_backends!(raw_group_file_packages);
+apply_backends!(all_raw_complex_backend_items);
 
 macro_rules! packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default)]
         pub struct Packages {
             $(
-                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::Options>,
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::PackageOptions>,
             )*
         }
         impl Packages {
@@ -207,7 +187,7 @@ macro_rules! packages {
 
             pub fn install(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 $(
-                    let options = BTreeMap::<String, <$upper_backend as Backend>::Options>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
+                    let options = BTreeMap::<String, <$upper_backend as Backend>::PackageOptions>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
                     $upper_backend::install(&options, no_confirm, &config.$lower_backend)?;
                 )*
 
@@ -225,7 +205,7 @@ macro_rules! packages {
             pub fn to_group_file_packages(&self) -> GroupFilePackages {
                 GroupFilePackages {
                     $(
-                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), GroupFilePackage {package: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
+                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), GroupFileItem {name: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
                     )*
                 }
             }
@@ -233,6 +213,46 @@ macro_rules! packages {
     }
 }
 apply_backends!(packages);
+
+macro_rules! repos {
+    ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+        #[derive(Debug, Clone, Default)]
+        pub struct Repos {
+            $(
+                pub $lower_backend: BTreeMap<String, <$upper_backend as Backend>::RepoOptions>,
+            )*
+        }
+        impl Repos {
+            is_empty!($(($upper_backend, $lower_backend)),*);
+
+            pub fn add(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
+                $(
+                    let options = BTreeMap::<String, <$upper_backend as Backend>::ReposOptions>::from_iter(self.$lower_backend.iter().map(|(x, y)| (x.to_string(), y.clone())));
+                    $upper_backend::add_repos(&options, no_confirm, &config.$lower_backend)?;
+                )*
+
+                Ok(())
+            }
+
+            pub fn remove(&self, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
+                $(
+                    $upper_backend::remove_repos(&self.$lower_backend.keys().cloned().collect(), no_confirm, &config.$lower_backend)?;
+                )*
+
+                Ok(())
+            }
+
+            pub fn to_group_file_packages(&self) -> GroupFilePackages {
+                GroupFilePackages {
+                    $(
+                        $lower_backend: self.$lower_backend.iter().map(|(x, y)| (x.to_string(), GroupFileItem {name: x.to_string(), options: y.clone(), hooks: Hooks::default()})).collect(),
+                    )*
+                }
+            }
+        }
+    }
+}
+apply_backends!(repos);
 
 macro_rules! backend_configs {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
