@@ -11,25 +11,25 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Mise;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct MiseOptions {
-    #[serde(default)]
-    version: Option<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct MiseConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct MiseRepo {}
+pub struct MisePackageOptions {
+    #[serde(default)]
+    version: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MiseRepoOptions {}
 
 impl Backend for Mise {
-    type Options = MiseOptions;
     type Config = MiseConfig;
-    type Repo = MiseRepo;
+    type PackageOptions = MisePackageOptions;
+    type RepoOptions = MiseRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -57,7 +57,7 @@ impl Backend for Mise {
             .collect())
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -92,7 +92,7 @@ impl Backend for Mise {
             if let Some(first_version) = versions.first() {
                 packages.insert(
                     key.clone(),
-                    MiseOptions {
+                    MisePackageOptions {
                         version: first_version
                             .get("requested_version")
                             .and_then(|x| x.as_str())
@@ -106,7 +106,7 @@ impl Backend for Mise {
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -148,11 +148,11 @@ impl Backend for Mise {
         Ok(())
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

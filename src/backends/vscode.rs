@@ -13,10 +13,6 @@ use serde::Serialize;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct VsCode;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct VsCodeOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct VsCodeConfig {
@@ -40,14 +36,18 @@ impl VsCodeVariant {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct VsCodeRepo {}
+pub struct VsCodePackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsCodeRepoOptions {}
 
 impl Backend for VsCode {
-    type Options = VsCodeOptions;
     type Config = VsCodeConfig;
-    type Repo = VsCodeRepo;
+    type PackageOptions = VsCodePackageOptions;
+    type RepoOptions = VsCodeRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -61,7 +61,7 @@ impl Backend for VsCode {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -72,14 +72,14 @@ impl Backend for VsCode {
             true,
         )?
         .lines()
-        .map(|x| (x.to_string(), Self::Options {}))
+        .map(|x| (x.to_string(), Self::PackageOptions {}))
         .collect();
 
         Ok(names)
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -132,11 +132,11 @@ impl Backend for VsCode {
         Ok(())
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

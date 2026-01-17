@@ -14,22 +14,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Pipx;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct PipxOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct PipxConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct PipxRepo {}
+pub struct PipxPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PipxRepoOptions {}
 
 impl Backend for Pipx {
-    type Options = PipxOptions;
     type Config = PipxConfig;
-    type Repo = PipxRepo;
+    type PackageOptions = PipxPackageOptions;
+    type RepoOptions = PipxRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -43,7 +43,7 @@ impl Backend for Pipx {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -54,11 +54,11 @@ impl Backend for Pipx {
             true,
         )?)?;
 
-        Ok(names.into_iter().map(|x| (x, Self::Options {})).collect())
+        Ok(names.into_iter().map(|x| (x, Self::PackageOptions {})).collect())
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -103,11 +103,11 @@ impl Backend for Pipx {
         Ok(())
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

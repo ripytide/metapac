@@ -11,9 +11,18 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct CargoConfig {
+    #[serde(default)]
+    pub locked: bool,
+    #[serde(default)]
+    pub binstall: bool,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CargoOptions {
+pub struct CargoPackageOptions {
     #[serde(default)]
     version: Option<String>,
     #[serde(default)]
@@ -28,23 +37,14 @@ pub struct CargoOptions {
     locked: Option<bool>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CargoConfig {
-    #[serde(default)]
-    pub locked: bool,
-    #[serde(default)]
-    pub binstall: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct CargoRepo {}
+pub struct CargoRepoOptions {}
 
 impl Backend for Cargo {
-    type Options = CargoOptions;
     type Config = CargoConfig;
-    type Repo = CargoRepo;
+    type PackageOptions = CargoPackageOptions;
+    type RepoOptions = CargoRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -58,7 +58,7 @@ impl Backend for Cargo {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -80,7 +80,7 @@ impl Backend for Cargo {
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -156,7 +156,7 @@ impl Backend for Cargo {
             .clone()
             .into_iter()
             .filter(|(x, _)| packages.contains(x))
-            .collect::<BTreeMap<String, CargoOptions>>();
+            .collect::<BTreeMap<String, CargoPackageOptions>>();
 
         for options in install_options.values_mut() {
             options.locked = Some(config.locked);
@@ -180,11 +180,11 @@ impl Backend for Cargo {
         })
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
@@ -193,7 +193,7 @@ impl Backend for Cargo {
     }
 }
 
-fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
+fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptions>> {
     let toml: toml::Table =
         toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
 
@@ -225,7 +225,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
 
             packages.insert(
                 package_name.to_string(),
-                CargoOptions {
+                CargoPackageOptions {
                     version: Some(version.to_string()),
                     git,
                     // All of these are not specified

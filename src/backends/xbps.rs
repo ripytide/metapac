@@ -11,22 +11,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Xbps;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct XbpsOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct XbpsConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct XbpsRepo {}
+pub struct XbpsPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct XbpsRepoOptions {}
 
 impl Backend for Xbps {
-    type Options = XbpsOptions;
     type Config = XbpsConfig;
-    type Repo = XbpsRepo;
+    type PackageOptions = XbpsPackageOptions;
+    type RepoOptions = XbpsRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -42,7 +42,7 @@ impl Backend for Xbps {
 
     fn get_installed(
         config: &Self::Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    ) -> Result<std::collections::BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -55,14 +55,14 @@ impl Backend for Xbps {
 
         let packages = stdout
             .lines()
-            .map(|line| (re.replace_all(line, "").to_string(), Self::Options {}))
+            .map(|line| (re.replace_all(line, "").to_string(), Self::PackageOptions {}))
             .collect();
 
         Ok(packages)
     }
 
     fn install(
-        packages: &std::collections::BTreeMap<String, Self::Options>,
+        packages: &std::collections::BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -132,11 +132,11 @@ impl Backend for Xbps {
         })
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

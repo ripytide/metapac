@@ -3,7 +3,10 @@ use color_eyre::{
     Result,
     eyre::{Context, eyre},
 };
+use serde::{Deserialize, Serialize};
 use toml::{Table, Value};
+
+use crate::cmd::run_command;
 
 use std::{
     collections::BTreeMap,
@@ -13,7 +16,73 @@ use std::{
 };
 
 #[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
-pub struct Groups(BTreeMap<PathBuf, RawGroupFilePackages>);
+pub struct Groups(BTreeMap<PathBuf, RawGroupFile>);
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BackendItems<P, R> {
+    #[serde(default)]
+    packages: Vec<GroupFileItem<P>>,
+    #[serde(default)]
+    repos: Vec<GroupFileItem<R>>,
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GroupFileItem<T> {
+    pub name: String,
+    #[serde(default)]
+    pub options: T,
+    #[serde(default)]
+    pub hooks: Hooks,
+}
+impl<T> GroupFileItem<T> {
+    pub fn into_options(self) -> T {
+        self.options
+    }
+
+    pub fn run_before_install(&self) -> Result<()> {
+        if let Some(args) = &self.hooks.before_install {
+            log::info!("running before_install hook for item: {:?}", self.name);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
+    pub fn run_after_install(&self) -> Result<()> {
+        if let Some(args) = &self.hooks.after_install {
+            log::info!("running after_install hook for item: {:?}", self.name);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
+    pub fn run_after_sync(&self) -> Result<()> {
+        if let Some(args) = &self.hooks.after_sync {
+            log::info!("running after_sync hook for item: {:?}", self.name);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
+    pub fn run_before_sync(&self) -> Result<()> {
+        if let Some(args) = &self.hooks.before_sync {
+            log::info!("running before_sync hook for item: {:?}", self.name);
+            run_command(args, Perms::Same)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Hooks {
+    pub before_install: Option<Vec<String>>,
+    pub after_install: Option<Vec<String>>,
+    pub after_sync: Option<Vec<String>>,
+    pub before_sync: Option<Vec<String>>,
+}
 
 impl Groups {
     pub fn contains(&self, backend: AnyBackend, package: &str) -> Vec<PathBuf> {
@@ -101,8 +170,8 @@ impl Groups {
     }
 }
 
-fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawGroupFilePackages> {
-    let mut raw_packages = RawGroupFilePackages::default();
+fn parse_group_file(group_file: &Path, contents: &str) -> Result<RawGroupFile> {
+    let mut raw_packages = RawGroupFile::default();
 
     let toml = toml::from_str::<Table>(contents)?;
 
@@ -117,12 +186,12 @@ fn parse_toml_key_value(
     group_file: &Path,
     key: &str,
     value: &Value,
-) -> Result<RawGroupFilePackages> {
+) -> Result<RawGroupFile> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
                 if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
-                    let mut raw_packages = RawGroupFilePackages::default();
+                    let mut raw_packages = RawGroupFile::default();
 
                     let packages = value.as_array().ok_or(
                         eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
@@ -131,8 +200,8 @@ fn parse_toml_key_value(
                     for package in packages {
                         let package =
                             match package {
-                                toml::Value::String(x) => GroupFilePackage { package:x.to_string(), options: Default::default(), hooks: Hooks::default() },
-                                toml::Value::Table(x) => x.clone().try_into::<GroupFilePackage<<$upper_backend as Backend>::Options>>()?,
+                                toml::Value::String(x) => GroupFileItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                toml::Value::Table(x) => x.clone().try_into::<GroupFileItem<<$upper_backend as Backend>::Options>>()?,
                                 _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
                             };
 
@@ -148,5 +217,5 @@ fn parse_toml_key_value(
 
     log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
 
-    Ok(RawGroupFilePackages::default())
+    Ok(RawGroupFile::default())
 }

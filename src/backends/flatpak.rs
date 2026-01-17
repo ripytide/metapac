@@ -10,13 +10,6 @@ use serde_inline_default::serde_inline_default;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct FlatpakOptions {
-    pub systemwide: Option<bool>,
-    pub remote: Option<String>,
-}
-
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -30,14 +23,21 @@ impl Default for FlatpakConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct FlatpakRepo {}
+pub struct FlatpakPackageOptions {
+    pub systemwide: Option<bool>,
+    pub remote: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakRepoOptions {}
 
 impl Backend for Flatpak {
-    type Options = FlatpakOptions;
     type Config = FlatpakConfig;
-    type Repo = FlatpakRepo;
+    type PackageOptions = FlatpakPackageOptions;
+    type RepoOptions = FlatpakRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -51,7 +51,7 @@ impl Backend for Flatpak {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -70,7 +70,7 @@ impl Backend for Flatpak {
         let system_apps = system_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
-                Self::Options {
+                Self::PackageOptions {
                     systemwide: Some(true),
                     remote: None,
                 },
@@ -91,7 +91,7 @@ impl Backend for Flatpak {
         let user_apps = user_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
-                Self::Options {
+                Self::PackageOptions {
                     systemwide: Some(false),
                     remote: None,
                 },
@@ -102,7 +102,7 @@ impl Backend for Flatpak {
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -167,11 +167,11 @@ impl Backend for Flatpak {
         })
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

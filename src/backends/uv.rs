@@ -13,25 +13,25 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Uv;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct UvOptions {
-    #[serde(default)]
-    python: Option<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct UvConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct UvRepo {}
+pub struct UvPackageOptions {
+    #[serde(default)]
+    python: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UvRepoOptions {}
 
 impl Backend for Uv {
-    type Options = UvOptions;
     type Config = UvConfig;
-    type Repo = UvRepo;
+    type PackageOptions = UvPackageOptions;
+    type RepoOptions = UvRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -45,7 +45,7 @@ impl Backend for Uv {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -58,14 +58,14 @@ impl Backend for Uv {
         .lines()
         .filter(|x| !x.starts_with("-"))
         .map(|x| x.split(" ").next().unwrap().to_string())
-        .map(|x| (x, Self::Options { python: None }))
+        .map(|x| (x, Self::PackageOptions { python: None }))
         .collect();
 
         Ok(names)
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -121,11 +121,11 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

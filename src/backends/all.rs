@@ -112,7 +112,7 @@ macro_rules! group_file_packages {
         #[derive(Debug, Clone, Default)]
         pub struct GroupFilePackages {
             $(
-                pub $lower_backend: BTreeMap<String, GroupFilePackage<<$upper_backend as Backend>::Options>>,
+                pub $lower_backend: BTreeMap<String, GroupFileItem<<$upper_backend as Backend>::Options>>,
             )*
         }
         impl GroupFilePackages {
@@ -120,8 +120,8 @@ macro_rules! group_file_packages {
             is_empty!($(($upper_backend, $lower_backend)),*);
             to_package_ids!($(($upper_backend, $lower_backend)),*);
 
-            pub fn to_raw(&self) -> RawGroupFilePackages {
-                RawGroupFilePackages {
+            pub fn to_raw(&self) -> RawGroupFile {
+                RawGroupFile {
                     $(
                         $lower_backend: self.$lower_backend.values().cloned().collect(),
                     )*
@@ -143,9 +143,9 @@ apply_backends!(group_file_packages);
 macro_rules! raw_group_file_packages {
     ($(($upper_backend:ident, $lower_backend:ident)),*) => {
         #[derive(Debug, Clone, Default, Serialize)]
-        pub struct RawGroupFilePackages {
+        pub struct RawGroupFile {
             $(
-                pub $lower_backend: Vec<GroupFilePackage<<$upper_backend as Backend>::Options>>,
+                pub $lower_backend: BackendItems<<$upper_backend as Backend>::Options, <$upper_backend as Backend>::Repo>,
             )*
         }
         impl RawGroupFilePackages {

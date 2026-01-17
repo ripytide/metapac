@@ -10,26 +10,26 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Dnf;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct DnfOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct DnfConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct DnfRepo {
+pub struct DnfPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DnfRepoOptions {
     // only copr is supported at the moment as dnf config-manager has no support for removing
     // repositories yet, only adding them
     project_id: String,
 }
 
 impl Backend for Dnf {
-    type Options = DnfOptions;
     type Config = DnfConfig;
-    type Repo = DnfRepo;
+    type PackageOptions = DnfPackageOptions;
+    type RepoOptions = DnfRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -43,7 +43,7 @@ impl Backend for Dnf {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -62,12 +62,12 @@ impl Backend for Dnf {
 
         Ok(packages
             .lines()
-            .map(|x| (x.to_string(), Self::Options {}))
+            .map(|x| (x.to_string(), Self::PackageOptions {}))
             .collect())
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -123,7 +123,7 @@ impl Backend for Dnf {
         })
     }
 
-    fn add_repos(repos: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(repos: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
             run_command(
                 ["dnf", "copr", "enable", repo.project_id.as_str()],
@@ -134,7 +134,7 @@ impl Backend for Dnf {
         Ok(())
     }
 
-    fn remove_repos(repos: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(repos: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
             run_command(
                 ["dnf", "copr", "remove", repo.project_id.as_str()],

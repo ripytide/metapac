@@ -9,10 +9,6 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Zypper;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ZypperOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ZypperConfig {
@@ -20,14 +16,18 @@ pub struct ZypperConfig {
     pub distribution_upgrade: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ZypperRepo {}
+pub struct ZypperPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ZypperRepoOptions {}
 
 impl Backend for Zypper {
-    type Options = ZypperOptions;
     type Config = ZypperConfig;
-    type Repo = ZypperRepo;
+    type PackageOptions = ZypperPackageOptions;
+    type RepoOptions = ZypperRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -43,7 +43,7 @@ impl Backend for Zypper {
 
     fn get_installed(
         config: &Self::Config,
-    ) -> Result<std::collections::BTreeMap<String, Self::Options>> {
+    ) -> Result<std::collections::BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -57,20 +57,20 @@ impl Backend for Zypper {
         stdout
             .lines()
             .filter(|line| line.starts_with("i+"))
-            .map(|line| -> Result<(String, Self::Options)> {
+            .map(|line| -> Result<(String, Self::PackageOptions)> {
                 let mut parts = line.split('|');
                 let package = parts
                     .nth(2)
                     .ok_or(eyre!("unexpected output"))?
                     .trim()
                     .to_string();
-                Ok((package, Self::Options {}))
+                Ok((package, Self::PackageOptions {}))
             })
             .collect()
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -135,11 +135,11 @@ impl Backend for Zypper {
         Self::version(config).map_or(Ok(()), |_| run_command(["zypper", "clean"], Perms::Sudo))
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

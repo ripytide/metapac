@@ -10,12 +10,6 @@ use serde_inline_default::serde_inline_default;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Brew;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct BrewOptions {
-    quarantine: Option<bool>,
-}
-
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,14 +23,20 @@ impl Default for BrewConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct BrewRepo {}
+pub struct BrewPackageOptions {
+    quarantine: Option<bool>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BrewRepoOptions {}
 
 impl Backend for Brew {
-    type Options = BrewOptions;
     type Config = BrewConfig;
-    type Repo = BrewRepo;
+    type PackageOptions = BrewPackageOptions;
+    type RepoOptions = BrewRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -50,7 +50,7 @@ impl Backend for Brew {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -70,12 +70,12 @@ impl Backend for Brew {
         Ok(formulae
             .lines()
             .chain(casks.lines())
-            .map(|x| (x.to_string(), Self::Options { quarantine: None }))
+            .map(|x| (x.to_string(), Self::PackageOptions { quarantine: None }))
             .collect())
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -135,11 +135,11 @@ impl Backend for Brew {
         })
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 

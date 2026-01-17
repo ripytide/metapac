@@ -11,22 +11,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Scoop;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ScoopGetOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ScoopConfig {}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ScoopRepo {}
+pub struct ScoopPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopRepoOptions {}
 
 impl Backend for Scoop {
-    type Options = ScoopGetOptions;
     type Config = ScoopConfig;
-    type Repo = ScoopRepo;
+    type PackageOptions = ScoopPackageOptions;
+    type RepoOptions = ScoopRepoOptions;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -49,7 +49,7 @@ impl Backend for Scoop {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -65,14 +65,14 @@ impl Backend for Scoop {
             let name = parts.first().ok_or(eyre!("unexpected output"))?;
             let bucket = parts.get(2).ok_or(eyre!("unexpected output"))?;
 
-            packages.insert(format!("{bucket}/{name}"), Self::Options {});
+            packages.insert(format!("{bucket}/{name}"), Self::PackageOptions {});
         }
 
         Ok(packages)
     }
 
     fn install(
-        packages: &BTreeMap<String, Self::Options>,
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -123,11 +123,11 @@ impl Backend for Scoop {
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
     }
 
-    fn add_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn add_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
-    fn remove_repos(_: &BTreeSet<Self::Repo>, _: &Self::Config) -> Result<()> {
+    fn remove_repos(_: &BTreeSet<Self::RepoOptions>, _: &Self::Config) -> Result<()> {
         Err(eyre!("unimplemented"))
     }
 
