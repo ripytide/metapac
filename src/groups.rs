@@ -110,31 +110,54 @@ fn parse_toml_key_value(
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
                 if key.to_lowercase() == $upper_backend.to_string().to_lowercase() {
-                    let mut raw_packages = RawGroupFile::default();
+                    let mut items = AllRawComplexBackendItems::default();
 
-                    let packages = value.as_array().ok_or(
-                        eyre!("the {} backend in the {group_file:?} group file has a non-array value", $upper_backend)
+                    let backend = value.as_table().ok_or(
+                        eyre!("the {} backend property in the {group_file:?} group file has a non-table value", $upper_backend)
                     )?;
 
-                    for package in packages {
-                        let package =
-                            match package {
-                                toml::Value::String(x) => GroupFileItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
-                                toml::Value::Table(x) => x.clone().try_into::<GroupFileItem<<$upper_backend as Backend>::Options>>()?,
-                                _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
-                            };
+                    if let Some(packages) = backend.get("packages") {
+                        let packages = packages.as_array().ok_or(
+                            eyre!("the {}.packages property in the {group_file:?} group file has a non-array value", $upper_backend)
+                        )?;
 
-                        raw_packages.$lower_backend.push(package);
+                        for package in packages {
+                            let package =
+                                match package {
+                                    toml::Value::String(x) => ComplexItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                    toml::Value::Table(x) => x.clone().try_into::<ComplexItem<<$upper_backend as Backend>::PackageOptions>>()?,
+                                    _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a package which is neither a string or a table", $upper_backend)),
+                                };
+
+                            items.$lower_backend.push(package);
+                        }
                     }
 
-                    return Ok(raw_packages);
+                    if let Some(repos) = backend.get("repos") {
+                        let repos = repos.as_array().ok_or(
+                            eyre!("the {}.repos property in the {group_file:?} group file has a non-array value", $upper_backend)
+                        )?;
+
+                        for repo in ackages {
+                            let repo =
+                                match repo {
+                                    toml::Value::String(x) => ComplexItem { name: x.to_string(), options: Default::default(), hooks: Hooks::default() },
+                                    toml::Value::Table(x) => x.clone().try_into::<ComplexItem<<$upper_backend as Backend>::RepoOptions>>()?,
+                                    _ => return Err(eyre!("the {} backend in the {group_file:?} group file has a repo which is neither a string or a table", $upper_backend)),
+                                };
+
+                            items.$lower_backend.push(repo);
+                        }
+                    }
+
+                    return Ok(items);
                 }
             )*
         };
     }
     apply_backends!(x);
 
-    log::warn!("unrecognised backend: {key:?} in group file: {group_file:?}");
-
-    Ok(RawGroupFile::default())
+    return Err(
+        eyre!("unrecognised property: {key:?} in group file: {group_file:?}")
+    )
 }
