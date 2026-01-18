@@ -142,19 +142,29 @@ impl Backend for Dnf {
 
     fn add_repos(
         repos: &BTreeMap<String, Self::RepoOptions>,
-        _: bool,
+        no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
         for repo in repos.keys() {
-            run_command(["dnf", "copr", "enable", repo.as_str()], Perms::Sudo)?
+            run_command(
+                ["dnf", "copr", "enable", repo.as_str()]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                Perms::Sudo,
+            )?
         }
 
         Ok(())
     }
 
-    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         for repo in repos.iter() {
-            run_command(["dnf", "copr", "remove", repo.as_str()], Perms::Sudo)?
+            run_command(
+                ["dnf", "copr", "remove", repo.as_str()]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                Perms::Sudo,
+            )?
         }
 
         Ok(())
