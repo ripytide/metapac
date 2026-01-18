@@ -107,6 +107,9 @@ macro_rules! all_raw_complex_backend_items {
                     }
 
                     backend_table.retain(|_, array| !array.as_array().unwrap().is_empty());
+
+                    // reverse the order of packages and repos since I like to have repos before
+                    // packages
                     backend_table.sort_values_by(|key1, _, key2, _| key1.cmp(key2).reverse());
                 )*
 
