@@ -107,6 +107,7 @@ macro_rules! all_raw_complex_backend_items {
                     }
 
                     backend_table.retain(|_, array| !array.as_array().unwrap().is_empty());
+                    backend_table.sort_values_by(|key1, _, key2, _| key1.cmp(key2).reverse());
                 )*
 
                 document.retain(|_, backend| !backend.as_inline_table_mut().unwrap().is_empty());
