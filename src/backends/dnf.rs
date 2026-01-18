@@ -88,11 +88,21 @@ impl Backend for Dnf {
         _: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
+            // we mark as dependency and then autoremove as otherwise removing a package also
+            // removes any of it's reverse dependencies which can inadvertently break group files
+            // and lead to cyclic cleans/syncs
             run_command(
-                ["dnf", "remove"]
+                ["dnf", "mark", "dependency"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
                     .chain(packages.iter().map(String::as_str)),
+                Perms::Sudo,
+            )?;
+
+            run_command(
+                ["dnf", "autoremove"]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
                 Perms::Sudo,
             )?;
         }
