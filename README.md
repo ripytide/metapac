@@ -196,16 +196,6 @@ Alternatively, you could create a new group file using the packages from
 the package group, which you can get from the command: `pacman -Sgq
 <group_name>`.
 
-#### Yay Bug
-
-Due to a bug in `yay`: <https://github.com/Jguer/yay/issues/2288>,
-`metapac` will sometimes keep trying to install some packages when doing
-`metapac sync`. To fix this, either switch to `paru` or use `pacman` to
-mark the packages in question as installed explicitly using `pacman
---database --asexplicit <packages...>`.
-
-Reported in #152.
-
 ### brew
 
 ### bun
