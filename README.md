@@ -495,7 +495,13 @@ flatpak = {
     {
       name = "package2",
       options = { remote = "flathub", installation = "user" },
+    },
+    {
+      name = "package3",
       options = { remote = "flathub", installation = "system" },
+    },
+    {
+      name = "package4",
       options = { remote = "flathub", installation = "my_custom_installation" },
     },
   ]
