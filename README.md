@@ -344,12 +344,14 @@ locked = false
 binstall = false
 
 [flatpak]
-# If this is `true` then flatpak packages default to using the `--system`
-# option.
-# If this is `false` then flatpak packages default to using the `--user`
-# option.
-# Default: true
-systemwide = true
+# The default installation to use for flatpak packages. If equal to "user"
+# then the --user option is passed when installing packages, if it is equal
+# to "system" then the "--system" option is passed, and if it is equal to
+# anything else then "--installation={installation}" is passed. If this is
+# not set then nothing is passed. This config can be overridden on a
+# per-package basis.
+# Default: None
+installation = "system"
 
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database
@@ -492,7 +494,15 @@ flatpak = {
     "package1",
     {
       name = "package2",
-      options = { remote = "flathub", systemwide = false }
+      options = { remote = "flathub", installation = "user" },
+    },
+    {
+      name = "package3",
+      options = { remote = "flathub", installation = "system" },
+    },
+    {
+      name = "package4",
+      options = { remote = "flathub", installation = "my_custom_installation" },
     },
   ]
 }
