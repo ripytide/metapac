@@ -80,37 +80,20 @@ when you run `metapac clean`.
 > to remove and ask for confirmation, so make sure to double check that the
 > expected packages and repos are being removed before confirming.
 
-### Adding a new package
+### Adding a new package/repo
 
-1. Edit your group files with a text editor to add the package to an
-   existing group file or create a new group file and add the package to
-   it. See the [`Group Files`](#group-files) section for the group file
-   syntax
-2. Run the `metapac add` command, see `metapac add --help` for arguments
-3. Run the `metapac install` command, see `metapac install --help` for
-   arguments
+Use a text editor to add the package/repo to an existing group file or
+create a new group file and add the package/repo to it. See the [`Group
+Files`](#group-files) section for the group file syntax.
 
-After the first two options you will then need to run `metapac sync` for
-the newly added package to be installed, whereas for `metapac install` it
-also installs the package while adding it to a group file.
+You can then run `metapac sync` and `metapac` will install the package if
+it is not already present on your system.
 
-> [!TIP]
-> The first option is recommended since then you can group or organize the
-> order of packages in your group files in a way that is meaningful to you
-> and even add comments using the `toml` format.
+### Removing a package/repo
 
-### Removing a package
-
-Do the opposite of [`Adding a new package`](#adding-a-new-package). The
-opposite of `metapac add` is `metapac remove`, the opposite of `metapac
-install` is `metapac uninstall` and the opposite of `metapac sync` is
-`metapac clean`.
-
-### Adding/Removing a repo
-
-At the moment the only way to add or remove a repo is to manually edit your
-group files with a text editor. See the [`Group Files`](#group-files)
-section for the group file syntax.
+Do the opposite of [`Adding a new package`](#adding-a-new-packagerepo). But
+instead use `metapac clean` after editing your group files to remove all
+packages/repos on your system not in your group files.
 
 ### Hooks
 
