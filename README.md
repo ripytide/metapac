@@ -40,9 +40,9 @@ for a list of the currently supported backend package managers.
 declare in `.toml` group files the packages and repos you would like
 installed on your system and then run one of the `metapac` commands which
 read these group files and then operate on your system to do some function
-such as install packages in your group files that are not present on your
-system yet (`metapac sync`), or remove packages present on your system but
-not in your group files (`metapac clean`).
+such as install packages and repos in your group files that are not present
+on your system yet (`metapac sync`), or remove packages and repos present
+on your system but not in your group files (`metapac clean`).
 
 The group files are then stored with your other system configuration files
 and so can be tracked with version control.
@@ -61,7 +61,7 @@ Run `metapac unmanaged` and save the output into a group file in
 `metapac`'s `groups/` folder, see the [`Group Files`](#group-files)
 section for the exact location of this folder on your operating system.
 
-For example, on linux this would mean:
+For example, on linux:
 
 ```console
 mkdir -p ~/.config/metapac/groups
@@ -74,11 +74,11 @@ when you run `metapac clean`.
 > [!CAUTION]
 > If you run `metapac clean` without first configuring your group files
 > with the packages you want installed then `metapac` will attempt to
-> remove all of your packages from your enabled backends.
+> remove all of your packages and repos from your enabled backends.
 >
-> `metapac clean` will always show you which packages it intends to remove
-> and ask for confirmation, so make sure to double check that the expected
-> packages are being removed before confirming.
+> `metapac clean` will always show you which packages and repos it intends
+> to remove and ask for confirmation, so make sure to double check that the
+> expected packages and repos are being removed before confirming.
 
 ### Adding a new package
 
@@ -134,6 +134,9 @@ examples.
   whether the package/repo was already installed or not. Only applies to the
   `metapac sync` command.
 
+Repo/package hooks are run before/after installing all repos/packages, not
+between each repo/package.
+
 ### Enable more logs for debugging
 
 You can enable additional log levels by setting the `RUST_LOG` environment
@@ -177,6 +180,8 @@ for additional backends are always welcome!
 
 ### apt
 
+Standard usage.
+
 ### arch
 
 #### Package Groups
@@ -216,23 +221,39 @@ Reported in #152.
 
 ### brew
 
+Standard usage.
+
 ### bun
+
+Standard usage.
 
 ### cargo
 
+Standard usage.
+
 ### dnf
+
+Standard usage.
 
 ### flatpak
 
+Standard usage.
+
 ### mas
 
+Standard usage.
+
 ### mise
+
+Standard usage.
 
 ### npm
 
 If on linux you might need to first run `npm config set prefix ~/.local`.
 
 ### pipx
+
+Standard usage.
 
 ### pnpm
 
@@ -247,17 +268,31 @@ your group files. See
 
 ### snap
 
+Standard usage.
+
 ### uv
+
+Standard usage.
 
 ### vscode
 
+Standard usage.
+
 ### winget
+
+Standard usage.
 
 ### xbps
 
+Standard usage.
+
 ### yarn
 
+Standard usage.
+
 ### zypper
+
+Standard usage.
 
 ## Config
 
@@ -357,11 +392,11 @@ distribution_upgrade = false
 ```toml
 # metapac's group files (like this one) should be placed in the following location
 # dependent on the operating system as specified in the `dirs` crate:
-# | Platform | Value                                     | Example                                                  |
-# | -------- | ----------------------------------------- | -------------------------------------------------------- |
-# | Linux    | $XDG_CONFIG_HOME or $HOME/.config/groups/ | /home/alice/.config/metapac/groups/                      |
-# | macOS    | $HOME/Library/Application Support/groups/ | /Users/Alice/Library/Application Support/metapac/groups/ |
-# | Windows  | {FOLDERID_RoamingAppData}\groups\         | C:\Users\Alice\AppData\Roaming\metapac\groups\           |
+# | Platform | Value                                             | Example                                                  |
+# | -------- | ------------------------------------------------- | -------------------------------------------------------- |
+# | Linux    | $XDG_CONFIG_HOME or $HOME/.config/metapac/groups/ | /home/alice/.config/metapac/groups/                      |
+# | macOS    | $HOME/Library/Application Support/metapac/groups/ | /Users/Alice/Library/Application Support/metapac/groups/ |
+# | Windows  | {FOLDERID_RoamingAppData}\metapac\groups\         | C:\Users\Alice\AppData\Roaming\metapac\groups\           |
 #
 # The packages for each backend in group files can come in two formats, short-form
 # and long-form:
@@ -519,7 +554,7 @@ of any other package managers we should be aware of.
 
 - [`apk`](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper): no
   attempt made yet
-- [`cgwin`](https://cygwin.com/): no attempt made yet
+- [`cygwin`](https://cygwin.com/): no attempt made yet
 - [`choco`](https://github.com/chocolatey/choco): no attempt made yet
 - [`deno`](https://github.com/denoland/deno): can't list installed global
   packages <https://github.com/denoland/deno/discussions/28230>
