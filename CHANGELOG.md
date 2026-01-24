@@ -31,12 +31,16 @@ more flexible.
 
 ### Migration Guide
 
+The array of packages gets moved under the `packages` property of the
+backend and the `package` property of long-form packages is renamed to
+`name` so it can be shared with the new repos.
+
 #### Old group file format
 
 ```toml
 arch = [
   "package1",
-  "package2",
+  { package = "package2"},
 ]
 ```
 
@@ -46,7 +50,7 @@ arch = [
 arch = {
   packages = [
     "package1",
-    "package2",
+    { name = "package2"},
   ]
 }
 ```
