@@ -2,9 +2,10 @@
 
 multi-backend declarative package manager
 
-`metapac` allows you to maintain a consistent set of packages across
-multiple machines. It also makes setting up a new system with your
-preferred packages from your preferred package managers much easier.
+`metapac` allows you to maintain a consistent set of packages and repos,
+across multiple machines. It also makes setting up a new system with your
+preferred packages and repos from your preferred package managers much
+easier.
 
 ## Obligatory XKCDs
 
@@ -36,12 +37,12 @@ for a list of the currently supported backend package managers.
 ## Declarative
 
 `metapac` is also a declarative package manager, that means that you
-declare in `.toml` group files the packages you would like installed on
-your system and then run one of the `metapac` commands which read these
-group files and then operate on your system to do some function such as
-install packages in your group files that are not present on your system
-yet (`metapac sync`), or remove packages present on your system but not in
-your group files (`metapac clean`).
+declare in `.toml` group files the packages and repos you would like
+installed on your system and then run one of the `metapac` commands which
+read these group files and then operate on your system to do some function
+such as install packages in your group files that are not present on your
+system yet (`metapac sync`), or remove packages present on your system but
+not in your group files (`metapac clean`).
 
 The group files are then stored with your other system configuration files
 and so can be tracked with version control.
@@ -105,26 +106,33 @@ opposite of `metapac add` is `metapac remove`, the opposite of `metapac
 install` is `metapac uninstall` and the opposite of `metapac sync` is
 `metapac clean`.
 
+### Adding/Removing a repo
+
+At the moment the only way to add or remove a repo is to manually edit your
+group files with a text editor. See the [`Group Files`](#group-files)
+section for the group file syntax.
+
 ### Hooks
 
-Hooks are commands that you can add per-package in your group files. They
-get run by `metapac` at various stages in some of `metapac`'s commands.
+Hooks are commands that you can add per-package or per-repo in your group
+files. They get run by `metapac` at various stages in some of `metapac`'s
+commands.
 
 One of the main use-cases for hooks is to allow you to declaratively
 maintain your enabled `systemd` services alongside each package in your
 group files. See the [`Group Files`](#group-files) section for some
 examples.
 
-- `before_install`: Run before a package is installed. Only applies to the
+- `before_install`: Run before a package/repo is installed. Only applies to the
   `metapac sync` command.
-- `after_install`: Run after a package is installed. Only applies to the
+- `after_install`: Run after a package/repo is installed. Only applies to the
   `metapac sync` command.
-- `before_sync`: Run before installing any packages, regardless of whether
-  the package is already installed or not. Only applies to the `metapac
-sync` command.
-- `after_sync`: Run after installing all packages, regardless of whether
-  the package was already installed or not. Only applies to the `metapac
-sync` command.
+- `before_sync`: Run before installing any packages/repos, regardless of
+  whether the package/repo was already installed or not. Only applies to the
+  `metapac sync` command.
+- `after_sync`: Run after installing all packages/repos, regardless of
+  whether the package/repo was already installed or not. Only applies to the
+  `metapac sync` command.
 
 ### Enable more logs for debugging
 
@@ -165,7 +173,7 @@ for additional backends are always welcome!
 | [`winget`](#winget)   |
 | [`xbps`](#xbps)       |
 | [`yarn`](#yarn)       |
-| [`zypper`](#zypper)       |
+| [`zypper`](#zypper)   |
 
 ### apt
 
@@ -370,76 +378,137 @@ distribution_upgrade = false
 #  { package = "metapac" }
 # ]
 
-apt = ["package1", { package = "package2" }]
-arch = [
-  "package1",
-  { package = "package2" },
-  { package = "syncthing", hooks = { after_sync = [
-    "sudo",
-    "systemctl",
-    "enable",
-    "--now",
-    "syncthing@ripytide",
-  ] } },
-  { package = "openssh", hooks = { after_sync = [
-    "sudo",
-    "systemctl",
-    "enable",
-    "--now",
-    "sshd",
-  ] } },
-  { package = "fastfetch", hooks = { before_install = [
-    "echo",
-    "before_install",
-  ], after_install = [
-    "echo",
-    "after_install",
-  ], before_sync = [
-    "echo",
-    "before_sync",
-  ], after_sync = [
-    "echo",
-    "after_sync",
-  ] } },
-]
-brew = ["package1", { package = "package2", options = { quarantine = false } }]
-bun = ["package1", { package = "package2" }]
-cargo = [
-  "package1",
-  { package = "package2", options = { git = "https://github.com/ripytide/metapac", all_features = true, no_default_features = false, features = [
-    "feature1",
-  ], locked = true } },
-]
-dnf = ["package1", { package = "package2" }]
-flatpak = [
-  "package1",
-  { package = "package2", options = { remote = "flathub", systemwide = false } },
-]
-mas = ["package1", { package = "package2" }]
-mise = [
-  "package1",
-  { package = "package2", options = { version = "1.0.0" } },
-  { package = "package3", options = { version = "lts" } },
-]
-npm = ["package1", { package = "package2" }]
-pipx = ["package1", { package = "package2" }]
-pnpm = ["package1", { package = "package2" }]
-scoop = ["main/metapac1", { package = "main/package2" }]
-snap = [
-  "package1",
-  { package = "package2" },
-  { package = "package3", options = { confinement = "strict" } },
-  { package = "package4", options = { confinement = "classic" } },
-  { package = "package5", options = { confinement = "dangerous" } },
-  { package = "package6", options = { confinement = "devmode" } },
-  { package = "package7", options = { confinement = "jailmode" } },
-]
-uv = ["package1", { package = "package2", options = { python = "3.11" } }]
-vscode = ["package1", { package = "package2" }]
-winget = ["ripytide.package1", { package = "ripytide.package2" }]
-xbps = ["package1", { package = "package2" }]
-yarn = ["package1", { package = "package2" }]
-zypper = ["package1", { package = "package2" }]
+apt = { packages = ["package1", { name = "package2" }] }
+arch = {
+  packages = [
+    "package1",
+    { name = "package2" },
+    {
+      name = "syncthing",
+      hooks = {
+        after_sync = [
+          "sudo",
+          "systemctl",
+          "enable",
+          "--now",
+          "syncthing@ripytide",
+        ]
+      }
+    },
+    {
+      name = "openssh",
+      hooks = {
+        after_sync = [
+          "sudo",
+          "systemctl",
+          "enable",
+          "--now",
+          "sshd",
+        ]
+      }
+    },
+    {
+      name = "fastfetch",
+      hooks = {
+        before_install = [
+          "echo",
+          "before_install",
+        ],
+        after_install = [
+          "echo",
+          "after_install",
+        ],
+        before_sync = [
+          "echo",
+          "before_sync",
+        ],
+        after_sync = [
+          "echo",
+          "after_sync",
+        ]
+      }
+    },
+  ]
+}
+brew = {
+  packages = [
+    "package1",
+    { name = "package2", options = { quarantine = false } }
+  ]
+}
+bun = { packages = ["package1", { name = "package2" }] }
+cargo = {
+  packages = [
+    "package1",
+    {
+      name = "package2",
+      options = {
+        git = "https://github.com/ripytide/metapac",
+        all_features = true,
+        no_default_features = false,
+        features = [
+          "feature1",
+        ],
+        locked = true
+      }
+    },
+  ]
+}
+dnf = {
+  repos = [
+    "copr.fedorainfracloud.org/ripytide/package1",
+    {
+      name = "copr.fedorainfracloud.org/ripytide/package2",
+      hooks = {
+        before_install = [
+          "echo",
+          "hooks still work with repos too!",
+        ],
+      }
+    },
+  ],
+  packages = ["package1", { name = "package2" }]
+}
+flatpak = {
+  packages = [
+    "package1",
+    {
+      name = "package2",
+      options = { remote = "flathub", systemwide = false }
+    },
+  ]
+}
+mas = { packages = ["package1", { name = "package2" }] }
+mise = {
+  packages = [
+    "package1",
+    { name = "package2", options = { version = "1.0.0" } },
+    { name = "package3", options = { version = "lts" } },
+  ]
+}
+npm = { packages = ["package1", { name = "package2" }] }
+pipx = { packages = ["package1", { name = "package2" }] }
+pnpm = { packages = ["package1", { name = "package2" }] }
+scoop = { packages = ["main/metapac1", { name = "main/package2" }] }
+snap = {
+  packages = [
+    "package1",
+    { name = "package2" },
+    { name = "package3", options = { confinement = "strict" } },
+    { name = "package4", options = { confinement = "classic" } },
+    { name = "package5", options = { confinement = "dangerous" } },
+    { name = "package6", options = { confinement = "devmode" } },
+    { name = "package7", options = { confinement = "jailmode" } },
+  ]
+}
+uv = {
+  packages = ["package1", { name = "package2", options = { python = "3.11" } }]
+}
+vscode = { packages = ["package1", { name = "package2" }] }
+winget = { packages = ["ripytide.package1", { name = "ripytide.package2" }] }
+xbps = { packages = ["package1", { name = "package2" }] }
+yarn = { packages = ["package1", { name = "package2" }] }
+zypper = { packages = ["package1", { name = "package2" }] }
 ```
 
 ## Wishlist
