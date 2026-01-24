@@ -64,6 +64,13 @@ arch = {
 - ❗ Breaking Change ❗ Invalid properties at the top level of a group file
   are now no longer a soft warning but a hard error (#188).
 
+### Removed
+
+- ‼️ Breaking Change ‼️ The `metapac add`, `metapac remove`, `metapac
+  install`, and `metapac uninstall` subcommands have been removed (#198).
+  This is up for discussion though, #197 has been opened for this
+  purpose and contains further reasoning.
+
 ## [0.8.0] - 2026-01-11
 
 ### Changed
