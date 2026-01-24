@@ -171,7 +171,7 @@ impl InstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::install(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
+                            $upper_backend::install_packages(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
                         },
                     )*
                 }
@@ -199,7 +199,7 @@ impl UninstallCommand {
                 match self.backend {
                     $(
                         AnyBackend::$upper_backend => {
-                            $upper_backend::uninstall(&packages, self.no_confirm, &config.backend_configs().$lower_backend)?;
+                            $upper_backend::uninstall_packages(&packages, self.no_confirm, &config.backend_configs().$lower_backend)?;
                         },
                     )*
                 }
@@ -255,10 +255,7 @@ impl CleanCommand {
 
         print!(
             "{}",
-            &unmanaged
-                .to_group_file_packages()
-                .to_raw()
-                .to_string_pretty()?
+            &unmanaged.clone().to_complex().to_raw().to_string_pretty()?
         );
 
         if self.no_confirm {
@@ -273,7 +270,19 @@ impl CleanCommand {
             return Ok(());
         }
 
-        unmanaged.uninstall(self.no_confirm, config.backend_configs())
+        macro_rules! x {
+            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
+                $(
+                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
+                        $upper_backend::remove_repos(&unmanaged.$lower_backend.repos.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
+                        $upper_backend::uninstall_packages(&unmanaged.$lower_backend.packages.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
+                    }
+                )*
+            };
+        }
+        apply_backends!(x);
+
+        Ok(())
     }
 }
 
@@ -288,7 +297,7 @@ impl SyncCommand {
         }
 
         if !missing.is_empty() {
-            print!("{}", &missing.to_raw().to_string_pretty()?);
+            print!("{}", &missing.clone().to_raw().to_string_pretty()?);
         }
 
         if self.no_confirm {
@@ -308,51 +317,32 @@ impl SyncCommand {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
                     if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        for package in required.$lower_backend.values() {
-                            package.run_before_sync()?;
+                        for options in required.$lower_backend.repos.values() {
+                            options.hooks.run_before_sync()?;
                         }
-                    }
-                )*
-            };
-        }
-        apply_backends!(x);
-
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                $(
-                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        for package in missing.$lower_backend.values() {
-                            package.run_before_install()?;
+                        for options in required.$lower_backend.repos.values() {
+                            options.hooks.run_before_install()?;
                         }
-                    }
-                )*
-            };
-        }
-        apply_backends!(x);
-
-        missing
-            .to_packages()
-            .install(self.no_confirm, config.backend_configs())?;
-
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                $(
-                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        for package in missing.$lower_backend.values() {
-                            package.run_after_install()?;
+                        $upper_backend::add_repos(&missing.clone().to_non_complex().$lower_backend.repos, self.no_confirm, &config.backend_configs().$lower_backend)?;
+                        for options in required.$lower_backend.repos.values() {
+                            options.hooks.run_after_install()?;
                         }
-                    }
-                )*
-            };
-        }
-        apply_backends!(x);
+                        for options in required.$lower_backend.repos.values() {
+                            options.hooks.run_after_sync()?;
+                        }
 
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                $(
-                    if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        for package in required.$lower_backend.values() {
-                            package.run_after_sync()?;
+                        for options in required.$lower_backend.packages.values() {
+                            options.hooks.run_before_sync()?;
+                        }
+                        for options in required.$lower_backend.packages.values() {
+                            options.hooks.run_before_install()?;
+                        }
+                        $upper_backend::install_packages(&missing.clone().to_non_complex().$lower_backend.packages, self.no_confirm, &config.backend_configs().$lower_backend)?;
+                        for options in required.$lower_backend.packages.values() {
+                            options.hooks.run_after_install()?;
+                        }
+                        for options in required.$lower_backend.packages.values() {
+                            options.hooks.run_after_sync()?;
                         }
                     }
                 )*
@@ -374,13 +364,7 @@ impl UnmanagedCommand {
         if unmanaged.is_empty() {
             log::info!("no unmanaged packages");
         } else {
-            print!(
-                "{}",
-                &unmanaged
-                    .to_group_file_packages()
-                    .to_raw()
-                    .to_string_pretty()?
-            );
+            print!("{}", &unmanaged.to_complex().to_raw().to_string_pretty()?);
         }
 
         Ok(())
@@ -419,11 +403,11 @@ impl CleanCacheCommand {
     }
 }
 
-fn required(hostname: &str, group_dir: &Path, config: &Config) -> Result<GroupFilePackages> {
+fn required(hostname: &str, group_dir: &Path, config: &Config) -> Result<AllComplexBackendItems> {
     let enabled_backends = config.enabled_backends(hostname);
     let groups = Groups::load(hostname, group_dir, config)
         .wrap_err("loading package options from group files")?;
-    let mut required = groups.to_group_file_packages();
+    let mut required = groups.to_combined();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
@@ -442,7 +426,7 @@ fn required(hostname: &str, group_dir: &Path, config: &Config) -> Result<GroupFi
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                let are_valid_packages = $upper_backend::are_packages_valid(&required.to_package_ids().$lower_backend, &config.backend_configs().$lower_backend);
+                let are_valid_packages = $upper_backend::are_packages_valid(&required.clone().$lower_backend.packages.keys().cloned().collect(), &config.backend_configs().$lower_backend);
 
                 let invalid_packages = are_valid_packages
                     .iter()
@@ -465,14 +449,17 @@ fn required(hostname: &str, group_dir: &Path, config: &Config) -> Result<GroupFi
 fn installed(
     enabled_backends: &BTreeSet<AnyBackend>,
     backend_configs: &BackendConfigs,
-) -> Result<Packages> {
+) -> Result<AllBackendItems> {
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-            Packages {
+            AllBackendItems {
                 $(
                     $lower_backend:
                         if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                            $upper_backend::get_installed(&backend_configs.$lower_backend)?
+                            BackendItems {
+                                packages: $upper_backend::get_installed_packages(&backend_configs.$lower_backend)?,
+                                repos: $upper_backend::get_installed_repos(&backend_configs.$lower_backend)?,
+                            }
                         } else {
                             Default::default()
                         },
@@ -482,15 +469,23 @@ fn installed(
     }
     Ok(apply_backends!(x))
 }
-fn unmanaged(required: &GroupFilePackages, installed: &Packages) -> Result<Packages> {
-    let mut output = Packages::default();
+fn unmanaged(
+    required: &AllComplexBackendItems,
+    installed: &AllBackendItems,
+) -> Result<AllBackendItems> {
+    let mut unmanaged = AllBackendItems::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, package) in installed.$lower_backend.iter() {
-                    if (!required.$lower_backend.contains_key(package_id)) {
-                        output.$lower_backend.insert(package_id.to_string(), package.clone());
+                for (package, options) in installed.$lower_backend.packages.iter() {
+                    if (!required.$lower_backend.packages.contains_key(package)) {
+                        unmanaged.$lower_backend.packages.insert(package.to_string(), options.clone());
+                    }
+                }
+                for (repo, options) in installed.$lower_backend.repos.iter() {
+                    if (!required.$lower_backend.repos.contains_key(repo)) {
+                        unmanaged.$lower_backend.repos.insert(repo.to_string(), options.clone());
                     }
                 }
             )*
@@ -498,23 +493,28 @@ fn unmanaged(required: &GroupFilePackages, installed: &Packages) -> Result<Packa
     }
     apply_backends!(x);
 
-    Ok(output)
+    Ok(unmanaged)
 }
 fn missing(
-    required: &GroupFilePackages,
+    required: &AllComplexBackendItems,
     enabled_backends: &BTreeSet<AnyBackend>,
     backend_configs: &BackendConfigs,
-) -> Result<GroupFilePackages> {
+) -> Result<AllComplexBackendItems> {
     let installed = installed(enabled_backends, backend_configs)?;
 
-    let mut missing = GroupFilePackages::default();
+    let mut missing = AllComplexBackendItems::default();
 
     macro_rules! x {
         ($(($upper_backend:ident, $lower_backend:ident)),*) => {
             $(
-                for (package_id, required_package) in required.$lower_backend.iter() {
-                    if !installed.$lower_backend.contains_key(package_id) {
-                        missing.$lower_backend.insert(package_id.clone(), required_package.clone());
+                for (package, options) in required.$lower_backend.packages.iter() {
+                    if (!installed.$lower_backend.packages.contains_key(package)) {
+                        missing.$lower_backend.packages.insert(package.to_string(), options.clone());
+                    }
+                }
+                for (repo, options) in required.$lower_backend.repos.iter() {
+                    if (!installed.$lower_backend.repos.contains_key(repo)) {
+                        missing.$lower_backend.repos.insert(repo.to_string(), options.clone());
                     }
                 }
             )*

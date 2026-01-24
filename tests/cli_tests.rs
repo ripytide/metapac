@@ -1,6 +1,5 @@
-use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
+use assert_cmd::cargo::cargo_bin_cmd;
 use markdown::{ParseOptions, mdast::Node};
-use std::process::Command;
 
 #[test]
 fn unmanaged() {
@@ -39,7 +38,7 @@ fn unmanaged() {
     std::fs::create_dir("groups").unwrap();
     std::fs::write("groups/example_group.toml", group).unwrap();
 
-    let mut cmd = Command::cargo_bin("metapac").unwrap();
+    let mut cmd = cargo_bin_cmd!();
     cmd.args(["--hostname", "pc", "--config-dir", ".", "unmanaged"]);
     cmd.assert().success();
 

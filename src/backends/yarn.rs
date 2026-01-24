@@ -11,17 +11,22 @@ use serde_json::Value;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Yarn;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct YarnOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct YarnConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct YarnPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct YarnRepoOptions {}
+
 impl Backend for Yarn {
-    type Options = YarnOptions;
     type Config = YarnConfig;
+    type PackageOptions = YarnPackageOptions;
+    type RepoOptions = YarnRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -31,11 +36,13 @@ impl Backend for Yarn {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -74,12 +81,12 @@ impl Backend for Yarn {
 
         Ok(names
             .into_iter()
-            .map(|name| (name, YarnOptions {}))
+            .map(|name| (name, YarnPackageOptions {}))
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -95,7 +102,7 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["yarn", "global", "remove"]
@@ -108,7 +115,7 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["yarn", "global", "upgrade"]
@@ -121,7 +128,7 @@ impl Backend for Yarn {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["yarn", "global", "upgrade"], Perms::Same)
     }
 
@@ -129,6 +136,18 @@ impl Backend for Yarn {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["yarn", "cache", "clean"], Perms::Same)
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

@@ -10,13 +10,6 @@ use serde_inline_default::serde_inline_default;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Flatpak;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct FlatpakOptions {
-    pub systemwide: Option<bool>,
-    pub remote: Option<String>,
-}
-
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -30,9 +23,21 @@ impl Default for FlatpakConfig {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakPackageOptions {
+    pub systemwide: Option<bool>,
+    pub remote: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlatpakRepoOptions {}
+
 impl Backend for Flatpak {
-    type Options = FlatpakOptions;
     type Config = FlatpakConfig;
+    type PackageOptions = FlatpakPackageOptions;
+    type RepoOptions = FlatpakRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -42,11 +47,13 @@ impl Backend for Flatpak {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -65,7 +72,7 @@ impl Backend for Flatpak {
         let system_apps = system_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
-                Self::Options {
+                Self::PackageOptions {
                     systemwide: Some(true),
                     remote: None,
                 },
@@ -86,7 +93,7 @@ impl Backend for Flatpak {
         let user_apps = user_apps.lines().map(|x| {
             (
                 x.trim().to_owned(),
-                Self::Options {
+                Self::PackageOptions {
                     systemwide: Some(false),
                     remote: None,
                 },
@@ -96,8 +103,8 @@ impl Backend for Flatpak {
         Ok(system_apps.chain(user_apps).collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -123,7 +130,11 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["flatpak", "uninstall"]
@@ -137,7 +148,11 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
@@ -147,7 +162,7 @@ impl Backend for Flatpak {
         )
     }
 
-    fn update_all(no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
@@ -160,6 +175,18 @@ impl Backend for Flatpak {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["flatpak", "remove", "--unused"], Perms::Same)
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

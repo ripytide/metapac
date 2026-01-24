@@ -21,28 +21,28 @@ broken_intra_doc_links = "allow"
 
 [dependencies]
 color-eyre = "0.6.5"
-clap = { version = "4.5.47", features = ["derive"] }
-regex = "1.11.2"
-libc = "0.2.175"
-log = { version = "0.4.28", features = ["std"] }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.143"
-toml = "0.9.5"
-derive_more = { version = "2.0.1", features = ["full"] }
+clap = { version = "4.5.54", features = ["derive"] }
+regex = "1.12.2"
+libc = "0.2.180"
+log = { version = "0.4.29", features = ["std"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+toml = "0.9.11"
+derive_more = { version = "2.1.1", features = ["full"] }
 itertools = "0.14.0"
 dirs = "6.0.0"
-home = "0.5.11"
+home = "0.5.12"
 pretty_env_logger = "0.5.0"
 dialoguer = "0.12.0"
 serde-inline-default = "1.0.0"
-hostname = "0.4.1"
+hostname = "0.4.2"
 walkdir = "2.5.0"
-toml_edit = { version = "0.23.4", features = ["serde", "display"] }
-tempfile = "3.21.0"
+toml_edit = { version = "0.24.0", features = ["serde", "display"] }
+tempfile = "3.24.0"
 strum = { version = "0.27.2", features = ["derive"] }
-indoc = "2.0.6"
+indoc = "2.0.7"
 taplo = "0.14.0"
 
 [dev-dependencies]
-assert_cmd = "2.0.17"
+assert_cmd = "2.1.2"
 markdown = "1.0.0"

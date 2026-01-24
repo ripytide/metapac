@@ -11,20 +11,25 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Mise;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct MiseOptions {
-    #[serde(default)]
-    version: Option<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct MiseConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MisePackageOptions {
+    #[serde(default)]
+    version: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MiseRepoOptions {}
+
 impl Backend for Mise {
-    type Options = MiseOptions;
     type Config = MiseConfig;
+    type PackageOptions = MisePackageOptions;
+    type RepoOptions = MiseRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -34,7 +39,7 @@ impl Backend for Mise {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         let search = run_command_for_stdout(
             ["mise", "search", "--no-headers", "--quiet"],
             Perms::Same,
@@ -52,7 +57,9 @@ impl Backend for Mise {
             .collect())
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -87,7 +94,7 @@ impl Backend for Mise {
             if let Some(first_version) = versions.first() {
                 packages.insert(
                     key.clone(),
-                    MiseOptions {
+                    MisePackageOptions {
                         version: first_version
                             .get("requested_version")
                             .and_then(|x| x.as_str())
@@ -100,8 +107,8 @@ impl Backend for Mise {
         Ok(packages)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -119,7 +126,7 @@ impl Backend for Mise {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(["mise", "uninstall", package], Perms::Same)?;
         }
@@ -127,7 +134,7 @@ impl Backend for Mise {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         for package in packages {
             run_command(["mise", "upgrade", package], Perms::Same)?;
         }
@@ -135,12 +142,24 @@ impl Backend for Mise {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["mise", "upgrade"], Perms::Same)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

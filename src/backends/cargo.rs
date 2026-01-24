@@ -11,9 +11,18 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Cargo;
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct CargoConfig {
+    #[serde(default)]
+    pub locked: bool,
+    #[serde(default)]
+    pub binstall: bool,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CargoOptions {
+pub struct CargoPackageOptions {
     #[serde(default)]
     version: Option<String>,
     #[serde(default)]
@@ -28,18 +37,14 @@ pub struct CargoOptions {
     locked: Option<bool>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct CargoConfig {
-    #[serde(default)]
-    pub locked: bool,
-    #[serde(default)]
-    pub binstall: bool,
-}
+pub struct CargoRepoOptions {}
 
 impl Backend for Cargo {
-    type Options = CargoOptions;
     type Config = CargoConfig;
+    type PackageOptions = CargoPackageOptions;
+    type RepoOptions = CargoRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -49,11 +54,13 @@ impl Backend for Cargo {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -74,8 +81,8 @@ impl Backend for Cargo {
         }
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         config: &Self::Config,
     ) -> Result<()> {
@@ -119,7 +126,7 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["cargo", "uninstall"]
@@ -132,11 +139,15 @@ impl Backend for Cargo {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_packages(
+        packages: &BTreeSet<String>,
+        no_confirm: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
-        let installed = Self::get_installed(config)?;
+        let installed = Self::get_installed_packages(config)?;
         let installed_names = installed.keys().map(String::from).collect();
 
         let difference = packages
@@ -151,22 +162,22 @@ impl Backend for Cargo {
             .clone()
             .into_iter()
             .filter(|(x, _)| packages.contains(x))
-            .collect::<BTreeMap<String, CargoOptions>>();
+            .collect::<BTreeMap<String, CargoPackageOptions>>();
 
         for options in install_options.values_mut() {
             options.locked = Some(config.locked);
         }
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
-    fn update_all(no_confirm: bool, config: &Self::Config) -> Result<()> {
+    fn update_all_packages(no_confirm: bool, config: &Self::Config) -> Result<()> {
         // upstream issue in case cargo ever implements a simpler way to do this
         // https://github.com/rust-lang/cargo/issues/9527
 
-        let install_options = Self::get_installed(config)?;
+        let install_options = Self::get_installed_packages(config)?;
 
-        Self::install(&install_options, no_confirm, config)
+        Self::install_packages(&install_options, no_confirm, config)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
@@ -175,12 +186,24 @@ impl Backend for Cargo {
         })
     }
 
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
     fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
     }
 }
 
-fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
+fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptions>> {
     let toml: toml::Table =
         toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
 
@@ -212,7 +235,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoOptions>> {
 
             packages.insert(
                 package_name.to_string(),
-                CargoOptions {
+                CargoPackageOptions {
                     version: Some(version.to_string()),
                     git,
                     // All of these are not specified

@@ -11,17 +11,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Scoop;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ScoopGetOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ScoopConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScoopRepoOptions {}
+
 impl Backend for Scoop {
-    type Options = ScoopGetOptions;
     type Config = ScoopConfig;
+    type PackageOptions = ScoopPackageOptions;
+    type RepoOptions = ScoopRepoOptions;
 
     fn invalid_package_help_text() -> String {
         indoc::formatdoc! {"
@@ -40,11 +45,13 @@ impl Backend for Scoop {
         )
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -60,14 +67,14 @@ impl Backend for Scoop {
             let name = parts.first().ok_or(eyre!("unexpected output"))?;
             let bucket = parts.get(2).ok_or(eyre!("unexpected output"))?;
 
-            packages.insert(format!("{bucket}/{name}"), Self::Options {});
+            packages.insert(format!("{bucket}/{name}"), Self::PackageOptions {});
         }
 
         Ok(packages)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -83,7 +90,7 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["scoop.cmd", "uninstall", "--purge"]
@@ -96,7 +103,7 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["scoop.cmd", "update"]
@@ -109,13 +116,25 @@ impl Backend for Scoop {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["scoop.cmd", "update", "--all"], Perms::Same)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         run_command(["scoop.cmd", "cache", "rm", "--all"], Perms::Same)?;
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

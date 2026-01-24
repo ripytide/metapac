@@ -11,17 +11,22 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Pnpm;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct PnpmOptions {}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct PnpmConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PnpmPackageOptions {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PnpmRepoOptions {}
+
 impl Backend for Pnpm {
-    type Options = PnpmOptions;
     type Config = PnpmConfig;
+    type PackageOptions = PnpmPackageOptions;
+    type RepoOptions = PnpmRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -31,11 +36,13 @@ impl Backend for Pnpm {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -60,12 +67,12 @@ impl Backend for Pnpm {
 
         Ok(names
             .into_iter()
-            .map(|name| (name, PnpmOptions {}))
+            .map(|name| (name, PnpmPackageOptions {}))
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -81,7 +88,7 @@ impl Backend for Pnpm {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["pnpm", "uninstall", "--global"]
@@ -94,7 +101,7 @@ impl Backend for Pnpm {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["pnpm", "update", "--global"]
@@ -107,7 +114,7 @@ impl Backend for Pnpm {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["pnpm", "update", "--global"], Perms::Same)
     }
 
@@ -115,6 +122,18 @@ impl Backend for Pnpm {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["pnpm", "store", "prune"], Perms::Same)
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

@@ -13,20 +13,25 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Uv;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct UvOptions {
-    #[serde(default)]
-    python: Option<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct UvConfig {}
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UvPackageOptions {
+    #[serde(default)]
+    python: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UvRepoOptions {}
+
 impl Backend for Uv {
-    type Options = UvOptions;
     type Config = UvConfig;
+    type PackageOptions = UvPackageOptions;
+    type RepoOptions = UvRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -36,11 +41,13 @@ impl Backend for Uv {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -53,14 +60,14 @@ impl Backend for Uv {
         .lines()
         .filter(|x| !x.starts_with("-"))
         .map(|x| x.split(" ").next().unwrap().to_string())
-        .map(|x| (x, Self::Options { python: None }))
+        .map(|x| (x, Self::PackageOptions { python: None }))
         .collect();
 
         Ok(names)
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -82,7 +89,7 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["uv", "tool", "uninstall"]
@@ -95,7 +102,7 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["uv", "tool", "upgrade"]
@@ -108,12 +115,24 @@ impl Backend for Uv {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["uv", "tool", "upgrade", "--all"], Perms::Same)
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
         Ok(())
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {

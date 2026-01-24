@@ -11,15 +11,15 @@ use crate::prelude::*;
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, derive_more::Display)]
 pub struct Snap;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SnapOptions {
-    pub confinement: Option<SnapConfinement>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct SnapConfig {}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SnapPackageOptions {
+    pub confinement: Option<SnapConfinement>,
+}
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Serialize, Deserialize, Hash,
@@ -32,7 +32,6 @@ pub enum SnapConfinement {
     Devmode,
     Jailmode,
 }
-
 impl SnapConfinement {
     fn try_from_notes(notes: &str) -> Option<SnapConfinement> {
         match notes {
@@ -57,9 +56,14 @@ impl SnapConfinement {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SnapRepoOptions {}
+
 impl Backend for Snap {
-    type Options = SnapOptions;
     type Config = SnapConfig;
+    type PackageOptions = SnapPackageOptions;
+    type RepoOptions = SnapRepoOptions;
 
     fn invalid_package_help_text() -> String {
         String::new()
@@ -69,11 +73,13 @@ impl Backend for Snap {
         None
     }
 
-    fn get_all(_: &Self::Config) -> Result<BTreeSet<String>> {
+    fn get_all_packages(_: &Self::Config) -> Result<BTreeSet<String>> {
         Err(eyre!("unimplemented"))
     }
 
-    fn get_installed(config: &Self::Config) -> Result<BTreeMap<String, Self::Options>> {
+    fn get_installed_packages(
+        config: &Self::Config,
+    ) -> Result<BTreeMap<String, Self::PackageOptions>> {
         if Self::version(config).is_err() {
             return Ok(BTreeMap::new());
         }
@@ -90,12 +96,12 @@ impl Backend for Snap {
                     // skip "Version", "Rev", "Tracking", and "Publisher" fields
                     (name, fields.nth(4).and_then(SnapConfinement::try_from_notes)))
             })
-            .map(|(name, confinement)| (name.to_string(), Self::Options { confinement }))
+            .map(|(name, confinement)| (name.to_string(), Self::PackageOptions { confinement }))
             .collect())
     }
 
-    fn install(
-        packages: &BTreeMap<String, Self::Options>,
+    fn install_packages(
+        packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
@@ -104,7 +110,7 @@ impl Backend for Snap {
             .try_for_each(|cmd| run_command(cmd, Perms::Sudo))
     }
 
-    fn uninstall(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn uninstall_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "remove"]
@@ -117,7 +123,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn update(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+    fn update_packages(packages: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
             run_command(
                 ["snap", "refresh"]
@@ -130,7 +136,7 @@ impl Backend for Snap {
         Ok(())
     }
 
-    fn update_all(_: bool, _: &Self::Config) -> Result<()> {
+    fn update_all_packages(_: bool, _: &Self::Config) -> Result<()> {
         run_command(["snap", "refresh"], Perms::Sudo)
     }
 
@@ -138,6 +144,18 @@ impl Backend for Snap {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["rm", "-rf", "/var/lib/snapd/cache/*"], Perms::Sudo)
         })
+    }
+
+    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        Ok(BTreeMap::new())
+    }
+
+    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
+    }
+
+    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        Err(eyre!("unimplemented"))
     }
 
     fn version(_: &Self::Config) -> Result<String> {
@@ -153,7 +171,9 @@ impl Backend for Snap {
     }
 }
 
-fn build_snap_install_commands(packages: &BTreeMap<String, SnapOptions>) -> Vec<Vec<String>> {
+fn build_snap_install_commands(
+    packages: &BTreeMap<String, SnapPackageOptions>,
+) -> Vec<Vec<String>> {
     packages
         .iter()
         .map(|(name, options)| {
@@ -178,8 +198,11 @@ fn build_snap_install_commands(packages: &BTreeMap<String, SnapOptions>) -> Vec<
 
 fn atomize_not_strict<'a>(
     confinement: &'a SnapConfinement,
-    packages_confined: Vec<(&'a String, &'a SnapOptions)>,
-) -> Vec<(&'a SnapConfinement, Vec<(&'a String, &'a SnapOptions)>)> {
+    packages_confined: Vec<(&'a String, &'a SnapPackageOptions)>,
+) -> Vec<(
+    &'a SnapConfinement,
+    Vec<(&'a String, &'a SnapPackageOptions)>,
+)> {
     match confinement.to_cli_option() {
         Some(_) => packages_confined
             .into_iter()
@@ -191,7 +214,7 @@ fn atomize_not_strict<'a>(
 
 fn build_snap_install_command<'a>(
     confinement: &'a SnapConfinement,
-    packages_confined: Vec<(&'a String, &'a SnapOptions)>,
+    packages_confined: Vec<(&'a String, &'a SnapPackageOptions)>,
 ) -> Vec<String> {
     ["snap", "install"]
         .into_iter()

@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+‼️ This is a breaking release. All users will need to fix their group
+files to move to the new format. See the migration guide below. ‼️
+
+This is big release, adding the (hopefully) final ingredient in a
+declarative meta package manager, repo management. Because what good is
+being able to declare a list of packages if the names of those packages are
+ambiguous due to coming from a bunch of different unmentioned repos.
+
+This release fixes that by introducing a second declaratively managed
+entity, a repo. Lots of package managers support multiple and even
+arbitrary repos, but for this release the driving backend was `dnf` and
+specifically issue #176. Thanks to @komapro too for making the case so well
+too.
+
+Hopefully, in future releases `metapac` will support repo management for
+more backends.
+
+And just as luck would have it, `toml` `v1.1.0` was released only a month
+ago <https://github.com/toml-lang/toml/issues/928> which added support for
+newlines and trailing commas in inline tables which makes group files a lot
+more flexible.
+
+### Migration Guide
+
+#### Old group file format
+
+```toml
+arch = [
+  "package1",
+  "package2",
+]
+```
+
+#### New group file format
+
+```toml
+arch = {
+  packages = [
+    "package1",
+    "package2",
+  ]
+}
+```
+
+### Added
+
+- `metapac` now supports `.toml` files using [`toml
+  v1.1.0`](https://toml.io/en/v1.1.0) (#188).
+
+### Changed
+
+- ‼️ Breaking Change ‼️ The group file format has changed to allow both
+  repos and packages to be added for the same backend (discussion in #176,
+  implemented in #188).
+- ❗ Breaking Change ❗ Invalid properties at the top level of a group file
+  are now no longer a soft warning but a hard error (#188).
+
 ## [0.8.0] - 2026-01-11
 
 ### Changed
