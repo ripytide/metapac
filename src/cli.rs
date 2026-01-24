@@ -25,10 +25,6 @@ pub struct MainArguments {
 
 #[derive(Subcommand)]
 pub enum MainSubcommand {
-    Add(AddCommand),
-    Remove(RemoveCommand),
-    Install(InstallCommand),
-    Uninstall(UninstallCommand),
     Update(UpdateCommand),
     UpdateAll(UpdateAllCommand),
     Clean(CleanCommand),
@@ -36,66 +32,6 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
-}
-
-#[derive(Args)]
-/// add packages for the given backend and group file
-///
-/// if the group file does not exist it will be created
-pub struct AddCommand {
-    #[arg(long)]
-    /// the backend for the packages
-    pub backend: AnyBackend,
-    #[arg(long, required=true, num_args=1..)]
-    /// the package names
-    pub packages: Vec<String>,
-    #[arg(long, default_value = "default")]
-    /// the group name
-    pub group: String,
-}
-
-#[derive(Args)]
-/// remove packages for the given backend from all active group files
-pub struct RemoveCommand {
-    #[arg(long)]
-    /// the backend for the packages
-    pub backend: AnyBackend,
-    #[arg(long, required=true, num_args=1..)]
-    /// the package names
-    pub packages: Vec<String>,
-}
-
-#[derive(Args)]
-/// install packages for the given backend and add it to the given group file
-///
-/// if the group file does not exist it will be created
-pub struct InstallCommand {
-    #[arg(long)]
-    /// the backend for the packages
-    pub backend: AnyBackend,
-    #[arg(long, required=true, num_args=1..)]
-    /// the package names
-    pub packages: Vec<String>,
-    #[arg(long, default_value = "default")]
-    /// the group name
-    pub group: String,
-    #[arg(long)]
-    /// do not ask for any confirmation
-    pub no_confirm: bool,
-}
-
-#[derive(Args)]
-/// uninstall packages for the given backend and remove it from all active group files
-pub struct UninstallCommand {
-    #[arg(long)]
-    /// the backend for the packages
-    pub backend: AnyBackend,
-    #[arg(long, required=true, num_args=1..)]
-    /// the package names
-    pub packages: Vec<String>,
-    #[arg(long)]
-    /// do not ask for any confirmation
-    pub no_confirm: bool,
 }
 
 #[derive(Args)]

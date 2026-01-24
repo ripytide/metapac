@@ -1,13 +1,11 @@
 use std::collections::BTreeSet;
-use std::fs::{self, File, read_to_string};
 use std::path::Path;
 use std::str::FromStr;
 
 use color_eyre::Result;
-use color_eyre::eyre::{Context, ContextCompat, Ok, eyre};
+use color_eyre::eyre::{Context, Ok, eyre};
 use dialoguer::Confirm;
 use strum::IntoEnumIterator;
-use toml_edit::{DocumentMut, Entry, Item, Value};
 
 use crate::prelude::*;
 
@@ -38,10 +36,6 @@ impl MainArguments {
         }
 
         match self.subcommand {
-            MainSubcommand::Add(add) => add.run(&hostname, &group_dir, &config),
-            MainSubcommand::Remove(remove) => remove.run(&hostname, &group_dir, &config),
-            MainSubcommand::Install(install) => install.run(&hostname, &group_dir, &config),
-            MainSubcommand::Uninstall(uninstall) => uninstall.run(&hostname, &group_dir, &config),
             MainSubcommand::Update(update) => update.run(&config),
             MainSubcommand::UpdateAll(update_all) => update_all.run(&hostname, &config),
             MainSubcommand::Clean(clean) => clean.run(&hostname, &group_dir, &config),
@@ -50,170 +44,6 @@ impl MainArguments {
             MainSubcommand::Backends(backends) => backends.run(&config),
             MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&hostname, &config),
         }
-    }
-}
-
-impl AddCommand {
-    fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
-        let groups = Groups::load(hostname, group_dir, config)?;
-
-        let packages = package_vec_to_btreeset(self.packages);
-
-        let packages = packages.iter().filter(|package| {
-            let containing_group_files = groups.contains(self.backend, package);
-
-            if !containing_group_files.is_empty() {
-                log::warn!("the {package:?} package for the {} backend is already present in the {containing_group_files:?} group files, so this package has been ignored", self.backend);
-
-                false
-            } else {
-                true
-            }
-        });
-
-        let group_file = group_dir.join(&self.group).with_extension("toml");
-
-        if !group_file.is_file() {
-            File::create_new(&group_file).wrap_err(eyre!(
-                "creating an empty group file {}@{group_file:?}",
-                &self.group,
-            ))?;
-        }
-
-        let file_contents = read_to_string(&group_file)
-            .wrap_err(eyre!("reading group file {}@{group_file:?}", &self.group))?;
-
-        let mut doc = file_contents
-            .parse::<DocumentMut>()
-            .wrap_err(eyre!("parsing group file {}@{group_file:?}", &self.group))?;
-
-        let entry = doc.entry(&self.backend.to_string().to_lowercase());
-        match entry {
-            Entry::Vacant(item) => {
-                item.insert(Item::Value(Value::Array(toml_edit::Array::from_iter(
-                    packages.clone(),
-                ))));
-            }
-            Entry::Occupied(mut item) => {
-                item.get_mut()
-                    .as_array_mut()
-                    .wrap_err(eyre!(
-                        "the {} backend in the {group_file:?} group file has a non-array value",
-                        self.backend
-                    ))?
-                    .extend(packages);
-            }
-        }
-
-        fs::write(group_file.clone(), doc.to_string())
-            .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
-
-        Ok(())
-    }
-}
-
-impl RemoveCommand {
-    fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
-        let groups = Groups::load(hostname, group_dir, config)?;
-
-        let packages = package_vec_to_btreeset(self.packages);
-
-        for package in packages {
-            let containing_group_files = groups.contains(self.backend, &package);
-            if !containing_group_files.is_empty() {
-                for group_file in containing_group_files {
-                    let file_contents = read_to_string(&group_file)
-                        .wrap_err(eyre!("reading group file {group_file:?}"))?;
-
-                    let mut doc = file_contents
-                        .parse::<DocumentMut>()
-                        .wrap_err(eyre!("parsing group file {group_file:?}"))?;
-
-                    let packages = doc
-                        .get_mut(&self.backend.to_string().to_lowercase())
-                        .unwrap()
-                        .as_array_mut()
-                        .wrap_err(eyre!(
-                            "the {} backend in the {group_file:?} group file has a non-array value",
-                            self.backend
-                        ))?;
-
-                    packages.retain(|x| match x {
-                        Value::String(formatted) => package != formatted.clone().into_value(),
-                        Value::InlineTable(inline_table) => {
-                            package != inline_table.get("package").unwrap().as_str().unwrap()
-                        }
-                        _ => unreachable!(),
-                    });
-
-                    fs::write(group_file.clone(), doc.to_string())
-                        .wrap_err(eyre!("writing back modified group file {group_file:?}"))?;
-                }
-            } else {
-                log::warn!(
-                    "the {} package for the {} backend is not in any of the active group files",
-                    package,
-                    self.backend
-                );
-            }
-        }
-
-        Ok(())
-    }
-}
-
-impl InstallCommand {
-    fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
-        let packages = package_vec_to_btreeset(self.packages);
-
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                match self.backend {
-                    $(
-                        AnyBackend::$upper_backend => {
-                            $upper_backend::install_packages(&packages.iter().cloned().map(|x| (x, Default::default())).collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
-                        },
-                    )*
-                }
-            };
-        }
-        apply_backends!(x);
-
-        AddCommand {
-            backend: self.backend,
-            packages: packages.into_iter().collect(),
-            group: self.group,
-        }
-        .run(hostname, group_dir, config)?;
-
-        Ok(())
-    }
-}
-
-impl UninstallCommand {
-    fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
-        let packages = package_vec_to_btreeset(self.packages);
-
-        macro_rules! x {
-            ($(($upper_backend:ident, $lower_backend:ident)),*) => {
-                match self.backend {
-                    $(
-                        AnyBackend::$upper_backend => {
-                            $upper_backend::uninstall_packages(&packages, self.no_confirm, &config.backend_configs().$lower_backend)?;
-                        },
-                    )*
-                }
-            };
-        }
-        apply_backends!(x);
-
-        RemoveCommand {
-            backend: self.backend,
-            packages: packages.into_iter().collect(),
-        }
-        .run(hostname, group_dir, config)?;
-
-        Ok(())
     }
 }
 
