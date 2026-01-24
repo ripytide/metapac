@@ -11,22 +11,16 @@ use serde_inline_default::serde_inline_default;
 pub struct Flatpak;
 
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct FlatpakConfig {
-    #[serde_inline_default(FlatpakConfig::default().systemwide)]
-    pub systemwide: bool,
-}
-impl Default for FlatpakConfig {
-    fn default() -> Self {
-        Self { systemwide: true }
-    }
+    installation: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FlatpakPackageOptions {
-    pub systemwide: Option<bool>,
+    pub installation: Option<String>,
     pub remote: Option<String>,
 }
 
@@ -58,49 +52,30 @@ impl Backend for Flatpak {
             return Ok(BTreeMap::new());
         }
 
-        let system_apps = run_command_for_stdout(
+        let apps = run_command_for_stdout(
             [
                 "flatpak",
                 "list",
-                "--system",
                 "--app",
-                "--columns=application",
+                "--columns=application,installation",
             ],
             Perms::Same,
             false,
         )?;
-        let system_apps = system_apps.lines().map(|x| {
+
+        let apps = apps.lines().map(|line| {
+            let parts = line.split_whitespace().collect::<Vec<_>>();
+
             (
-                x.trim().to_owned(),
+                parts[0].to_string(),
                 Self::PackageOptions {
-                    systemwide: Some(true),
+                    installation: Some(parts[1].to_string()),
                     remote: None,
                 },
             )
         });
 
-        let user_apps = run_command_for_stdout(
-            [
-                "flatpak",
-                "list",
-                "--user",
-                "--app",
-                "--columns=application",
-            ],
-            Perms::Same,
-            false,
-        )?;
-        let user_apps = user_apps.lines().map(|x| {
-            (
-                x.trim().to_owned(),
-                Self::PackageOptions {
-                    systemwide: Some(false),
-                    remote: None,
-                },
-            )
-        });
-
-        Ok(system_apps.chain(user_apps).collect())
+        Ok(apps.collect())
     }
 
     fn install_packages(
@@ -108,21 +83,30 @@ impl Backend for Flatpak {
         no_confirm: bool,
         config: &Self::Config,
     ) -> Result<()> {
+        let mut groups = BTreeMap::new();
         for (package, options) in packages {
+            let installation = options.installation.clone().or(config.installation.clone());
+            let remote = options.remote.clone();
+            groups
+                .entry((installation, remote))
+                .or_insert_with(Vec::new)
+                .push(package.clone());
+        }
+
+        for ((installation, remote), packages) in groups {
             run_command(
-                [
-                    "flatpak",
-                    "install",
-                    if options.systemwide.unwrap_or(config.systemwide) {
-                        "--system"
-                    } else {
-                        "--user"
-                    },
-                ]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(options.remote.as_deref())
-                .chain([package.as_str()]),
+                ["flatpak", "install"]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .map(|x| x.to_string())
+                    .chain(match installation.as_deref() {
+                        Some("user") => Some("--user".to_string()),
+                        Some("system") => Some("--system".to_string()),
+                        Some(x) => Some(format!("--installation={x}")),
+                        None => None,
+                    })
+                    .chain(remote)
+                    .chain(packages),
                 Perms::Same,
             )?;
         }

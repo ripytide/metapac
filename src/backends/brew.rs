@@ -14,7 +14,7 @@ pub struct Brew;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BrewConfig {
-    #[serde_inline_default(FlatpakConfig::default().systemwide)]
+    #[serde_inline_default(BrewConfig::default().quarantine)]
     quarantine: bool,
 }
 impl Default for BrewConfig {
