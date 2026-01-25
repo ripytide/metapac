@@ -13,21 +13,17 @@ pub struct Flatpak;
 #[serde_inline_default]
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-pub struct FlatpakConfig {
-    installation: Option<String>,
-}
+pub struct FlatpakConfig {}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FlatpakPackageOptions {
-    pub installation: Option<String>,
     pub remote: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FlatpakRepoOptions {
-    pub installation: Option<String>,
     pub url: Option<String>,
 }
 
@@ -60,7 +56,7 @@ impl Backend for Flatpak {
                 "flatpak",
                 "list",
                 "--app",
-                "--columns=application,installation",
+                "--columns=installation,application,origin",
             ],
             Perms::Same,
             StdErr::Show,
@@ -70,10 +66,9 @@ impl Backend for Flatpak {
             let parts = line.split_whitespace().collect::<Vec<_>>();
 
             (
-                parts[0].to_string(),
+                format!("{}:{}", parts[0], parts[1]),
                 Self::PackageOptions {
-                    installation: Some(parts[1].to_string()),
-                    remote: None,
+                    remote: Some(parts[2].to_string()),
                 },
             )
         });
@@ -84,16 +79,19 @@ impl Backend for Flatpak {
     fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         no_confirm: bool,
-        config: &Self::Config,
+        _: &Self::Config,
     ) -> Result<()> {
-        let mut groups = BTreeMap::new();
+        //group packages for faster installation and less y/n prompts
+        let mut groups: BTreeMap<(String, Option<String>), Vec<String>> = BTreeMap::new();
         for (package, options) in packages {
-            let installation = options.installation.clone().or(config.installation.clone());
-            let remote = options.remote.clone();
+            let (installation, package) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name, should be in form \"installation:package\""
+            ))?;
+
             groups
-                .entry((installation, remote))
-                .or_insert_with(Vec::new)
-                .push(package.clone());
+                .entry((installation.to_string(), options.remote.clone()))
+                .or_default()
+                .push(package.to_string());
         }
 
         for ((installation, remote), packages) in groups {
@@ -102,11 +100,10 @@ impl Backend for Flatpak {
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
                     .map(|x| x.to_string())
-                    .chain(match installation.as_deref() {
-                        Some("user") => Some("--user".to_string()),
-                        Some("system") => Some("--system".to_string()),
-                        Some(x) => Some(format!("--installation={x}")),
-                        None => None,
+                    .chain(match installation.as_str() {
+                        "user" => Some("--user".to_string()),
+                        "system" => Some("--system".to_string()),
+                        x => Some(format!("--installation={x}")),
                     })
                     .chain(remote)
                     .chain(packages),
@@ -122,12 +119,31 @@ impl Backend for Flatpak {
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        if !packages.is_empty() {
+        //group packages for faster uninstallation and less y/n prompts
+        let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for package in packages {
+            let (installation, package) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name, should be in form \"installation:package\", such as \"system:metapac\""
+            ))?;
+
+            groups
+                .entry(installation.to_string())
+                .or_default()
+                .push(package.to_string());
+        }
+
+        for (installation, packages) in groups {
             run_command(
                 ["flatpak", "uninstall"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
-                    .chain(packages.iter().map(String::as_str)),
+                    .map(|x| x.to_string())
+                    .chain(match installation.as_str() {
+                        "user" => Some("--user".to_string()),
+                        "system" => Some("--system".to_string()),
+                        x => Some(format!("--installation={x}")),
+                    })
+                    .chain(packages),
                 Perms::Same,
             )?;
         }
@@ -140,13 +156,36 @@ impl Backend for Flatpak {
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        run_command(
-            ["flatpak", "update"]
-                .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
-                .chain(packages.iter().map(String::as_str)),
-            Perms::Same,
-        )
+        //group packages for faster uninstallation and less y/n prompts
+        let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for package in packages {
+            let (installation, package) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name, should be in form \"installation:package\", such as \"system:metapac\""
+            ))?;
+
+            groups
+                .entry(installation.to_string())
+                .or_default()
+                .push(package.to_string());
+        }
+
+        for (installation, packages) in groups {
+            run_command(
+                ["flatpak", "update"]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .map(|x| x.to_string())
+                    .chain(match installation.as_str() {
+                        "user" => Some("--user".to_string()),
+                        "system" => Some("--system".to_string()),
+                        x => Some(format!("--installation={x}")),
+                    })
+                    .chain(packages),
+                Perms::Same,
+            )?;
+        }
+
+        Ok(())
     }
 
     fn update_all_packages(no_confirm: bool, _: &Self::Config) -> Result<()> {
@@ -166,7 +205,7 @@ impl Backend for Flatpak {
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         let repos = run_command_for_stdout(
-            ["flatpak", "remotes", "--columns", "name,options,url"],
+            ["flatpak", "remotes", "--columns", "options,name,url"],
             Perms::Sudo,
             StdErr::Show,
         )?;
@@ -176,9 +215,8 @@ impl Backend for Flatpak {
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
                 (
-                    parts[0].to_string(),
+                    format!("{}:{}", parts[0], parts[1]),
                     FlatpakRepoOptions {
-                        installation: Some(parts[1].to_string()),
                         url: Some(parts[2].to_string()),
                     },
                 )
@@ -191,32 +229,29 @@ impl Backend for Flatpak {
     fn add_repos(
         repos: &BTreeMap<String, Self::RepoOptions>,
         no_confirm: bool,
-        config: &Self::Config,
+        _: &Self::Config,
     ) -> Result<()> {
         for (repo, options) in repos {
+            let (installation, repo) = repo.split_once(":").ok_or(eyre!(
+                "invalid flatpak repo name, should be in form \"installation:repo\", such as \"system:flathub\""
+            ))?;
+
             run_command(
-                ["dnf", "remote-add"]
-                    .map(ToString::to_string)
+                ["flatpak", "remote-add"]
                     .into_iter()
-                    .chain(Some("--assumeyes".to_string()).filter(|_| no_confirm))
-                    .chain(
-                        match options
-                            .installation
-                            .as_deref()
-                            .or(config.installation.as_deref())
-                        {
-                            Some("user") => Some("--user".to_string()),
-                            Some("system") => Some("--system".to_string()),
-                            Some(x) => Some(format!("--installation={x}")),
-                            None => None,
-                        },
-                    )
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .map(ToString::to_string)
+                    .chain(match installation {
+                        "user" => Some("--user".to_string()),
+                        "system" => Some("--system".to_string()),
+                        x => Some(format!("--installation={x}")),
+                    })
                     .chain([
                         repo.to_string(),
                         options
                             .url
                             .as_deref()
-                            .ok_or(eyre!("flatpak repos must have the url option set"))?
+                            .ok_or(eyre!("flatpak repos must have the \"url\" option set"))?
                             .to_string(),
                     ]),
                 Perms::Sudo,
@@ -226,33 +261,23 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        for (repo, options) in repos {
+    fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+        for repo in repos {
+            let (installation, repo) = repo.split_once(":").ok_or(eyre!(
+                "invalid flatpak repo name, should be in form \"installation:repo\", such as \"system:flathub\""
+            ))?;
+
             run_command(
-                ["dnf", "remote-delete", repo.as_str()]
-                    .map(ToString::to_string)
+                ["flatpak", "remote-delete"]
                     .into_iter()
-                    .chain(Some("--assumeyes".to_string()).filter(|_| no_confirm))
-                    .chain(
-                        match options
-                            .installation
-                            .as_deref()
-                            .or(config.installation.as_deref())
-                        {
-                            Some("user") => Some("--user".to_string()),
-                            Some("system") => Some("--system".to_string()),
-                            Some(x) => Some(format!("--installation={x}")),
-                            None => None,
-                        },
-                    )
-                    .chain([
-                        repo.to_string(),
-                        options
-                            .url
-                            .as_deref()
-                            .ok_or(eyre!("flatpak repos must have the url option set"))?
-                            .to_string(),
-                    ]),
+                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .map(ToString::to_string)
+                    .chain(match installation {
+                        "user" => Some("--user".to_string()),
+                        "system" => Some("--system".to_string()),
+                        x => Some(format!("--installation={x}")),
+                    })
+                    .chain([repo.to_string()]),
                 Perms::Sudo,
             )?
         }

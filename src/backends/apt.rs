@@ -62,7 +62,8 @@ impl Backend for Apt {
         // designed with this use-case in mind so there are lots and
         // lots of different methods all of which seem to have
         // caveats.
-        let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, StdErr::Show)?;
+        let explicit =
+            run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, StdErr::Show)?;
         Ok(explicit
             .lines()
             .map(|x| (x.to_string(), Self::PackageOptions {}))
@@ -142,12 +143,24 @@ impl Backend for Apt {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {

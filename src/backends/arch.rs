@@ -262,12 +262,20 @@ impl Backend for Arch {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(config: &Self::Config) -> Result<String> {

@@ -343,16 +343,6 @@ locked = false
 # Default: false
 binstall = false
 
-[flatpak]
-# The default installation to use for flatpak packages and remotes. If equal
-# to "user" then the --user option is passed when installing packages or
-# remotes, if it is equal to "system" then the "--system" option is passed,
-# and if it is equal to anything else then "--installation={installation}"
-# is passed. If this is not set then nothing is passed. This config can be
-# overridden on a per-package basis.
-# Default: None
-installation = "system"
-
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
@@ -369,7 +359,6 @@ variant = "code"
 # If this is `true` then the system is updated with the subcommand `dist-upgrade` (`dup`).
 # Default: false
 distribution_upgrade = false
-
 ```
 
 ## Group Files
