@@ -12,7 +12,7 @@ use std::path::PathBuf;
     arg_required_else_help(true),
     subcommand_required(true)
 )]
-pub struct MainArguments {
+pub struct Command {
     #[arg(long)]
     /// specify a different hostname
     pub hostname: Option<String>,
@@ -32,6 +32,7 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
+    Completions(CompletionsCommand),
 }
 
 #[derive(Args)]
@@ -105,4 +106,12 @@ pub struct CleanCacheCommand {
     ///
     /// - otherwise the list will be parsed as a list of backends to be used
     pub backends: Vec<String>,
+}
+
+#[derive(Args)]
+/// generate shell completions
+pub struct CompletionsCommand {
+    #[arg(long)]
+    /// the shell to generate completions for
+    pub shell: AnyShell,
 }

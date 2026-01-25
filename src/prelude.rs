@@ -25,10 +25,11 @@ pub use crate::backends::xbps::{Xbps, XbpsPackageOptions};
 pub use crate::backends::yarn::{Yarn, YarnPackageOptions};
 pub use crate::backends::zypper::{Zypper, ZypperPackageOptions};
 pub use crate::cli::{
-    BackendsCommand, CleanCacheCommand, CleanCommand, MainArguments, MainSubcommand, SyncCommand,
-    UnmanagedCommand, UpdateAllCommand, UpdateCommand,
+    BackendsCommand, CleanCacheCommand, CleanCommand, CompletionsCommand, Command,
+    MainSubcommand, SyncCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
 };
 pub use crate::cmd::{Perms, StdErr};
+pub use crate::completions::AnyShell;
 pub use crate::config::Config;
 pub use crate::groups::Groups;
 pub use crate::hooks::Hooks;

@@ -16,11 +16,11 @@
 
 use clap::Parser;
 use color_eyre::Result;
-use metapac::MainArguments;
+use metapac::Command;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
     color_eyre::install()?;
 
-    MainArguments::parse().run()
+    Command::parse().run()
 }
