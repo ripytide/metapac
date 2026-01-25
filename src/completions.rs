@@ -14,9 +14,9 @@ pub enum AnyShell {
     Bash,
     Elvish,
     Fish,
-    Nushell,
     PowerShell,
     Zsh,
+    Nushell,
 }
 
 impl Generator for AnyShell {

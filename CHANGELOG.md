@@ -58,7 +58,11 @@ arch = {
 ### Added
 
 - `metapac` now supports `.toml` files using [`toml
-  v1.1.0`](https://toml.io/en/v1.1.0) (#188).
+v1.1.0`](https://toml.io/en/v1.1.0) (#188).
+- `metapac` now has a new `completions` subcommand for generating shell
+  completions for the following shells: `Bash, Elvish, Fish, PowerShell, Zsh, NuShell`.
+  These are now also automatically installed with the `metapac` AUR
+  package. (#205)
 
 ### Changed
 
