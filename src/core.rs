@@ -1,3 +1,5 @@
+use clap::CommandFactory;
+use clap_complete::generate;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::str::FromStr;
@@ -9,7 +11,7 @@ use strum::IntoEnumIterator;
 
 use crate::prelude::*;
 
-impl MainArguments {
+impl Command {
     pub fn run(self) -> Result<()> {
         let hostname = if let Some(x) = self.hostname {
             x
@@ -43,6 +45,7 @@ impl MainArguments {
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&hostname, &group_dir, &config),
             MainSubcommand::Backends(backends) => backends.run(&config),
             MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&hostname, &config),
+            MainSubcommand::Completions(completions) => completions.run(),
         }
     }
 }
@@ -228,6 +231,19 @@ impl CleanCacheCommand {
 
             backend.clean_cache(config.backend_configs())?
         }
+
+        Ok(())
+    }
+}
+
+impl CompletionsCommand {
+    pub fn run(self) -> Result<()> {
+        generate(
+            self.shell,
+            &mut Command::command(),
+            "metapac",
+            &mut std::io::stdout(),
+        );
 
         Ok(())
     }

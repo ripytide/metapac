@@ -18,6 +18,8 @@ broken_intra_doc_links = "allow"
 [dependencies]
 color-eyre = "0.6.5"
 clap = { version = "4.5.54", features = ["derive"] }
+clap_complete = "4.5.65"
+clap_complete_nushell = "4.5.10"
 regex = "1.12.2"
 libc = "0.2.180"
 log = { version = "0.4.29", features = ["std"] }
