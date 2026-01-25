@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=metapac
+Comment=multi-backend declarative package manager
+Exec=metapac
+StartupNotify=false
+StartupWMClass=metapac
+Terminal=false
+Type=Application
+Categories=Game;
+Keywords=Package;
