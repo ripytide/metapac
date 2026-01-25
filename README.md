@@ -479,20 +479,20 @@ dnf = {
   packages = ["package1", { name = "package2" }]
 }
 flatpak = {
+  repos = [
+    {
+      name = "system:flathub",
+      options = { url = "https://dl.flathub.org/repo/" }
+    },
+    {
+      name = "system:fedora",
+      options = { url = "oci+https://registry.fedoraproject.org" }
+    },
+  ],
   packages = [
-    "package1",
-    {
-      name = "package2",
-      options = { remote = "flathub", installation = "user" },
-    },
-    {
-      name = "package3",
-      options = { remote = "flathub", installation = "system" },
-    },
-    {
-      name = "package4",
-      options = { remote = "flathub", installation = "my_custom_installation" },
-    },
+    "system:metapac",
+    { name = "system:org.gimp.GIMP", options = { remote = "flathub" } },
+    { name = "system:org.kde.krita", options = { remote = "fedora" } },
   ]
 }
 mas = { packages = ["package1", { name = "package2" }] }

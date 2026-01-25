@@ -84,14 +84,14 @@ impl Backend for Flatpak {
         //group packages for faster installation and less y/n prompts
         let mut groups: BTreeMap<(String, Option<String>), Vec<String>> = BTreeMap::new();
         for (package, options) in packages {
-            let (installation, package) = package.split_once(":").ok_or(eyre!(
-                "invalid flatpak package name, should be in form \"installation:package\""
+            let (installation, name) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
             groups
                 .entry((installation.to_string(), options.remote.clone()))
                 .or_default()
-                .push(package.to_string());
+                .push(name.to_string());
         }
 
         for ((installation, remote), packages) in groups {
@@ -122,14 +122,14 @@ impl Backend for Flatpak {
         //group packages for faster uninstallation and less y/n prompts
         let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for package in packages {
-            let (installation, package) = package.split_once(":").ok_or(eyre!(
-                "invalid flatpak package name, should be in form \"installation:package\", such as \"system:metapac\""
+            let (installation, name) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
             groups
                 .entry(installation.to_string())
                 .or_default()
-                .push(package.to_string());
+                .push(name.to_string());
         }
 
         for (installation, packages) in groups {
@@ -159,14 +159,14 @@ impl Backend for Flatpak {
         //group packages for faster uninstallation and less y/n prompts
         let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for package in packages {
-            let (installation, package) = package.split_once(":").ok_or(eyre!(
-                "invalid flatpak package name, should be in form \"installation:package\", such as \"system:metapac\""
+            let (installation, name) = package.split_once(":").ok_or(eyre!(
+                "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
             groups
                 .entry(installation.to_string())
                 .or_default()
-                .push(package.to_string());
+                .push(name.to_string());
         }
 
         for (installation, packages) in groups {
@@ -232,8 +232,8 @@ impl Backend for Flatpak {
         _: &Self::Config,
     ) -> Result<()> {
         for (repo, options) in repos {
-            let (installation, repo) = repo.split_once(":").ok_or(eyre!(
-                "invalid flatpak repo name, should be in form \"installation:repo\", such as \"system:flathub\""
+            let (installation, name) = repo.split_once(":").ok_or(eyre!(
+                "invalid flatpak repo name: {repo:?}, should be in form \"installation:repo\", such as \"system:flathub\""
             ))?;
 
             run_command(
@@ -247,7 +247,7 @@ impl Backend for Flatpak {
                         x => Some(format!("--installation={x}")),
                     })
                     .chain([
-                        repo.to_string(),
+                        name.to_string(),
                         options
                             .url
                             .as_deref()
@@ -263,8 +263,8 @@ impl Backend for Flatpak {
 
     fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
         for repo in repos {
-            let (installation, repo) = repo.split_once(":").ok_or(eyre!(
-                "invalid flatpak repo name, should be in form \"installation:repo\", such as \"system:flathub\""
+            let (installation, name) = repo.split_once(":").ok_or(eyre!(
+                "invalid flatpak repo name: {repo:?}, should be in form \"installation:repo\", such as \"system:flathub\""
             ))?;
 
             run_command(
@@ -277,7 +277,7 @@ impl Backend for Flatpak {
                         "system" => Some("--system".to_string()),
                         x => Some(format!("--installation={x}")),
                     })
-                    .chain([repo.to_string()]),
+                    .chain([name.to_string()]),
                 Perms::Sudo,
             )?
         }
