@@ -8,10 +8,6 @@ repository = "https://github.com/ripytide/metapac"
 readme = "README.md"
 keywords = ["package-manager", "linux", "declarative", "cli"]
 categories = ["command-line-utilities"]
-authors = [
-  "James Forster <james.forsterer@gmail.com>",
-  "Md Isfarul Haque <md-isfarul-haque@proton.me",
-]
 
 [package.metadata.release]
 allow-branch = ["main"]
