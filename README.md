@@ -485,14 +485,23 @@ flatpak = {
       options = { url = "https://dl.flathub.org/repo/" }
     },
     {
-      name = "system:fedora",
-      options = { url = "oci+https://registry.fedoraproject.org" }
+      name = "user:ykc",
+      options = { url = "https://flatpak.yellowkeycard.net/ykc.flatpakrepo" }
+    },
+    {
+      name = "custom_installation:flathub_beta",
+      options = {
+        url = "https://flathub.org/beta-repo/flathub-beta.flatpakrepo"
+      }
     },
   ],
   packages = [
-    "system:metapac",
     { name = "system:org.gimp.GIMP", options = { remote = "flathub" } },
-    { name = "system:org.kde.krita", options = { remote = "fedora" } },
+    { name = "user:io.github.sonicgalactic", options = { remote = "ykc" } },
+    {
+      name = "custom_installation:org.mozilla.firefox",
+      options = { remote = "flathub_beta" }
+    },
   ]
 }
 mas = { packages = ["package1", { name = "package2" }] }

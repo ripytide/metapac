@@ -214,8 +214,9 @@ impl Backend for Flatpak {
             .lines()
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
+                let installation = parts[0].split(",").collect::<Vec<_>>()[0];
                 (
-                    format!("{}:{}", parts[0], parts[1]),
+                    format!("{}:{}", installation, parts[1]),
                     FlatpakRepoOptions {
                         url: Some(parts[2].to_string()),
                     },
