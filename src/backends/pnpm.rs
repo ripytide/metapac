@@ -47,8 +47,11 @@ impl Backend for Pnpm {
             return Ok(BTreeMap::new());
         }
 
-        let stdout =
-            run_command_for_stdout(["pnpm", "list", "--global", "--json"], Perms::Same, false)?;
+        let stdout = run_command_for_stdout(
+            ["pnpm", "list", "--global", "--json"],
+            Perms::Same,
+            StdErr::Show,
+        )?;
 
         let value: Value = serde_json::from_str(&stdout)?;
         let first_object = value.as_array().ok_or(eyre!("json should be an array"))?[0]
@@ -128,15 +131,27 @@ impl Backend for Pnpm {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["pnpm", "--version"], Perms::Same, false)
+        run_command_for_stdout(["pnpm", "--version"], Perms::Same, StdErr::Show)
     }
 }

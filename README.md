@@ -343,16 +343,6 @@ locked = false
 # Default: false
 binstall = false
 
-[flatpak]
-# The default installation to use for flatpak packages. If equal to "user"
-# then the --user option is passed when installing packages, if it is equal
-# to "system" then the "--system" option is passed, and if it is equal to
-# anything else then "--installation={installation}" is passed. If this is
-# not set then nothing is passed. This config can be overridden on a
-# per-package basis.
-# Default: None
-installation = "system"
-
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database
 # they are mutually exclusive and so you must pick which one you want
@@ -369,7 +359,6 @@ variant = "code"
 # If this is `true` then the system is updated with the subcommand `dist-upgrade` (`dup`).
 # Default: false
 distribution_upgrade = false
-
 ```
 
 ## Group Files
@@ -490,19 +479,28 @@ dnf = {
   packages = ["package1", { name = "package2" }]
 }
 flatpak = {
+  repos = [
+    {
+      name = "system:flathub",
+      options = { url = "https://dl.flathub.org/repo/" }
+    },
+    {
+      name = "user:ykc",
+      options = { url = "https://flatpak.yellowkeycard.net/ykc.flatpakrepo" }
+    },
+    {
+      name = "custom_installation:flathub_beta",
+      options = {
+        url = "https://flathub.org/beta-repo/flathub-beta.flatpakrepo"
+      }
+    },
+  ],
   packages = [
-    "package1",
+    { name = "system:org.gimp.GIMP", options = { remote = "flathub" } },
+    { name = "user:io.github.sonicgalactic", options = { remote = "ykc" } },
     {
-      name = "package2",
-      options = { remote = "flathub", installation = "user" },
-    },
-    {
-      name = "package3",
-      options = { remote = "flathub", installation = "system" },
-    },
-    {
-      name = "package4",
-      options = { remote = "flathub", installation = "my_custom_installation" },
+      name = "custom_installation:org.mozilla.firefox",
+      options = { remote = "flathub_beta" }
     },
   ]
 }

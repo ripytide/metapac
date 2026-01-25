@@ -181,25 +181,38 @@ impl Backend for Cargo {
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
-        run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
-            run_command(["cargo", "cache", "-a"], Perms::Same)
-        })
+        run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, StdErr::Show)
+            .map_or(Ok(()), |_| {
+                run_command(["cargo", "cache", "-a"], Perms::Same)
+            })
     }
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
+        run_command_for_stdout(["cargo", "--version"], Perms::Same, StdErr::Show)
     }
 }
 

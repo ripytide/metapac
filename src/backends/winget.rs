@@ -68,7 +68,7 @@ impl Backend for WinGet {
                 tempfile.path().to_str().unwrap(),
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let mut export = String::new();
@@ -147,15 +147,27 @@ impl Backend for WinGet {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["winget", "--version"], Perms::Same, false)
+        run_command_for_stdout(["winget", "--version"], Perms::Same, StdErr::Show)
     }
 }

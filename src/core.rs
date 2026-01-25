@@ -91,7 +91,7 @@ impl CleanCommand {
         if self.no_confirm {
             log::info!("proceeding to uninstall packages without confirmation");
         } else if !Confirm::new()
-            .with_prompt("these packages will be uninstalled, do you want to continue?")
+            .with_prompt("these repos/packages will be uninstalled, do you want to continue?")
             .default(true)
             .show_default(true)
             .interact()
@@ -134,7 +134,7 @@ impl SyncCommand {
             log::info!("proceeding to install packages without confirmation");
         } else if !missing.is_empty()
             && !Confirm::new()
-                .with_prompt("these packages will be installed, do you want to continue?")
+                .with_prompt("these repos/packages will be installed, do you want to continue?")
                 .default(true)
                 .show_default(true)
                 .interact()

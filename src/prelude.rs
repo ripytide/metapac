@@ -28,7 +28,7 @@ pub use crate::cli::{
     BackendsCommand, CleanCacheCommand, CleanCommand, MainArguments, MainSubcommand, SyncCommand,
     UnmanagedCommand, UpdateAllCommand, UpdateCommand,
 };
-pub use crate::cmd::Perms;
+pub use crate::cmd::{Perms, StdErr};
 pub use crate::config::Config;
 pub use crate::groups::Groups;
 pub use crate::hooks::Hooks;

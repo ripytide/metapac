@@ -84,7 +84,7 @@ impl Backend for Snap {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(["snap", "list"], Perms::Same, false)?;
+        let output = run_command_for_stdout(["snap", "list"], Perms::Same, StdErr::Show)?;
 
         // Skip the first line which is the header
         Ok(output
@@ -150,16 +150,28 @@ impl Backend for Snap {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["snap", "--version"], Perms::Same, false).map(|output| {
+        run_command_for_stdout(["snap", "--version"], Perms::Same, StdErr::Show).map(|output| {
             output
                 .lines()
                 .next()

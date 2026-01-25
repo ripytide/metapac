@@ -47,8 +47,11 @@ impl Backend for Xbps {
             return Ok(BTreeMap::new());
         }
 
-        let stdout =
-            run_command_for_stdout(["xbps-query", "--list-manual-pkgs"], Perms::Same, false)?;
+        let stdout = run_command_for_stdout(
+            ["xbps-query", "--list-manual-pkgs"],
+            Perms::Same,
+            StdErr::Show,
+        )?;
 
         // Removes the package version from output
         let re = Regex::new(r"-[^-]*$")?;
@@ -149,15 +152,27 @@ impl Backend for Xbps {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
+        run_command_for_stdout(["xbps-query", "--version"], Perms::Same, StdErr::Show)
     }
 }

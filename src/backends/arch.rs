@@ -98,13 +98,13 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let installed = run_command_for_stdout(
             [config.package_manager.as_command(), "--query", "--quiet"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         Ok(all
@@ -129,7 +129,7 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let mut result = BTreeMap::new();
@@ -189,7 +189,7 @@ impl Backend for Arch {
                     "--quiet",
                 ],
                 Perms::Same,
-                false,
+                StdErr::Show,
             )?;
             let orphans = orphans_output.lines();
 
@@ -262,19 +262,31 @@ impl Backend for Arch {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(config: &Self::Config) -> Result<String> {
         run_command_for_stdout(
             [config.package_manager.as_command(), "--version"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )
     }
 }

@@ -55,7 +55,7 @@ impl Backend for Dnf {
                 "%{name}\n",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         Ok(packages
@@ -140,7 +140,7 @@ impl Backend for Dnf {
     }
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
-        let repos = run_command_for_stdout(["dnf", "copr", "list"], Perms::Sudo, false)?;
+        let repos = run_command_for_stdout(["dnf", "copr", "list"], Perms::Sudo, StdErr::Show)?;
 
         let repos = repos
             .lines()
@@ -181,6 +181,6 @@ impl Backend for Dnf {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["dnf", "--version"], Perms::Same, false)
+        run_command_for_stdout(["dnf", "--version"], Perms::Same, StdErr::Show)
     }
 }

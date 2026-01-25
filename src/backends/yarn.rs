@@ -51,7 +51,7 @@ impl Backend for Yarn {
         //have binaries, see https://github.com/yarnpkg/yarn/issues/5725
         //
         //instead we manually read the global `package.json` file
-        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, true)?;
+        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, StdErr::Hide)?;
         let dir = dir
             .lines()
             .next()
@@ -142,15 +142,27 @@ impl Backend for Yarn {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["yarn", "--version"], Perms::Same, false)
+        run_command_for_stdout(["yarn", "--version"], Perms::Same, StdErr::Show)
     }
 }

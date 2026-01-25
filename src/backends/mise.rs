@@ -43,7 +43,7 @@ impl Backend for Mise {
         let search = run_command_for_stdout(
             ["mise", "search", "--no-headers", "--quiet"],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?;
 
         Ok(search
@@ -75,7 +75,7 @@ impl Backend for Mise {
                 "--quiet",
             ],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?;
 
         let packages_json = match serde_json::from_str(&packages)? {
@@ -154,15 +154,27 @@ impl Backend for Mise {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["mise", "--version"], Perms::Same, false)
+        run_command_for_stdout(["mise", "--version"], Perms::Same, StdErr::Show)
     }
 }

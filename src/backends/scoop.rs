@@ -56,7 +56,7 @@ impl Backend for Scoop {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(["scoop.cmd", "list"], Perms::Same, false)?;
+        let output = run_command_for_stdout(["scoop.cmd", "list"], Perms::Same, StdErr::Show)?;
         let lines = output.lines().collect::<Vec<_>>();
 
         let mut packages = BTreeMap::new();
@@ -129,16 +129,28 @@ impl Backend for Scoop {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
+        if repos.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("unimplemented"))
+        }
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        let output = run_command_for_stdout(["scoop.cmd", "--version"], Perms::Same, false)?;
+        let output = run_command_for_stdout(["scoop.cmd", "--version"], Perms::Same, StdErr::Show)?;
 
         Ok(output.lines().nth(1).unwrap().to_string())
     }

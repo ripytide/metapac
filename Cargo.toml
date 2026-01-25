@@ -8,10 +8,6 @@ repository = "https://github.com/ripytide/metapac"
 readme = "README.md"
 keywords = ["package-manager", "linux", "declarative", "cli"]
 categories = ["command-line-utilities"]
-authors = [
-  "James Forster <james.forsterer@gmail.com>",
-  "Md Isfarul Haque <md-isfarul-haque@proton.me",
-]
 
 [package.metadata.release]
 allow-branch = ["main"]
@@ -34,7 +30,7 @@ dirs = "6.0.0"
 home = "0.5.12"
 pretty_env_logger = "0.5.0"
 dialoguer = "0.12.0"
-serde-inline-default = "1.0.0"
+serde-inline-default = "1.0.1"
 hostname = "0.4.2"
 walkdir = "2.5.0"
 toml_edit = { version = "0.24.0", features = ["serde", "display"] }

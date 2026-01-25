@@ -13,7 +13,13 @@ pub enum Perms {
     Same,
 }
 
-pub fn run_command_for_stdout<I, S>(args: I, perms: Perms, hide_stderr: bool) -> Result<String>
+#[derive(Debug, Clone, Copy)]
+pub enum StdErr {
+    Show,
+    Hide,
+}
+
+pub fn run_command_for_stdout<I, S>(args: I, perms: Perms, stderr: StdErr) -> Result<String>
 where
     S: Into<String>,
     I: IntoIterator<Item = S>,
@@ -39,7 +45,7 @@ where
         .args(remaining_args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
-        .stderr(if !hide_stderr {
+        .stderr(if matches!(stderr, StdErr::Show) {
             Stdio::inherit()
         } else {
             Stdio::null()
