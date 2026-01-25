@@ -28,7 +28,7 @@ jobs:
       - name: Fix permissions
         run: chown -R builder:builder .
 
-      - name: Build package (makepkg -si)
+      - name: Build package
         run: |
           sudo -u builder bash <<'EOF'
           set -e
