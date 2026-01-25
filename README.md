@@ -344,12 +344,12 @@ locked = false
 binstall = false
 
 [flatpak]
-# The default installation to use for flatpak packages. If equal to "user"
-# then the --user option is passed when installing packages, if it is equal
-# to "system" then the "--system" option is passed, and if it is equal to
-# anything else then "--installation={installation}" is passed. If this is
-# not set then nothing is passed. This config can be overridden on a
-# per-package basis.
+# The default installation to use for flatpak packages and remotes. If equal
+# to "user" then the --user option is passed when installing packages or
+# remotes, if it is equal to "system" then the "--system" option is passed,
+# and if it is equal to anything else then "--installation={installation}"
+# is passed. If this is not set then nothing is passed. This config can be
+# overridden on a per-package basis.
 # Default: None
 installation = "system"
 

@@ -188,12 +188,37 @@ impl Backend for Flatpak {
         Ok(repos)
     }
 
-    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, no_confirm: bool, config: &Self::Config) -> Result<()> {
-        for repo in repos.keys() {
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        no_confirm: bool,
+        config: &Self::Config,
+    ) -> Result<()> {
+        for (repo, options) in repos {
             run_command(
-                ["dnf", "copr", "enable", repo.as_str()]
+                ["dnf", "remote-add"]
+                    .map(ToString::to_string)
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                    .chain(Some("--assumeyes".to_string()).filter(|_| no_confirm))
+                    .chain(
+                        match options
+                            .installation
+                            .as_deref()
+                            .or(config.installation.as_deref())
+                        {
+                            Some("user") => Some("--user".to_string()),
+                            Some("system") => Some("--system".to_string()),
+                            Some(x) => Some(format!("--installation={x}")),
+                            None => None,
+                        },
+                    )
+                    .chain([
+                        repo.to_string(),
+                        options
+                            .url
+                            .as_deref()
+                            .ok_or(eyre!("flatpak repos must have the url option set"))?
+                            .to_string(),
+                    ]),
                 Perms::Sudo,
             )?
         }
@@ -201,8 +226,38 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, config: &Self::Config) -> Result<()> {
+        for (repo, options) in repos {
+            run_command(
+                ["dnf", "remote-delete", repo.as_str()]
+                    .map(ToString::to_string)
+                    .into_iter()
+                    .chain(Some("--assumeyes".to_string()).filter(|_| no_confirm))
+                    .chain(
+                        match options
+                            .installation
+                            .as_deref()
+                            .or(config.installation.as_deref())
+                        {
+                            Some("user") => Some("--user".to_string()),
+                            Some("system") => Some("--system".to_string()),
+                            Some(x) => Some(format!("--installation={x}")),
+                            None => None,
+                        },
+                    )
+                    .chain([
+                        repo.to_string(),
+                        options
+                            .url
+                            .as_deref()
+                            .ok_or(eyre!("flatpak repos must have the url option set"))?
+                            .to_string(),
+                    ]),
+                Perms::Sudo,
+            )?
+        }
+
+        Ok(())
     }
 
     fn version(_: &Self::Config) -> Result<String> {
