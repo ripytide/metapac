@@ -51,7 +51,7 @@ impl Backend for Yarn {
         //have binaries, see https://github.com/yarnpkg/yarn/issues/5725
         //
         //instead we manually read the global `package.json` file
-        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, true)?;
+        let dir = run_command_for_stdout(["yarn", "global", "dir"], Perms::Same, StdErr::Hide)?;
         let dir = dir
             .lines()
             .next()
@@ -151,6 +151,6 @@ impl Backend for Yarn {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["yarn", "--version"], Perms::Same, false)
+        run_command_for_stdout(["yarn", "--version"], Perms::Same, StdErr::Show)
     }
 }

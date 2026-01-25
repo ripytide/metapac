@@ -53,7 +53,7 @@ impl Backend for Pipx {
         let names = extract_package_names(run_command_for_stdout(
             ["pipx", "list", "--json"],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?)?;
 
         Ok(names
@@ -121,7 +121,7 @@ impl Backend for Pipx {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["pipx", "--version"], Perms::Same, false)
+        run_command_for_stdout(["pipx", "--version"], Perms::Same, StdErr::Show)
     }
 }
 

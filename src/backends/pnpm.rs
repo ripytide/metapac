@@ -48,7 +48,7 @@ impl Backend for Pnpm {
         }
 
         let stdout =
-            run_command_for_stdout(["pnpm", "list", "--global", "--json"], Perms::Same, false)?;
+            run_command_for_stdout(["pnpm", "list", "--global", "--json"], Perms::Same, StdErr::Show)?;
 
         let value: Value = serde_json::from_str(&stdout)?;
         let first_object = value.as_array().ok_or(eyre!("json should be an array"))?[0]
@@ -137,6 +137,6 @@ impl Backend for Pnpm {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["pnpm", "--version"], Perms::Same, false)
+        run_command_for_stdout(["pnpm", "--version"], Perms::Same, StdErr::Show)
     }
 }

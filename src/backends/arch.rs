@@ -98,13 +98,13 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let installed = run_command_for_stdout(
             [config.package_manager.as_command(), "--query", "--quiet"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         Ok(all
@@ -129,7 +129,7 @@ impl Backend for Arch {
                 "--quiet",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let mut result = BTreeMap::new();
@@ -189,7 +189,7 @@ impl Backend for Arch {
                     "--quiet",
                 ],
                 Perms::Same,
-                false,
+                StdErr::Show,
             )?;
             let orphans = orphans_output.lines();
 
@@ -274,7 +274,7 @@ impl Backend for Arch {
         run_command_for_stdout(
             [config.package_manager.as_command(), "--version"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )
     }
 }

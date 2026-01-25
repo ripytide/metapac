@@ -51,7 +51,7 @@ impl Backend for Zypper {
         let stdout = run_command_for_stdout(
             ["zypper", "packages", "--userinstalled"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         stdout
@@ -156,6 +156,6 @@ impl Backend for Zypper {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["zypper", "--version"], Perms::Same, false)
+        run_command_for_stdout(["zypper", "--version"], Perms::Same, StdErr::Show)
     }
 }

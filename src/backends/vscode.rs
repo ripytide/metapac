@@ -71,7 +71,7 @@ impl Backend for VsCode {
         let names = run_command_for_stdout(
             [config.variant.as_command(), "--list-extensions"],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?
         .lines()
         .map(|x| (x.to_string(), Self::PackageOptions {}))
@@ -154,7 +154,7 @@ impl Backend for VsCode {
         run_command_for_stdout(
             [config.variant.as_command(), "--version"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )
         .map(|x| x.lines().join(" "))
     }

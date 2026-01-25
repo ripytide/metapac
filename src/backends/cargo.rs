@@ -181,7 +181,7 @@ impl Backend for Cargo {
     }
 
     fn clean_cache(_: &Self::Config) -> Result<()> {
-        run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, false).map_or(Ok(()), |_| {
+        run_command_for_stdout(["cargo-cache", "-V"], Perms::Same, StdErr::Show).map_or(Ok(()), |_| {
             run_command(["cargo", "cache", "-a"], Perms::Same)
         })
     }
@@ -199,7 +199,7 @@ impl Backend for Cargo {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["cargo", "--version"], Perms::Same, false)
+        run_command_for_stdout(["cargo", "--version"], Perms::Same, StdErr::Show)
     }
 }
 

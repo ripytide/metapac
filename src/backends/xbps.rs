@@ -48,7 +48,7 @@ impl Backend for Xbps {
         }
 
         let stdout =
-            run_command_for_stdout(["xbps-query", "--list-manual-pkgs"], Perms::Same, false)?;
+            run_command_for_stdout(["xbps-query", "--list-manual-pkgs"], Perms::Same, StdErr::Show)?;
 
         // Removes the package version from output
         let re = Regex::new(r"-[^-]*$")?;
@@ -158,6 +158,6 @@ impl Backend for Xbps {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["xbps-query", "--version"], Perms::Same, false)
+        run_command_for_stdout(["xbps-query", "--version"], Perms::Same, StdErr::Show)
     }
 }

@@ -46,7 +46,7 @@ impl Backend for Bun {
         }
 
         let output =
-            match run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, true) {
+            match run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, StdErr::Hide) {
                 Ok(output) => output,
                 //unfortunately when there are no global packages installed bun returns an error rather
                 //than saying zero packages
@@ -156,6 +156,6 @@ impl Backend for Bun {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["bun", "--version"], Perms::Same, false)
+        run_command_for_stdout(["bun", "--version"], Perms::Same, StdErr::Show)
     }
 }

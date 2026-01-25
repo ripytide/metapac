@@ -26,7 +26,10 @@ pub struct FlatpakPackageOptions {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct FlatpakRepoOptions {}
+pub struct FlatpakRepoOptions {
+    pub installation: Option<String>,
+    pub url: Option<String>,
+}
 
 impl Backend for Flatpak {
     type Config = FlatpakConfig;
@@ -60,7 +63,7 @@ impl Backend for Flatpak {
                 "--columns=application,installation",
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let apps = apps.lines().map(|line| {
@@ -162,11 +165,40 @@ impl Backend for Flatpak {
     }
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
-        Ok(BTreeMap::new())
+        let repos = run_command_for_stdout(
+            ["flatpak", "remotes", "--columns", "name,options,url"],
+            Perms::Sudo,
+            StdErr::Show,
+        )?;
+
+        let repos = repos
+            .lines()
+            .map(|line| {
+                let parts = line.split_whitespace().collect::<Vec<_>>();
+                (
+                    parts[0].to_string(),
+                    FlatpakRepoOptions {
+                        installation: Some(parts[1].to_string()),
+                        url: Some(parts[2].to_string()),
+                    },
+                )
+            })
+            .collect();
+
+        Ok(repos)
     }
 
-    fn add_repos(_: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
-        Err(eyre!("unimplemented"))
+    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, no_confirm: bool, config: &Self::Config) -> Result<()> {
+        for repo in repos.keys() {
+            run_command(
+                ["dnf", "copr", "enable", repo.as_str()]
+                    .into_iter()
+                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                Perms::Sudo,
+            )?
+        }
+
+        Ok(())
     }
 
     fn remove_repos(_: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
@@ -174,6 +206,6 @@ impl Backend for Flatpak {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["flatpak", "--version"], Perms::Same, false)
+        run_command_for_stdout(["flatpak", "--version"], Perms::Same, StdErr::Show)
     }
 }

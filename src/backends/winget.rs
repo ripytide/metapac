@@ -68,7 +68,7 @@ impl Backend for WinGet {
                 tempfile.path().to_str().unwrap(),
             ],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let mut export = String::new();
@@ -156,6 +156,6 @@ impl Backend for WinGet {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["winget", "--version"], Perms::Same, false)
+        run_command_for_stdout(["winget", "--version"], Perms::Same, StdErr::Show)
     }
 }

@@ -62,7 +62,7 @@ impl Backend for Apt {
         // designed with this use-case in mind so there are lots and
         // lots of different methods all of which seem to have
         // caveats.
-        let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, false)?;
+        let explicit = run_command_for_stdout(["apt-mark", "showmanual"], Perms::Same, StdErr::Show)?;
         Ok(explicit
             .lines()
             .map(|x| (x.to_string(), Self::PackageOptions {}))
@@ -151,6 +151,6 @@ impl Backend for Apt {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["apt", "--version"], Perms::Same, false)
+        run_command_for_stdout(["apt", "--version"], Perms::Same, StdErr::Show)
     }
 }

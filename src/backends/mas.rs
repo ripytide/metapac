@@ -45,7 +45,7 @@ impl Backend for Mas {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(["mas", "list"], Perms::Same, false)?;
+        let output = run_command_for_stdout(["mas", "list"], Perms::Same, StdErr::Show)?;
 
         Ok(output
             .lines()
@@ -119,6 +119,6 @@ impl Backend for Mas {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["mas", "version"], Perms::Same, false)
+        run_command_for_stdout(["mas", "version"], Perms::Same, StdErr::Show)
     }
 }

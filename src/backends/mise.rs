@@ -43,7 +43,7 @@ impl Backend for Mise {
         let search = run_command_for_stdout(
             ["mise", "search", "--no-headers", "--quiet"],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?;
 
         Ok(search
@@ -75,7 +75,7 @@ impl Backend for Mise {
                 "--quiet",
             ],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?;
 
         let packages_json = match serde_json::from_str(&packages)? {
@@ -163,6 +163,6 @@ impl Backend for Mise {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["mise", "--version"], Perms::Same, false)
+        run_command_for_stdout(["mise", "--version"], Perms::Same, StdErr::Show)
     }
 }

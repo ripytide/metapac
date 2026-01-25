@@ -55,7 +55,7 @@ impl Backend for Uv {
         let names = run_command_for_stdout(
             ["uv", "tool", "list", "--color", "never"],
             Perms::Same,
-            true,
+            StdErr::Hide,
         )?
         .lines()
         .filter(|x| !x.starts_with("-"))
@@ -136,6 +136,6 @@ impl Backend for Uv {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["uv", "--version"], Perms::Same, false)
+        run_command_for_stdout(["uv", "--version"], Perms::Same, StdErr::Show)
     }
 }

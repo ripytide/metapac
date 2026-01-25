@@ -60,13 +60,13 @@ impl Backend for Brew {
         let formulae = run_command_for_stdout(
             ["brew", "list", "-1", "--quiet", "--installed-on-request"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         let casks = run_command_for_stdout(
             ["brew", "list", "-1", "--cask", "--quiet"],
             Perms::Same,
-            false,
+            StdErr::Show,
         )?;
 
         Ok(formulae
@@ -150,6 +150,6 @@ impl Backend for Brew {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["brew", "--version"], Perms::Same, false)
+        run_command_for_stdout(["brew", "--version"], Perms::Same, StdErr::Show)
     }
 }

@@ -84,7 +84,7 @@ impl Backend for Snap {
             return Ok(BTreeMap::new());
         }
 
-        let output = run_command_for_stdout(["snap", "list"], Perms::Same, false)?;
+        let output = run_command_for_stdout(["snap", "list"], Perms::Same, StdErr::Show)?;
 
         // Skip the first line which is the header
         Ok(output
@@ -159,7 +159,7 @@ impl Backend for Snap {
     }
 
     fn version(_: &Self::Config) -> Result<String> {
-        run_command_for_stdout(["snap", "--version"], Perms::Same, false).map(|output| {
+        run_command_for_stdout(["snap", "--version"], Perms::Same, StdErr::Show).map(|output| {
             output
                 .lines()
                 .next()
