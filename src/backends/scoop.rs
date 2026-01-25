@@ -129,7 +129,11 @@ impl Backend for Scoop {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if repos.is_empty() {
             Ok(())
         } else {

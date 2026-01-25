@@ -47,8 +47,11 @@ impl Backend for Xbps {
             return Ok(BTreeMap::new());
         }
 
-        let stdout =
-            run_command_for_stdout(["xbps-query", "--list-manual-pkgs"], Perms::Same, StdErr::Show)?;
+        let stdout = run_command_for_stdout(
+            ["xbps-query", "--list-manual-pkgs"],
+            Perms::Same,
+            StdErr::Show,
+        )?;
 
         // Removes the package version from output
         let re = Regex::new(r"-[^-]*$")?;
@@ -149,7 +152,11 @@ impl Backend for Xbps {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if repos.is_empty() {
             Ok(())
         } else {

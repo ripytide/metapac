@@ -45,13 +45,16 @@ impl Backend for Bun {
             return Ok(BTreeMap::new());
         }
 
-        let output =
-            match run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, StdErr::Hide) {
-                Ok(output) => output,
-                //unfortunately when there are no global packages installed bun returns an error rather
-                //than saying zero packages
-                Err(_) => return Ok(BTreeMap::new()),
-            };
+        let output = match run_command_for_stdout(
+            ["bun", "pm", "ls", "--global"],
+            Perms::Same,
+            StdErr::Hide,
+        ) {
+            Ok(output) => output,
+            //unfortunately when there are no global packages installed bun returns an error rather
+            //than saying zero packages
+            Err(_) => return Ok(BTreeMap::new()),
+        };
 
         let lines = output.lines().collect::<Vec<_>>();
 
@@ -147,7 +150,11 @@ impl Backend for Bun {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if repos.is_empty() {
             Ok(())
         } else {

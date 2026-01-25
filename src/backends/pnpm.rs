@@ -47,8 +47,11 @@ impl Backend for Pnpm {
             return Ok(BTreeMap::new());
         }
 
-        let stdout =
-            run_command_for_stdout(["pnpm", "list", "--global", "--json"], Perms::Same, StdErr::Show)?;
+        let stdout = run_command_for_stdout(
+            ["pnpm", "list", "--global", "--json"],
+            Perms::Same,
+            StdErr::Show,
+        )?;
 
         let value: Value = serde_json::from_str(&stdout)?;
         let first_object = value.as_array().ok_or(eyre!("json should be an array"))?[0]
@@ -128,7 +131,11 @@ impl Backend for Pnpm {
         Ok(BTreeMap::new())
     }
 
-    fn add_repos(repos: &BTreeMap<String, Self::RepoOptions>, _: bool, _: &Self::Config) -> Result<()> {
+    fn add_repos(
+        repos: &BTreeMap<String, Self::RepoOptions>,
+        _: bool,
+        _: &Self::Config,
+    ) -> Result<()> {
         if repos.is_empty() {
             Ok(())
         } else {
