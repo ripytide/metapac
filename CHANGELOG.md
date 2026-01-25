@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-‼️ This is a breaking release. All users will need to fix their group
-files to move to the new format. See the migration guide below. ‼️
+## [0.9.0] - 2026-01-25
+
+‼️ This is a extremely breaking release. All users will need to fix their
+group files to move to the new format. See the migration guide below. ‼️
 
 This is big release, adding the (hopefully) final ingredient in a
 declarative meta package manager, repo management. Because what good is
@@ -19,7 +21,7 @@ This release fixes that by introducing a second declaratively managed
 entity, a repo. Lots of package managers support multiple and even
 arbitrary repos, but for this release the driving backend was `dnf` and
 specifically issue #176. Thanks to @komapro too for making the case so well
-too.
+too. The `flatpak` backend also now supports repos.
 
 Hopefully, in future releases `metapac` will support repo management for
 more backends.
