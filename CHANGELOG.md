@@ -40,7 +40,7 @@ backend and the `package` property of long-form packages is renamed to
 ```toml
 arch = [
   "package1",
-  { package = "package2"},
+  { package = "package2" },
 ]
 ```
 
@@ -50,7 +50,7 @@ arch = [
 arch = {
   packages = [
     "package1",
-    { name = "package2"},
+    { name = "package2" },
   ]
 }
 ```
@@ -67,9 +67,11 @@ arch = {
   implemented in #188).
 - ❗ Breaking Change ❗ Invalid properties at the top level of a group file
   are now no longer a soft warning but a hard error (#188).
-- ❗ Breaking Change ❗ The `flatpak.systemwide` has been removed in favor
-  of a new `flatpak.installation` config to allow custom installations, see
-  the readme group file for examples (#200).
+- ❗ Breaking Change ❗ The `flatpak` has been completely overhauled and a
+  new `installation:name` format is used for package/repo names since each
+  installation is independent. The `flatpak.systemwide` config has been
+  removed in favor of the more explicit installation on each package (#200
+  and #201)
 
 ### Removed
 
@@ -77,13 +79,6 @@ arch = {
   install`, and `metapac uninstall` subcommands have been removed (#198).
   This is up for discussion though, #197 has been opened for this
   purpose and contains further reasoning.
-
-### Fixed
-
-- The `flatpak` backend now groups packages with the same `installation`
-  and `remote` when running `flatpak install` so there are less yes/no
-  prompts as opposed to before where each package had it's own `flatpak
-  install` command. It's probably also more performant this way too (#200).
 
 ## [0.8.0] - 2026-01-11
 
