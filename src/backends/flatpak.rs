@@ -212,6 +212,9 @@ impl Backend for Flatpak {
 
         let repos = repos
             .lines()
+            // if there are no remotes an empty line is still returned
+            // so we filter out empty lines
+            .filter(|x| !x.is_empty())
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
                 let installation = parts[0].split(",").collect::<Vec<_>>()[0];
