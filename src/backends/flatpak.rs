@@ -232,7 +232,7 @@ impl Backend for Flatpak {
 
     fn add_repos(
         repos: &BTreeMap<String, Self::RepoOptions>,
-        no_confirm: bool,
+        _: bool,
         _: &Self::Config,
     ) -> Result<()> {
         for (repo, options) in repos {
@@ -243,7 +243,6 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-add"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),
@@ -265,7 +264,7 @@ impl Backend for Flatpak {
         Ok(())
     }
 
-    fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
+    fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         for repo in repos {
             let (installation, name) = repo.split_once(":").ok_or(eyre!(
                 "invalid flatpak repo name: {repo:?}, should be in form \"installation:repo\", such as \"system:flathub\""
@@ -274,7 +273,6 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-delete"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),

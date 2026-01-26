@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.9.2] - 2026-01-26
+
+### Fixed
+
+- Removed the `--assumeyes` option from the `flatpak remote-add` and
+  `flatpak remote-delete` commands as it's not a valid option (reported in
+  #209, fixed in #212).
+
 ## [0.9.1] - 2026-01-26
 
 ### Fixed
@@ -14,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a panic when parsing `flatpak` remotes and removed `sudo` from all
   `flatpak` commands as `flatpak` does its own privilege escalation
   (reported in #207, fixed in #208)
-
+ 
 ## [0.9.0] - 2026-01-25
 
 ‼️ This is a extremely breaking release. All users will need to fix their
