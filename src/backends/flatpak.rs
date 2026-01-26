@@ -98,7 +98,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "install"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -136,7 +136,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "uninstall"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -173,7 +173,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "update"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("--y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -192,7 +192,7 @@ impl Backend for Flatpak {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                .chain(Some("-y").filter(|_| no_confirm)),
             Perms::Same,
         )
     }
@@ -240,7 +240,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-add"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),
@@ -271,7 +271,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-delete"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),
