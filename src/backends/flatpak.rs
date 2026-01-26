@@ -98,7 +98,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "install"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -136,7 +136,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "uninstall"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -173,7 +173,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "update"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -192,7 +192,7 @@ impl Backend for Flatpak {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                .chain(Some("-y").filter(|_| no_confirm)),
             Perms::Same,
         )
     }
@@ -206,15 +206,12 @@ impl Backend for Flatpak {
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         let repos = run_command_for_stdout(
             ["flatpak", "remotes", "--columns", "options,name,url"],
-            Perms::Same,
+            Perms::Sudo,
             StdErr::Show,
         )?;
 
         let repos = repos
             .lines()
-            // if there are no remotes an empty line is still returned
-            // so we filter out empty lines
-            .filter(|x| !x.is_empty())
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
                 let installation = parts[0].split(",").collect::<Vec<_>>()[0];
@@ -243,7 +240,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-add"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),
@@ -258,7 +255,7 @@ impl Backend for Flatpak {
                             .ok_or(eyre!("flatpak repos must have the \"url\" option set"))?
                             .to_string(),
                     ]),
-                Perms::Same,
+                Perms::Sudo,
             )?
         }
 
@@ -274,7 +271,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "remote-delete"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(ToString::to_string)
                     .chain(match installation {
                         "user" => Some("--user".to_string()),
@@ -282,7 +279,7 @@ impl Backend for Flatpak {
                         x => Some(format!("--installation={x}")),
                     })
                     .chain([name.to_string()]),
-                Perms::Same,
+                Perms::Sudo,
             )?
         }
 
