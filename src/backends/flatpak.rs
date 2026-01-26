@@ -173,7 +173,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "update"]
                     .into_iter()
-                    .chain(Some("--y").filter(|_| no_confirm))
+                    .chain(Some("-y").filter(|_| no_confirm))
                     .map(|x| x.to_string())
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
