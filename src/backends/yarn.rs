@@ -60,7 +60,6 @@ impl Backend for Yarn {
         let package_file = Path::new(&dir).join("package.json");
 
         if !package_file.exists() {
-            dbg!(&package_file);
             return Ok(BTreeMap::new());
         }
 

@@ -206,12 +206,15 @@ impl Backend for Flatpak {
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         let repos = run_command_for_stdout(
             ["flatpak", "remotes", "--columns", "options,name,url"],
-            Perms::Sudo,
+            Perms::Same,
             StdErr::Show,
         )?;
 
         let repos = repos
             .lines()
+            // if there are no remotes an empty line is still returned
+            // so we filter out empty lines
+            .filter(|x| !x.is_empty())
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
                 let installation = parts[0].split(",").collect::<Vec<_>>()[0];
@@ -255,7 +258,7 @@ impl Backend for Flatpak {
                             .ok_or(eyre!("flatpak repos must have the \"url\" option set"))?
                             .to_string(),
                     ]),
-                Perms::Sudo,
+                Perms::Same,
             )?
         }
 
@@ -279,7 +282,7 @@ impl Backend for Flatpak {
                         x => Some(format!("--installation={x}")),
                     })
                     .chain([name.to_string()]),
-                Perms::Sudo,
+                Perms::Same,
             )?
         }
 
