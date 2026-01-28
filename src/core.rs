@@ -153,11 +153,11 @@ impl SyncCommand {
                         for options in required.$lower_backend.repos.values() {
                             options.hooks.run_before_sync()?;
                         }
-                        for options in required.$lower_backend.repos.values() {
+                        for options in missing.$lower_backend.repos.values() {
                             options.hooks.run_before_install()?;
                         }
                         $upper_backend::add_repos(&missing.clone().to_non_complex().$lower_backend.repos, self.no_confirm, &config.backend_configs().$lower_backend)?;
-                        for options in required.$lower_backend.repos.values() {
+                        for options in missing.$lower_backend.repos.values() {
                             options.hooks.run_after_install()?;
                         }
                         for options in required.$lower_backend.repos.values() {
@@ -167,11 +167,11 @@ impl SyncCommand {
                         for options in required.$lower_backend.packages.values() {
                             options.hooks.run_before_sync()?;
                         }
-                        for options in required.$lower_backend.packages.values() {
+                        for options in missing.$lower_backend.packages.values() {
                             options.hooks.run_before_install()?;
                         }
                         $upper_backend::install_packages(&missing.clone().to_non_complex().$lower_backend.packages, self.no_confirm, &config.backend_configs().$lower_backend)?;
-                        for options in required.$lower_backend.packages.values() {
+                        for options in missing.$lower_backend.packages.values() {
                             options.hooks.run_after_install()?;
                         }
                         for options in required.$lower_backend.packages.values() {
