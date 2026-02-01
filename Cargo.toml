@@ -1,46 +1,56 @@
 [package]
 name = "metapac"
-description = "multi-backend declarative package manager"
 version = "0.9.3"
 edition = "2024"
-license = "GPL-3.0-or-later"
-repository = "https://github.com/ripytide/metapac"
+description = "multi-backend declarative package manager"
 readme = "README.md"
-keywords = ["package-manager", "linux", "declarative", "cli"]
+repository = "https://github.com/ripytide/metapac"
+license = "GPL-3.0-or-later"
+keywords = ["cli", "declarative", "linux", "package-manager"]
 categories = ["command-line-utilities"]
 
 [package.metadata.release]
 allow-branch = ["main"]
 
-[lints.rustdoc]
-broken_intra_doc_links = "allow"
-
 [dependencies]
-color-eyre = "0.6.5"
-clap = { version = "4.5.54", features = ["derive"] }
+clap = { version = "4.5.56", features = ["derive"] }
 clap_complete = "4.5.65"
 clap_complete_nushell = "4.5.10"
-regex = "1.12.2"
-libc = "0.2.180"
-log = { version = "0.4.29", features = ["std"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-toml = "0.9.11"
+color-eyre = "0.6.5"
 derive_more = { version = "2.1.1", features = ["full"] }
-itertools = "0.14.0"
+dialoguer = "0.12.0"
 dirs = "6.0.0"
 home = "0.5.12"
-pretty_env_logger = "0.5.0"
-dialoguer = "0.12.0"
-serde-inline-default = "1.0.1"
 hostname = "0.4.2"
-walkdir = "2.5.0"
-toml_edit = { version = "0.24.0", features = ["serde", "display"] }
-tempfile = "3.24.0"
-strum = { version = "0.27.2", features = ["derive"] }
 indoc = "2.0.7"
+itertools = "0.14.0"
+libc = "0.2.180"
+log = { version = "0.4.29", features = ["std"] }
+pretty_env_logger = "0.5.0"
+regex = "1.12.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde-inline-default = "1.0.1"
+serde_json = "1.0.149"
+strum = { version = "0.27.2", features = ["derive"] }
 taplo = "0.14.0"
+tempfile = "3.24.0"
+toml = "0.9.11"
+toml_edit = { version = "0.24.0", features = ["display", "serde"] }
+walkdir = "2.5.0"
 
 [dev-dependencies]
 assert_cmd = "2.1.2"
 markdown = "1.0.0"
+
+[lints.clippy]
+as_conversions = "warn"
+missing_errors_doc = { level = "allow", priority = 1 }
+must_use_candidate = { level = "allow", priority = 1 }
+pedantic = "warn"
+redundant_pub_crate = "warn"
+unnecessary_debug_formatting = { level = "allow", priority = 1 }
+use_debug = "warn"
+use_self = "warn"
+
+[lints.rustdoc]
+broken_intra_doc_links = "allow"

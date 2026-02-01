@@ -78,9 +78,8 @@ impl Backend for Mise {
             StdErr::Hide,
         )?;
 
-        let packages_json = match serde_json::from_str(&packages)? {
-            Value::Object(x) => x,
-            _ => return Err(eyre!("json should be an object")),
+        let Value::Object(packages_json) = serde_json::from_str(&packages)? else {
+            return Err(eyre!("json should be an object"));
         };
 
         let mut packages = BTreeMap::new();
@@ -98,7 +97,7 @@ impl Backend for Mise {
                         version: first_version
                             .get("requested_version")
                             .and_then(|x| x.as_str())
-                            .map(|x| x.to_string()),
+                            .map(ToString::to_string),
                     },
                 );
             }

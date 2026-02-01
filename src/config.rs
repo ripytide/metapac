@@ -28,18 +28,18 @@ impl Config {
     pub fn load(config_dir: &Path) -> Result<Self> {
         let config_file_path = config_dir.join("config.toml");
 
-        if !config_file_path.is_file() {
-            log::warn!(
-                "no config file found at {config_file_path:?}, using default config instead"
-            );
-
-            Ok(Self::default())
-        } else {
+        if config_file_path.is_file() {
             toml::from_str(
                 &std::fs::read_to_string(config_file_path.clone())
                     .wrap_err("reading config file")?,
             )
             .wrap_err(eyre!("parsing toml config {config_file_path:?}"))
+        } else {
+            log::warn!(
+                "no config file found at {config_file_path:?}, using default config instead"
+            );
+
+            Ok(Self::default())
         }
     }
 

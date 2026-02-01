@@ -1,6 +1,6 @@
 /// This contains the four variants of types used with group files
 ///
-/// Raw types use Vec's instead of BTreeMap since they could contain duplicates.
+/// Raw types use `Vec`s instead of `BTreeMap` since they could contain duplicates.
 /// Once duplicate detection is done the type is converted into the non-raw variants.
 ///
 /// Then there is complex vs non-complex where complex items include extra information which at the

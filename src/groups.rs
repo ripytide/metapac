@@ -18,7 +18,7 @@ pub struct Groups(BTreeMap<PathBuf, AllRawComplexBackendItems>);
 impl Groups {
     pub fn contains(&self, backend: AnyBackend, package: &str) -> BTreeSet<PathBuf> {
         let mut results = BTreeSet::new();
-        for (group_file, all_items) in self.0.iter() {
+        for (group_file, all_items) in &self.0 {
             macro_rules! x {
                 ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                     match backend {
@@ -59,7 +59,7 @@ impl Groups {
             apply_backends!(x);
         }
 
-        for ((backend, package), group_files_counts) in reoriented.iter() {
+        for ((backend, package), group_files_counts) in reoriented {
             if group_files_counts.len() > 1 || group_files_counts.values().any(|y| *y > 1) {
                 let group_files = group_files_counts.keys().cloned().collect::<Vec<_>>();
 
@@ -89,14 +89,14 @@ impl Groups {
         apply_backends!(x)
     }
 
-    pub fn load(hostname: &str, group_dir: &Path, config: &Config) -> Result<Groups> {
+    pub fn load(hostname: &str, group_dir: &Path, config: &Config) -> Result<Self> {
         let group_files = config
             .group_files(group_dir, hostname)
             .wrap_err("finding group files")?;
 
         let mut groups = Self::default();
 
-        for group_file in group_files.iter() {
+        for group_file in &group_files {
             let file_contents =
                 read_to_string(group_file).wrap_err(eyre!("reading group file {group_file:?}"))?;
 
@@ -115,7 +115,7 @@ fn parse_group_file(group_file: &Path, contents: &str) -> Result<AllRawComplexBa
 
     let toml = toml::from_str::<Table>(contents)?;
 
-    for (key, value) in toml.iter() {
+    for (key, value) in &toml {
         raw_packages.append(&mut parse_toml_key_value(group_file, key, value)?);
     }
 

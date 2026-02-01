@@ -33,24 +33,24 @@ pub enum SnapConfinement {
     Jailmode,
 }
 impl SnapConfinement {
-    fn try_from_notes(notes: &str) -> Option<SnapConfinement> {
+    fn try_from_notes(notes: &str) -> Option<Self> {
         match notes {
-            "-" => Some(SnapConfinement::Strict),
-            "classic" => Some(SnapConfinement::Classic),
-            "dangerous" => Some(SnapConfinement::Dangerous),
-            "devmode" => Some(SnapConfinement::Devmode),
-            "jailmode" => Some(SnapConfinement::Jailmode),
+            "-" => Some(Self::Strict),
+            "classic" => Some(Self::Classic),
+            "dangerous" => Some(Self::Dangerous),
+            "devmode" => Some(Self::Devmode),
+            "jailmode" => Some(Self::Jailmode),
             _ => None,
         }
     }
 
     fn to_cli_option(&self) -> Option<String> {
         match self {
-            SnapConfinement::Strict => None,
-            SnapConfinement::Classic => Some("--classic"),
-            SnapConfinement::Dangerous => Some("--dangerous"),
-            SnapConfinement::Devmode => Some("--devmode"),
-            SnapConfinement::Jailmode => Some("--jailmode"),
+            Self::Strict => None,
+            Self::Classic => Some("--classic"),
+            Self::Dangerous => Some("--dangerous"),
+            Self::Devmode => Some("--devmode"),
+            Self::Jailmode => Some("--jailmode"),
         }
         .map(String::from)
     }

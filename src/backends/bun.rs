@@ -45,15 +45,12 @@ impl Backend for Bun {
             return Ok(BTreeMap::new());
         }
 
-        let output = match run_command_for_stdout(
-            ["bun", "pm", "ls", "--global"],
-            Perms::Same,
-            StdErr::Hide,
-        ) {
-            Ok(output) => output,
+        let Ok(output) =
+            run_command_for_stdout(["bun", "pm", "ls", "--global"], Perms::Same, StdErr::Hide)
+        else {
             //unfortunately when there are no global packages installed bun returns an error rather
             //than saying zero packages
-            Err(_) => return Ok(BTreeMap::new()),
+            return Ok(BTreeMap::new());
         };
 
         let lines = output.lines().collect::<Vec<_>>();
@@ -70,7 +67,7 @@ impl Backend for Bun {
                 return Err(eyre!("unexpected tree parts"));
             }
 
-            let name = if tree_parts[1].starts_with("@") {
+            let name = if tree_parts[1].starts_with('@') {
                 let package_parts = tree_parts[1].split('@').collect::<Vec<_>>();
 
                 if package_parts.len() != 3 {

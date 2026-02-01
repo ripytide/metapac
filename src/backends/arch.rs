@@ -28,23 +28,20 @@ pub enum ArchPackageManager {
     Yay,
 }
 impl ArchPackageManager {
-    pub fn as_command(&self) -> &'static str {
+    pub fn as_command(self) -> &'static str {
         match self {
-            ArchPackageManager::Pacman => "pacman",
-            ArchPackageManager::Pamac => "pamac",
-            ArchPackageManager::Paru => "paru",
-            ArchPackageManager::Pikaur => "pikaur",
-            ArchPackageManager::Yay => "yay",
+            Self::Pacman => "pacman",
+            Self::Pamac => "pamac",
+            Self::Paru => "paru",
+            Self::Pikaur => "pikaur",
+            Self::Yay => "yay",
         }
     }
 
-    pub fn change_perms(&self) -> Perms {
+    pub fn change_perms(self) -> Perms {
         match self {
-            ArchPackageManager::Pacman => Perms::Sudo,
-            ArchPackageManager::Pamac => Perms::Same,
-            ArchPackageManager::Paru => Perms::Same,
-            ArchPackageManager::Pikaur => Perms::Same,
-            ArchPackageManager::Yay => Perms::Same,
+            Self::Pacman => Perms::Sudo,
+            Self::Pamac | Self::Paru | Self::Pikaur | Self::Yay => Perms::Same,
         }
     }
 }
@@ -86,7 +83,7 @@ impl Backend for Arch {
         // see <https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming>
         let regex = Regex::new("[a-z0-9@._+-]+").unwrap();
 
-        Some(regex.is_match(package) && !package.starts_with("-") && !package.starts_with("."))
+        Some(regex.is_match(package) && !package.starts_with('-') && !package.starts_with('.'))
     }
 
     fn get_all_packages(config: &Self::Config) -> Result<BTreeSet<String>> {

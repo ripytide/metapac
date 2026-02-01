@@ -55,7 +55,7 @@ pub struct UpdateAllCommand {
     #[arg(long)]
     /// the backends to operate on
     ///
-    /// - if no backends are passed then the enabled_backend config is used
+    /// - if no backends are passed then the `enabled_backends` config is used
     ///
     /// - if "all" is passed by itself then all backends are used
     ///
@@ -100,7 +100,7 @@ pub struct CleanCacheCommand {
     #[arg(long)]
     /// the backends to operate on
     ///
-    /// - if no backends are passed then the enabled_backend config is used
+    /// - if no backends are passed then the `enabled_backends` config is used
     ///
     /// - if "all" is passed by itself then all backends are used
     ///

@@ -58,8 +58,8 @@ impl Backend for Uv {
             StdErr::Hide,
         )?
         .lines()
-        .filter(|x| !x.starts_with("-"))
-        .map(|x| x.split(" ").next().unwrap().to_string())
+        .filter(|x| !x.starts_with('-'))
+        .map(|x| x.split(' ').next().unwrap().to_string())
         .map(|x| (x, Self::PackageOptions { python: None }))
         .collect();
 

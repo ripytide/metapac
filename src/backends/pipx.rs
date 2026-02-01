@@ -50,7 +50,7 @@ impl Backend for Pipx {
             return Ok(BTreeMap::new());
         }
 
-        let names = extract_package_names(run_command_for_stdout(
+        let names = extract_package_names(&run_command_for_stdout(
             ["pipx", "list", "--json"],
             Perms::Same,
             StdErr::Hide,
@@ -137,8 +137,8 @@ impl Backend for Pipx {
     }
 }
 
-fn extract_package_names(stdout: String) -> Result<BTreeSet<String>> {
-    let value: Value = serde_json::from_str(&stdout)?;
+fn extract_package_names(stdout: &str) -> Result<BTreeSet<String>> {
+    let value: Value = serde_json::from_str(stdout)?;
 
     let result = value["venvs"]
         .as_object()

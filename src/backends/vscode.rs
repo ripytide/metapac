@@ -28,10 +28,10 @@ pub enum VsCodeVariant {
     Codium,
 }
 impl VsCodeVariant {
-    pub fn as_command(&self) -> &'static str {
+    pub fn as_command(self) -> &'static str {
         match self {
-            VsCodeVariant::Code => "code",
-            VsCodeVariant::Codium => "codium",
+            Self::Code => "code",
+            Self::Codium => "codium",
         }
     }
 }

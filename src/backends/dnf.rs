@@ -161,20 +161,20 @@ impl Backend for Dnf {
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm)),
                 Perms::Sudo,
-            )?
+            )?;
         }
 
         Ok(())
     }
 
     fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
-        for repo in repos.iter() {
+        for repo in repos {
             run_command(
                 ["dnf", "copr", "remove", repo.as_str()]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm)),
                 Perms::Sudo,
-            )?
+            )?;
         }
 
         Ok(())

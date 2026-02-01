@@ -34,7 +34,7 @@ impl Command {
         let config = Config::load(&config_dir).wrap_err("loading config file")?;
 
         if config.enabled_backends(&hostname).is_empty() {
-            log::warn!("no backends found in the enabled_backends config")
+            log::warn!("no backends found in the enabled_backends config");
         }
 
         match self.subcommand {
@@ -64,10 +64,10 @@ impl UpdateAllCommand {
         let enabled_backends = &config.enabled_backends(hostname);
         let backends = parse_backends(&self.backends, enabled_backends)?;
 
-        for backend in backends.iter() {
+        for backend in backends {
             log::info!("updating all packages for {backend} backend");
 
-            backend.update_all(self.no_confirm, config.backend_configs())?
+            backend.update_all(self.no_confirm, config.backend_configs())?;
         }
 
         Ok(())
@@ -188,6 +188,7 @@ impl SyncCommand {
 }
 
 impl UnmanagedCommand {
+    #[allow(clippy::unused_self)]
     fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
         let enabled_backends = config.enabled_backends(hostname);
         let required = required(hostname, group_dir, config)?;
@@ -205,6 +206,7 @@ impl UnmanagedCommand {
 }
 
 impl BackendsCommand {
+    #[allow(clippy::unused_self)]
     fn run(self, config: &Config) -> Result<()> {
         for backend in AnyBackend::iter() {
             println!(
@@ -226,10 +228,10 @@ impl CleanCacheCommand {
         let enabled_backends = &config.enabled_backends(hostname);
         let backends = parse_backends(&self.backends, enabled_backends)?;
 
-        for backend in backends.iter() {
+        for backend in backends {
             log::info!("cleaning cache for {backend} backend");
 
-            backend.clean_cache(config.backend_configs())?
+            backend.clean_cache(config.backend_configs())?;
         }
 
         Ok(())

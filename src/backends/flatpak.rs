@@ -84,7 +84,7 @@ impl Backend for Flatpak {
         //group packages for faster installation and less y/n prompts
         let mut groups: BTreeMap<(String, Option<String>), Vec<String>> = BTreeMap::new();
         for (package, options) in packages {
-            let (installation, name) = package.split_once(":").ok_or(eyre!(
+            let (installation, name) = package.split_once(':').ok_or(eyre!(
                 "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
@@ -99,7 +99,7 @@ impl Backend for Flatpak {
                 ["flatpak", "install"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
-                    .map(|x| x.to_string())
+                    .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
                         "system" => Some("--system".to_string()),
@@ -122,7 +122,7 @@ impl Backend for Flatpak {
         //group packages for faster uninstallation and less y/n prompts
         let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for package in packages {
-            let (installation, name) = package.split_once(":").ok_or(eyre!(
+            let (installation, name) = package.split_once(':').ok_or(eyre!(
                 "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
@@ -137,7 +137,7 @@ impl Backend for Flatpak {
                 ["flatpak", "uninstall"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
-                    .map(|x| x.to_string())
+                    .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
                         "system" => Some("--system".to_string()),
@@ -159,7 +159,7 @@ impl Backend for Flatpak {
         //group packages for faster uninstallation and less y/n prompts
         let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for package in packages {
-            let (installation, name) = package.split_once(":").ok_or(eyre!(
+            let (installation, name) = package.split_once(':').ok_or(eyre!(
                 "invalid flatpak package name: {package:?}, should be in form \"installation:package\", such as \"system:metapac\""
             ))?;
 
@@ -174,7 +174,7 @@ impl Backend for Flatpak {
                 ["flatpak", "update"]
                     .into_iter()
                     .chain(Some("--assumeyes").filter(|_| no_confirm))
-                    .map(|x| x.to_string())
+                    .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
                         "system" => Some("--system".to_string()),
@@ -217,7 +217,7 @@ impl Backend for Flatpak {
             .filter(|x| !x.is_empty())
             .map(|line| {
                 let parts = line.split_whitespace().collect::<Vec<_>>();
-                let installation = parts[0].split(",").collect::<Vec<_>>()[0];
+                let installation = parts[0].split(',').collect::<Vec<_>>()[0];
                 (
                     format!("{}:{}", installation, parts[1]),
                     FlatpakRepoOptions {
@@ -236,7 +236,7 @@ impl Backend for Flatpak {
         _: &Self::Config,
     ) -> Result<()> {
         for (repo, options) in repos {
-            let (installation, name) = repo.split_once(":").ok_or(eyre!(
+            let (installation, name) = repo.split_once(':').ok_or(eyre!(
                 "invalid flatpak repo name: {repo:?}, should be in form \"installation:repo\", such as \"system:flathub\""
             ))?;
 
@@ -258,7 +258,7 @@ impl Backend for Flatpak {
                             .to_string(),
                     ]),
                 Perms::Same,
-            )?
+            )?;
         }
 
         Ok(())
@@ -266,7 +266,7 @@ impl Backend for Flatpak {
 
     fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
         for repo in repos {
-            let (installation, name) = repo.split_once(":").ok_or(eyre!(
+            let (installation, name) = repo.split_once(':').ok_or(eyre!(
                 "invalid flatpak repo name: {repo:?}, should be in form \"installation:repo\", such as \"system:flathub\""
             ))?;
 
@@ -281,7 +281,7 @@ impl Backend for Flatpak {
                     })
                     .chain([name.to_string()]),
                 Perms::Same,
-            )?
+            )?;
         }
 
         Ok(())

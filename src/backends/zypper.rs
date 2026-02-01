@@ -127,10 +127,10 @@ impl Backend for Zypper {
         run_command(
             [
                 "zypper",
-                if !config.distribution_upgrade {
-                    "update"
-                } else {
+                if config.distribution_upgrade {
                     "dist-upgrade"
+                } else {
+                    "update"
                 },
             ]
             .into_iter()

@@ -41,7 +41,7 @@ where
                 }
             };
 
-            output.insert(package.to_string(), valid);
+            output.insert(package.clone(), valid);
         }
 
         output

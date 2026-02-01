@@ -105,7 +105,7 @@ where
 
     match status {
         Ok(status) if status.success() => {
-            log::trace!("command succeeded, status: {}", status);
+            log::trace!("command succeeded, status: {status}");
             Ok(())
         }
         Ok(status) => Err(eyre!(
@@ -121,6 +121,7 @@ where
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn get_args(mut args: VecDeque<String>, perms: Perms) -> Result<VecDeque<String>> {
     #[cfg(unix)]
     match perms {

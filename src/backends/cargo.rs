@@ -90,10 +90,10 @@ impl Backend for Cargo {
             run_command(
                 ["cargo"]
                     .into_iter()
-                    .chain(if !config.binstall {
-                        vec!["install"]
-                    } else {
+                    .chain(if config.binstall {
                         vec!["binstall", "--no-confirm"]
+                    } else {
+                        vec!["install"]
                     })
                     .chain(
                         Some("--locked")
@@ -236,8 +236,8 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptio
 
             let git = if source.starts_with("(git+") {
                 Some(
-                    source.split("+").collect::<Vec<_>>()[1]
-                        .split("#")
+                    source.split('+').collect::<Vec<_>>()[1]
+                        .split('#')
                         .next()
                         .unwrap()
                         .to_string(),
