@@ -382,10 +382,12 @@ distribution_upgrade = false
 # The "package" field in the table specifies the name of the package.
 #
 # For example, the following two packages are equivalent:
-# arch = [
-#  "metapac",
-#  { package = "metapac" }
-# ]
+# arch = {
+#   packages = [
+#     "metapac",
+#     { name = "metapac" }
+#   ]
+# }
 
 apt = { packages = ["package1", { name = "package2" }] }
 arch = {
