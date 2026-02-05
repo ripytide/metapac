@@ -385,7 +385,7 @@ distribution_upgrade = false
 # arch = {
 #   packages = [
 #     "metapac",
-#     { package = "metapac" }
+#     { name = "metapac" }
 #   ]
 # }
 
