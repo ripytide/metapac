@@ -149,6 +149,7 @@ for additional backends are always welcome!
 | [`flatpak`](#flatpak) |
 | [`mas`](#mas)         |
 | [`mise`](#mise)       |
+| [`nix`](#nix)         |
 | [`npm`](#npm)         |
 | [`pipx`](#pipx)       |
 | [`pnpm`](#pnpm)       |
@@ -229,6 +230,13 @@ Standard usage.
 ### mise
 
 Standard usage.
+
+### nix
+
+The `nix` backend uses `nix profile` commands.
+
+Packages are matched by profile element name. If you use custom installables
+you should set `options.installable` explicitly so installs are reproducible.
 
 ### npm
 
@@ -342,6 +350,19 @@ locked = false
 # This can be faster for installing packages as it downloads pre-built binaries.
 # Default: false
 binstall = false
+
+[nix]
+# Optional profile path to operate on. If unset, nix uses the default profile.
+# Default: None
+profile = "/home/alice/.local/state/nix/profiles/profile"
+
+# Pass --impure to nix commands that evaluate installables.
+# Default: false
+impure = false
+
+# Pass --accept-flake-config to nix commands that evaluate installables.
+# Default: false
+accept_flake_config = false
 
 [vscode]
 # Since VSCode and VSCodium both operate on the same package database
@@ -514,6 +535,12 @@ mise = {
     { name = "package3", options = { version = "lts" } },
   ]
 }
+nix = {
+  packages = [
+    "hello",
+    { name = "ripgrep", options = { installable = "nixpkgs#ripgrep", priority = 4 } },
+  ]
+}
 npm = { packages = ["package1", { name = "package2" }] }
 pipx = { packages = ["package1", { name = "package2" }] }
 pnpm = { packages = ["package1", { name = "package2" }] }
@@ -554,7 +581,6 @@ of any other package managers we should be aware of.
 - [`emerge`](https://wiki.gentoo.org/wiki/Emerge): no attempt made yet
 - [`guix`](https://codeberg.org/guix/guix): no attempt made yet
 - [`nala`](https://github.com/volitank/nala): no attempt made yet
-- [`nix`](https://github.com/NixOS/nix): no attempt made yet
 - [`opkg`](https://github.com/oe-mirrors/opkg): no attempt made yet
 - [`pip`](https://pypi.org/project/pip/): we support `pipx` instead which
   only allows you to install cli programs which makes sense for a global

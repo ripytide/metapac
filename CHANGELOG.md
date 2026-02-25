@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added a new `nix` backend using `nix profile`, including package options for
+  `installable` and `priority`, plus backend config options for `profile`,
+  `impure`, and `accept_flake_config`.
+
 ## [0.9.3] - 2026-01-28
 
 ### Fixed
