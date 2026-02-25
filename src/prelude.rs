@@ -13,6 +13,7 @@ pub use crate::backends::dnf::{Dnf, DnfConfig, DnfPackageOptions};
 pub use crate::backends::flatpak::{Flatpak, FlatpakConfig, FlatpakPackageOptions};
 pub use crate::backends::mas::{Mas, MasConfig, MasPackageOptions};
 pub use crate::backends::mise::{Mise, MiseConfig, MisePackageOptions};
+pub use crate::backends::nix::{Nix, NixConfig, NixPackageOptions};
 pub use crate::backends::npm::{Npm, NpmPackageOptions};
 pub use crate::backends::pipx::{Pipx, PipxPackageOptions};
 pub use crate::backends::pnpm::{Pnpm, PnpmPackageOptions};
