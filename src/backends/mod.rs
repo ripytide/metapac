@@ -8,6 +8,7 @@ pub mod dnf;
 pub mod flatpak;
 pub mod mas;
 pub mod mise;
+pub mod nix;
 pub mod npm;
 pub mod pipx;
 pub mod pnpm;
@@ -36,6 +37,7 @@ macro_rules! apply_backends {
         (Flatpak, flatpak),
         (Mas, mas),
         (Mise, mise),
+        (Nix, nix),
         (Npm, npm),
         (Pipx, pipx),
         (Pnpm, pnpm),
