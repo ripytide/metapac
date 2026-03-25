@@ -26,6 +26,15 @@ cargo install metapac
 paru -S metapac
 ```
 
+### With Copr (Fedora/RHEL/EPEL)
+
+This is an **unofficial** repo maintained by [komapro](https://github.com/komapro).
+
+```shell
+dnf copr enable komapro/metapac
+dnf install metapac
+```
+
 ## Meta
 
 `metapac` is a meta package manager, that means it does not directly
