@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Removed the no longer valid `quarantine` options from the `brew` backend
+  (reported in #224, fixed in #225).
+
 ## [0.9.3] - 2026-01-28
 
 ### Fixed

@@ -11,23 +11,13 @@ use serde_inline_default::serde_inline_default;
 pub struct Brew;
 
 #[serde_inline_default]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-pub struct BrewConfig {
-    #[serde_inline_default(BrewConfig::default().quarantine)]
-    quarantine: bool,
-}
-impl Default for BrewConfig {
-    fn default() -> Self {
-        Self { quarantine: true }
-    }
-}
+pub struct BrewConfig {}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct BrewPackageOptions {
-    quarantine: Option<bool>,
-}
+pub struct BrewPackageOptions {}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -72,28 +62,18 @@ impl Backend for Brew {
         Ok(formulae
             .lines()
             .chain(casks.lines())
-            .map(|x| (x.to_string(), Self::PackageOptions { quarantine: None }))
+            .map(|x| (x.to_string(), Self::PackageOptions {}))
             .collect())
     }
 
     fn install_packages(
         packages: &BTreeMap<String, Self::PackageOptions>,
         _: bool,
-        config: &Self::Config,
+        _: &Self::Config,
     ) -> Result<()> {
-        for (package, options) in packages {
+        for package in packages.keys() {
             run_command(
-                [
-                    "brew",
-                    "install",
-                    if options.quarantine.unwrap_or(config.quarantine) {
-                        "--quarantine"
-                    } else {
-                        "--no-quarantine"
-                    },
-                    package.as_str(),
-                ]
-                .into_iter(),
+                ["brew", "install", package.as_str()].into_iter(),
                 Perms::Same,
             )?;
         }

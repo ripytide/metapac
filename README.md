@@ -333,14 +333,6 @@ server = ["relative_group"]
 # Default: "pacman"
 package_manager = "paru"
 
-[brew]
-# If this is `true` then brew packages default to using the `--quarantine`
-# option.
-# If this is `false` then brew packages default to using the `--no-quarantine`
-# option.
-# Default: true
-quarantine = true
-
 [cargo]
 # Whether to default to installing cargo packages with the `--locked` option.
 # Default: false
@@ -450,12 +442,7 @@ arch = {
     },
   ]
 }
-brew = {
-  packages = [
-    "package1",
-    { name = "package2", options = { quarantine = false } }
-  ]
-}
+brew = { packages = ["package1", { name = "package2" }] }
 bun = { packages = ["package1", { name = "package2" }] }
 cargo = {
   packages = [
