@@ -247,7 +247,7 @@ fn parse_installed_packages(stdout: &str) -> Result<BTreeMap<String, NixPackageO
                 .filter(|priority| *priority != 5);
 
             Ok((
-                name.to_string(),
+                name.clone(),
                 NixPackageOptions {
                     installable,
                     priority,
