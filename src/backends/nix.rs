@@ -33,19 +33,6 @@ pub struct NixPackageOptions {
 #[serde(deny_unknown_fields)]
 pub struct NixRepoOptions {}
 
-#[derive(Debug, Deserialize)]
-struct NixProfileList {
-    elements: BTreeMap<String, NixProfileElement>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct NixProfileElement {
-    attr_path: Option<String>,
-    original_url: Option<String>,
-    priority: Option<u32>,
-}
-
 impl Backend for Nix {
     type Config = NixConfig;
     type PackageOptions = NixPackageOptions;
@@ -83,14 +70,13 @@ impl Backend for Nix {
             return Ok(BTreeMap::new());
         }
 
-        let mut args = vec![
-            "nix".to_string(),
-            "profile".to_string(),
-            "list".to_string(),
-            "--json".to_string(),
-            "--no-pretty".to_string(),
-        ];
-        append_profile_arg(&mut args, config);
+        let mut args = vec!["nix", "profile", "list", "--json", "--no-pretty"]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+        if let Some(profile) = &config.profile {
+            args.extend(["--profile".to_string(), profile.clone()]);
+        }
 
         let output = run_command_for_stdout(args, Perms::Same, StdErr::Show)?;
         parse_installed_packages(&output)
@@ -102,8 +88,13 @@ impl Backend for Nix {
         config: &Self::Config,
     ) -> Result<()> {
         for (name, options) in packages {
-            let mut args = vec!["nix".to_string(), "profile".to_string(), "add".to_string()];
-            append_profile_arg(&mut args, config);
+            let mut args = vec!["nix", "profile", "add"]
+                .into_iter()
+                .map(String::from)
+                .collect::<Vec<_>>();
+            if let Some(profile) = &config.profile {
+                args.extend(["--profile".to_string(), profile.clone()]);
+            }
             append_eval_flags(&mut args, config);
 
             if let Some(priority) = options.priority {
@@ -111,7 +102,12 @@ impl Backend for Nix {
                 args.push(priority.to_string());
             }
 
-            args.push(installable_for(name, options));
+            args.push(
+                options
+                    .installable
+                    .clone()
+                    .unwrap_or_else(|| format!("nixpkgs#{name}")),
+            );
 
             run_command(args, Perms::Same)?;
         }
@@ -125,12 +121,13 @@ impl Backend for Nix {
         config: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
-            let mut args = vec![
-                "nix".to_string(),
-                "profile".to_string(),
-                "remove".to_string(),
-            ];
-            append_profile_arg(&mut args, config);
+            let mut args = vec!["nix", "profile", "remove"]
+                .into_iter()
+                .map(String::from)
+                .collect::<Vec<_>>();
+            if let Some(profile) = &config.profile {
+                args.extend(["--profile".to_string(), profile.clone()]);
+            }
             args.extend(packages.iter().cloned());
             run_command(args, Perms::Same)?;
         }
@@ -140,12 +137,13 @@ impl Backend for Nix {
 
     fn update_packages(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
-            let mut args = vec![
-                "nix".to_string(),
-                "profile".to_string(),
-                "upgrade".to_string(),
-            ];
-            append_profile_arg(&mut args, config);
+            let mut args = vec!["nix", "profile", "upgrade"]
+                .into_iter()
+                .map(String::from)
+                .collect::<Vec<_>>();
+            if let Some(profile) = &config.profile {
+                args.extend(["--profile".to_string(), profile.clone()]);
+            }
             append_eval_flags(&mut args, config);
             args.extend(packages.iter().cloned());
             run_command(args, Perms::Same)?;
@@ -155,13 +153,13 @@ impl Backend for Nix {
     }
 
     fn update_all_packages(_: bool, config: &Self::Config) -> Result<()> {
-        let mut args = vec![
-            "nix".to_string(),
-            "profile".to_string(),
-            "upgrade".to_string(),
-            "--all".to_string(),
-        ];
-        append_profile_arg(&mut args, config);
+        let mut args = vec!["nix", "profile", "upgrade", "--all"]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+        if let Some(profile) = &config.profile {
+            args.extend(["--profile".to_string(), profile.clone()]);
+        }
         append_eval_flags(&mut args, config);
         run_command(args, Perms::Same)
     }
@@ -199,13 +197,6 @@ impl Backend for Nix {
     }
 }
 
-fn append_profile_arg(args: &mut Vec<String>, config: &NixConfig) {
-    if let Some(profile) = &config.profile {
-        args.push("--profile".to_string());
-        args.push(profile.clone());
-    }
-}
-
 fn append_eval_flags(args: &mut Vec<String>, config: &NixConfig) {
     if config.impure {
         args.push("--impure".to_string());
@@ -215,36 +206,53 @@ fn append_eval_flags(args: &mut Vec<String>, config: &NixConfig) {
     }
 }
 
-fn installable_for(name: &str, options: &NixPackageOptions) -> String {
-    options
-        .installable
-        .clone()
-        .unwrap_or_else(|| format!("nixpkgs#{name}"))
-}
-
 fn parse_installed_packages(stdout: &str) -> Result<BTreeMap<String, NixPackageOptions>> {
-    let profile_list: NixProfileList = serde_json::from_str(stdout)?;
+    let profile_list: serde_json::Value = serde_json::from_str(stdout)?;
+    let elements = profile_list["elements"]
+        .as_object()
+        .ok_or(eyre!("expected `elements` to be an object"))?;
 
-    let installed = profile_list
-        .elements
-        .into_iter()
+    elements
+        .iter()
         .map(|(name, element)| {
-            let installable = element
-                .original_url
-                .zip(element.attr_path)
+            let element = element
+                .as_object()
+                .ok_or(eyre!("expected profile element to be an object"))?;
+
+            let original_url = element
+                .get("originalUrl")
+                .map(|x| {
+                    x.as_str()
+                        .ok_or(eyre!("expected `originalUrl` to be a string"))
+                })
+                .transpose()?;
+            let attr_path = element
+                .get("attrPath")
+                .map(|x| {
+                    x.as_str()
+                        .ok_or(eyre!("expected `attrPath` to be a string"))
+                })
+                .transpose()?;
+            let installable = original_url
+                .zip(attr_path)
                 .map(|(original_url, attr_path)| format!("{original_url}#{attr_path}"));
 
-            let priority = element.priority.filter(|priority| *priority != 5);
+            let priority = element
+                .get("priority")
+                .map(|x| {
+                    let priority = x.as_u64().ok_or(eyre!("expected `priority` to be a u64"))?;
+                    u32::try_from(priority).map_err(|_| eyre!("priority overflows u32"))
+                })
+                .transpose()?
+                .filter(|priority| *priority != 5);
 
-            (
-                name,
+            Ok((
+                name.to_string(),
                 NixPackageOptions {
                     installable,
                     priority,
                 },
-            )
+            ))
         })
-        .collect();
-
-    Ok(installed)
+        .collect()
 }
