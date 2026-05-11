@@ -70,13 +70,11 @@ impl Backend for Nix {
             return Ok(BTreeMap::new());
         }
 
-        let mut args = vec!["nix", "profile", "list", "--json", "--no-pretty"]
+        let args = ["nix", "profile", "list", "--json", "--no-pretty"]
             .into_iter()
             .map(String::from)
+            .chain(profile_args(config))
             .collect::<Vec<_>>();
-        if let Some(profile) = &config.profile {
-            args.extend(["--profile".to_string(), profile.clone()]);
-        }
 
         let output = run_command_for_stdout(args, Perms::Same, StdErr::Show)?;
         parse_installed_packages(&output)
@@ -88,26 +86,24 @@ impl Backend for Nix {
         config: &Self::Config,
     ) -> Result<()> {
         for (name, options) in packages {
-            let mut args = vec!["nix", "profile", "add"]
+            let args = ["nix", "profile", "add"]
                 .into_iter()
                 .map(String::from)
+                .chain(profile_args(config))
+                .chain(eval_flag_args(config))
+                .chain(
+                    options
+                        .priority
+                        .into_iter()
+                        .flat_map(|priority| ["--priority".to_string(), priority.to_string()]),
+                )
+                .chain(std::iter::once(
+                    options
+                        .installable
+                        .clone()
+                        .unwrap_or_else(|| format!("nixpkgs#{name}")),
+                ))
                 .collect::<Vec<_>>();
-            if let Some(profile) = &config.profile {
-                args.extend(["--profile".to_string(), profile.clone()]);
-            }
-            append_eval_flags(&mut args, config);
-
-            if let Some(priority) = options.priority {
-                args.push("--priority".to_string());
-                args.push(priority.to_string());
-            }
-
-            args.push(
-                options
-                    .installable
-                    .clone()
-                    .unwrap_or_else(|| format!("nixpkgs#{name}")),
-            );
 
             run_command(args, Perms::Same)?;
         }
@@ -121,14 +117,12 @@ impl Backend for Nix {
         config: &Self::Config,
     ) -> Result<()> {
         if !packages.is_empty() {
-            let mut args = vec!["nix", "profile", "remove"]
+            let args = ["nix", "profile", "remove"]
                 .into_iter()
                 .map(String::from)
+                .chain(profile_args(config))
+                .chain(packages.iter().cloned())
                 .collect::<Vec<_>>();
-            if let Some(profile) = &config.profile {
-                args.extend(["--profile".to_string(), profile.clone()]);
-            }
-            args.extend(packages.iter().cloned());
             run_command(args, Perms::Same)?;
         }
 
@@ -137,15 +131,13 @@ impl Backend for Nix {
 
     fn update_packages(packages: &BTreeSet<String>, _: bool, config: &Self::Config) -> Result<()> {
         if !packages.is_empty() {
-            let mut args = vec!["nix", "profile", "upgrade"]
+            let args = ["nix", "profile", "upgrade"]
                 .into_iter()
                 .map(String::from)
+                .chain(profile_args(config))
+                .chain(eval_flag_args(config))
+                .chain(packages.iter().cloned())
                 .collect::<Vec<_>>();
-            if let Some(profile) = &config.profile {
-                args.extend(["--profile".to_string(), profile.clone()]);
-            }
-            append_eval_flags(&mut args, config);
-            args.extend(packages.iter().cloned());
             run_command(args, Perms::Same)?;
         }
 
@@ -153,14 +145,12 @@ impl Backend for Nix {
     }
 
     fn update_all_packages(_: bool, config: &Self::Config) -> Result<()> {
-        let mut args = vec!["nix", "profile", "upgrade", "--all"]
+        let args = ["nix", "profile", "upgrade", "--all"]
             .into_iter()
             .map(String::from)
+            .chain(profile_args(config))
+            .chain(eval_flag_args(config))
             .collect::<Vec<_>>();
-        if let Some(profile) = &config.profile {
-            args.extend(["--profile".to_string(), profile.clone()]);
-        }
-        append_eval_flags(&mut args, config);
         run_command(args, Perms::Same)
     }
 
@@ -197,13 +187,24 @@ impl Backend for Nix {
     }
 }
 
-fn append_eval_flags(args: &mut Vec<String>, config: &NixConfig) {
-    if config.impure {
-        args.push("--impure".to_string());
-    }
-    if config.accept_flake_config {
-        args.push("--accept-flake-config".to_string());
-    }
+fn profile_args(config: &NixConfig) -> impl Iterator<Item = String> {
+    config
+        .profile
+        .iter()
+        .cloned()
+        .flat_map(|profile| ["--profile".to_string(), profile])
+}
+
+fn eval_flag_args(config: &NixConfig) -> impl Iterator<Item = String> {
+    config
+        .impure
+        .then_some("--impure".to_string())
+        .into_iter()
+        .chain(
+            config
+                .accept_flake_config
+                .then_some("--accept-flake-config".to_string()),
+        )
 }
 
 fn parse_installed_packages(stdout: &str) -> Result<BTreeMap<String, NixPackageOptions>> {
