@@ -55,6 +55,10 @@ impl UpdateCommand {
     fn run(self, config: &Config) -> Result<()> {
         let packages = package_vec_to_btreeset(self.packages);
 
+        if self.refresh {
+            refresh_backend(self.backend, config.backend_configs())?;
+        }
+
         self.backend
             .update(&packages, self.no_confirm, config.backend_configs())
     }
@@ -66,6 +70,10 @@ impl UpdateAllCommand {
         let backends = parse_backends(&self.backends, enabled_backends)?;
 
         for backend in backends {
+            if self.refresh {
+                refresh_backend(backend, config.backend_configs())?;
+            }
+
             log::info!("updating all packages for {backend} backend");
 
             backend.update_all(self.no_confirm, config.backend_configs())?;
@@ -123,6 +131,11 @@ impl CleanCommand {
 impl SyncCommand {
     fn run(self, hostname: &str, group_dir: &Path, config: &Config) -> Result<()> {
         let enabled_backends = config.enabled_backends(hostname);
+
+        if self.refresh {
+            refresh_backends(&enabled_backends, config.backend_configs())?;
+        }
+
         let required = required(hostname, group_dir, config)?;
         let missing = missing(&required, &enabled_backends, config.backend_configs())?;
 
@@ -244,13 +257,7 @@ impl RefreshCommand {
         let enabled_backends = &config.enabled_backends(hostname);
         let backends = parse_backends(&self.backends, enabled_backends)?;
 
-        for backend in backends {
-            log::info!("refreshing package metadata for {backend} backend");
-
-            backend.refresh(config.backend_configs())?;
-        }
-
-        Ok(())
+        refresh_backends(&backends, config.backend_configs())
     }
 }
 
@@ -388,6 +395,23 @@ fn missing(
 
     Ok(missing)
 }
+fn refresh_backend(backend: AnyBackend, backend_configs: &BackendConfigs) -> Result<()> {
+    log::info!("refreshing package metadata for {backend} backend");
+
+    backend.refresh(backend_configs)
+}
+
+fn refresh_backends(
+    backends: &BTreeSet<AnyBackend>,
+    backend_configs: &BackendConfigs,
+) -> Result<()> {
+    for backend in backends {
+        refresh_backend(*backend, backend_configs)?;
+    }
+
+    Ok(())
+}
+
 fn package_vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
     let mut packages = BTreeSet::new();
 

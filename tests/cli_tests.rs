@@ -1,6 +1,30 @@
 use assert_cmd::cargo::cargo_bin_cmd;
 use markdown::{ParseOptions, mdast::Node};
 
+fn assert_help_contains(args: &[&str], needle: &str) {
+    let output = cargo_bin_cmd!().args(args).output().unwrap();
+
+    assert!(output.status.success());
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains(needle),
+        "{stdout:?} did not contain {needle:?}"
+    );
+}
+
+#[test]
+fn refresh_help() {
+    assert_help_contains(&["refresh", "--help"], "refresh package metadata");
+}
+
+#[test]
+fn sync_update_and_update_all_have_refresh_flag() {
+    assert_help_contains(&["sync", "--help"], "--refresh");
+    assert_help_contains(&["update", "--help"], "--refresh");
+    assert_help_contains(&["update-all", "--help"], "--refresh");
+}
+
 #[test]
 fn unmanaged() {
     let readme =

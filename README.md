@@ -137,6 +137,10 @@ or similar commands depending on the backend. Like `metapac clean-cache`,
 you can pass `--backends` to choose specific backends or `--backends all` to
 operate on all backends.
 
+You can also pass `--refresh` to `metapac sync`, `metapac update`, or
+`metapac update-all` to refresh package metadata before installing or
+updating packages.
+
 ### Enable more logs for debugging
 
 You can enable additional log levels by setting the `RUST_LOG` environment
