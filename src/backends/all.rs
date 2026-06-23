@@ -35,6 +35,11 @@ macro_rules! any_backend {
                     $( AnyBackend::$upper_backend => $upper_backend::clean_cache(&config.$lower_backend), )*
                 }
             }
+            pub fn refresh(&self, config: &BackendConfigs) -> Result<()> {
+                match self {
+                    $( AnyBackend::$upper_backend => $upper_backend::refresh(&config.$lower_backend), )*
+                }
+            }
             pub fn update(&self, packages: &BTreeSet<String>, no_confirm: bool, config: &BackendConfigs) -> Result<()> {
                 match self {
                     $( AnyBackend::$upper_backend => $upper_backend::update_packages(packages, no_confirm, &config.$lower_backend), )*

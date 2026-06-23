@@ -129,6 +129,14 @@ examples.
 Repo/package hooks are run before/after installing all repos/packages, not
 between each repo/package.
 
+### Refreshing backend package metadata
+
+Run `metapac refresh` to refresh local package metadata for the enabled
+backends, such as running `apt-get update`, `brew update`, `dnf makecache`,
+or similar commands depending on the backend. Like `metapac clean-cache`,
+you can pass `--backends` to choose specific backends or `--backends all` to
+operate on all backends.
+
 ### Enable more logs for debugging
 
 You can enable additional log levels by setting the `RUST_LOG` environment

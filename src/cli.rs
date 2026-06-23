@@ -32,6 +32,7 @@ pub enum MainSubcommand {
     Unmanaged(UnmanagedCommand),
     Backends(BackendsCommand),
     CleanCache(CleanCacheCommand),
+    Refresh(RefreshCommand),
     Completions(CompletionsCommand),
 }
 
@@ -97,6 +98,20 @@ pub struct BackendsCommand {}
 #[derive(Args)]
 /// clean the caches for the given backends
 pub struct CleanCacheCommand {
+    #[arg(long)]
+    /// the backends to operate on
+    ///
+    /// - if no backends are passed then the `enabled_backends` config is used
+    ///
+    /// - if "all" is passed by itself then all backends are used
+    ///
+    /// - otherwise the list will be parsed as a list of backends to be used
+    pub backends: Vec<String>,
+}
+
+#[derive(Args)]
+/// refresh package metadata for the given backends
+pub struct RefreshCommand {
     #[arg(long)]
     /// the backends to operate on
     ///

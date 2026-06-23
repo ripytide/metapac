@@ -45,6 +45,7 @@ impl Command {
             MainSubcommand::Unmanaged(unmanaged) => unmanaged.run(&hostname, &group_dir, &config),
             MainSubcommand::Backends(backends) => backends.run(&config),
             MainSubcommand::CleanCache(clean_cache) => clean_cache.run(&hostname, &config),
+            MainSubcommand::Refresh(refresh) => refresh.run(&hostname, &config),
             MainSubcommand::Completions(completions) => completions.run(),
         }
     }
@@ -232,6 +233,21 @@ impl CleanCacheCommand {
             log::info!("cleaning cache for {backend} backend");
 
             backend.clean_cache(config.backend_configs())?;
+        }
+
+        Ok(())
+    }
+}
+
+impl RefreshCommand {
+    fn run(&self, hostname: &str, config: &Config) -> Result<()> {
+        let enabled_backends = &config.enabled_backends(hostname);
+        let backends = parse_backends(&self.backends, enabled_backends)?;
+
+        for backend in backends {
+            log::info!("refreshing package metadata for {backend} backend");
+
+            backend.refresh(config.backend_configs())?;
         }
 
         Ok(())
