@@ -143,6 +143,10 @@ impl Backend for WinGet {
         Ok(())
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["winget", "source", "update"], Perms::Same)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }

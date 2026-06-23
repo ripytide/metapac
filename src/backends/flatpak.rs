@@ -203,6 +203,10 @@ impl Backend for Flatpak {
         })
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["flatpak", "update", "--appstream"], Perms::Same)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         let repos = run_command_for_stdout(
             ["flatpak", "remotes", "--columns", "options,name,url"],

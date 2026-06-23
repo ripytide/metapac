@@ -255,6 +255,13 @@ impl Backend for Arch {
         })
     }
 
+    fn refresh(config: &Self::Config) -> Result<()> {
+        run_command(
+            [config.package_manager.as_command(), "--sync", "--refresh"],
+            config.package_manager.change_perms(),
+        )
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }

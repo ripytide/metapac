@@ -139,6 +139,10 @@ impl Backend for Dnf {
         })
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["dnf", "makecache"], Perms::Sudo)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         let repos = run_command_for_stdout(["dnf", "copr", "list"], Perms::Sudo, StdErr::Show)?;
 

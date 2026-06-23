@@ -139,6 +139,10 @@ impl Backend for Apt {
         })
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["apt-get", "update"], Perms::Sudo)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }
