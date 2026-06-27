@@ -46,9 +46,6 @@ pub struct UpdateCommand {
     /// the package names
     pub packages: Vec<String>,
     #[arg(long)]
-    /// refresh package metadata before updating packages
-    pub refresh: bool,
-    #[arg(long)]
     /// do not ask for any confirmation
     pub no_confirm: bool,
 }
@@ -66,9 +63,6 @@ pub struct UpdateAllCommand {
     /// - otherwise the list will be parsed as a list of backends to be used
     pub backends: Vec<String>,
     #[arg(long)]
-    /// refresh package metadata before updating packages
-    pub refresh: bool,
-    #[arg(long)]
     /// do not ask for any confirmation
     pub no_confirm: bool,
 }
@@ -84,9 +78,6 @@ pub struct CleanCommand {
 #[derive(Args)]
 /// install missing packages from groups
 pub struct SyncCommand {
-    #[arg(long)]
-    /// refresh package metadata before installing packages
-    pub refresh: bool,
     #[arg(long)]
     /// do not ask for any confirmation
     pub no_confirm: bool,
@@ -119,7 +110,7 @@ pub struct CleanCacheCommand {
 }
 
 #[derive(Args)]
-/// refresh package metadata for the given backends
+/// refresh local package metadata for the given backends
 pub struct RefreshCommand {
     #[arg(long)]
     /// the backends to operate on

@@ -131,15 +131,10 @@ between each repo/package.
 
 ### Refreshing backend package metadata
 
-Run `metapac refresh` to refresh local package metadata for the enabled
-backends, such as running `apt-get update`, `brew update`, `dnf makecache`,
-or similar commands depending on the backend. Like `metapac clean-cache`,
-you can pass `--backends` to choose specific backends or `--backends all` to
-operate on all backends.
-
-You can also pass `--refresh` to `metapac sync`, `metapac update`, or
-`metapac update-all` to refresh package metadata before installing or
-updating packages.
+Run `metapac refresh` to update local package metadata for all enabled
+backends (e.g. `apt-get update` for `apt`, `brew update` for `brew`, `dnf
+makecache` for `dnf`). Use `--backends` to target specific backends, or
+`--backends all` to include every backend.
 
 ### Enable more logs for debugging
 

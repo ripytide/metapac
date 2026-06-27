@@ -137,8 +137,8 @@ pub trait Backend {
 
     /// Attempts to refresh the backend's local package metadata.
     ///
-    /// Backends that do not have a separate metadata/index refresh operation should use the
-    /// default no-op implementation.
+    /// Backends that do not have a local package metadata refresh operation should have a no-op
+    /// implementation.
     fn refresh(_config: &Self::Config) -> Result<()> {
         Ok(())
     }
