@@ -82,26 +82,23 @@ impl CleanCommand {
         let installed = installed(&enabled_backends, config.backend_configs())?;
         let unmanaged = unmanaged(&required, &installed)?;
 
-        if unmanaged.is_empty() {
-            log::info!("nothing to clean since there are no unmanaged packages");
-            return Ok(());
-        }
+        if !unmanaged.is_empty() {
+            print!(
+                "{}",
+                &unmanaged.clone().to_complex().to_raw().to_string_pretty()?
+            );
 
-        print!(
-            "{}",
-            &unmanaged.clone().to_complex().to_raw().to_string_pretty()?
-        );
-
-        if self.no_confirm {
-            log::info!("proceeding to uninstall packages without confirmation");
-        } else if !Confirm::new()
-            .with_prompt("these repos/packages will be uninstalled, do you want to continue?")
-            .default(true)
-            .show_default(true)
-            .interact()
-            .wrap_err("getting user confirmation")?
-        {
-            return Ok(());
+            if self.no_confirm {
+                log::info!("proceeding to uninstall packages without confirmation");
+            } else if !Confirm::new()
+                .with_prompt("these repos/packages will be uninstalled, do you want to continue?")
+                .default(true)
+                .show_default(true)
+                .interact()
+                .wrap_err("getting user confirmation")?
+            {
+                return Ok(());
+            }
         }
 
         macro_rules! x {
