@@ -7,17 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.10.0] - 2026-06-27
+
 ### Added
+
+- Added a new `metapac refresh` subcommand to allow the updating of
+  backends' local package metadata (e.g. `apt-get update` for `apt`, `brew
+update` for `brew`, `dnf makecache` for `dnf`) (requested in #230, fixed
+  in #231), thanks @lrntgr!
 
 - Added a new `nix` backend using `nix profile`, including package options for
   `installable` and `priority`, plus backend config options for `profile`,
   `impure`, and `accept_flake_config` (requested in #219, fixed in #220),
   thanks @maax3v3!
 
-- Added a new `metapac refresh` subcommand to allow the updating of
-  backends' local package metadata (e.g. `apt-get update` for `apt`, `brew
-  update` for `brew`, `dnf makecache` for `dnf`) (requested in #230, fixed
-  in #231), thanks @lrntgr!
+### Fixed
+
+- Fixed a double `metapac clean` not removing packages on the `arch`
+  backend if cancelled the first time (reported in #229, fixed in #232).
 
 ## [0.9.4] - 2026-04-05
 
@@ -125,7 +132,7 @@ v1.1.0`](https://toml.io/en/v1.1.0) (#188).
 ### Removed
 
 - ‼️ Breaking Change ‼️ The `metapac add`, `metapac remove`, `metapac
-  install`, and `metapac uninstall` subcommands have been removed (#198).
+install`, and `metapac uninstall` subcommands have been removed (#198).
   This is up for discussion though, #197 has been opened for this
   purpose and contains further reasoning.
 
@@ -139,8 +146,9 @@ v1.1.0`](https://toml.io/en/v1.1.0) (#188).
   longer easy to remember which letter goes with which sub-command (#187).
 
   As an example `metapac s` is no longer valid, use the explicit `metapac
-  sync` instead. The same goes for options so instead of `metapac -n
-  hostname` use `metapac --hostname hostname`.
+sync` instead. The same goes for options so instead of `metapac -n
+hostname` use `metapac --hostname hostname`.
+
 - ❗ Breaking Change ❗ the `dnf` backend has been massively simplified and
   now has no package options. Previously there was a `repo` and `user`
   options which didn't make any sense. The backend now behaves much
@@ -152,7 +160,7 @@ v1.1.0`](https://toml.io/en/v1.1.0) (#188).
   into only those sub-commands that require that rather than being done for
   all sub-commands which should result is a gargantuan speedup for those
   sub-commands that didn't and don't need the group files such as `metapac
-  upgrade-all` and `metapac backends` (#187).
+upgrade-all` and `metapac backends` (#187).
 - Fixed running non-`.exe` executables on windows such as `.ps1` and `.cmd`
   files which aren't normally executable by rust's `Command` by wrapping
   all commands executed on windows in `cmd /C` which enables them.
