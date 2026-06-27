@@ -78,7 +78,7 @@ impl Backend for Xbps {
             run_command(
                 ["xbps-install", "--sync"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -96,7 +96,7 @@ impl Backend for Xbps {
             run_command(
                 ["xbps-remove", "--recursive"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -114,7 +114,7 @@ impl Backend for Xbps {
             run_command(
                 ["xbps-install", "--sync", "--update"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -128,7 +128,7 @@ impl Backend for Xbps {
             run_command(
                 ["xbps-install", "--sync", "--update"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm)),
+                    .chain(no_confirm.then_some("--yes")),
                 Perms::Sudo,
             )
         };

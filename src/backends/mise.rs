@@ -116,7 +116,7 @@ impl Backend for Mise {
             run_command(
                 ["mise", "use", "--global"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(std::iter::once(package.as_str())),
                 Perms::Same,
             )?;

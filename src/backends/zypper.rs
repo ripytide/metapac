@@ -78,7 +78,7 @@ impl Backend for Zypper {
             run_command(
                 ["zypper", "install"]
                     .into_iter()
-                    .chain(Some("--no-confirm").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--no-confirm"))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -96,7 +96,7 @@ impl Backend for Zypper {
             run_command(
                 ["zypper", "remove"]
                     .into_iter()
-                    .chain(Some("--no-confirm").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--no-confirm"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -114,7 +114,7 @@ impl Backend for Zypper {
             run_command(
                 ["zypper", "update"]
                     .into_iter()
-                    .chain(Some("--no-confirm").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--no-confirm"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -134,7 +134,7 @@ impl Backend for Zypper {
                 },
             ]
             .into_iter()
-            .chain(Some("--no-confirm").filter(|_| no_confirm)),
+            .chain(no_confirm.then_some("--no-confirm")),
             Perms::Sudo,
         )
     }

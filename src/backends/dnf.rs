@@ -73,7 +73,7 @@ impl Backend for Dnf {
             run_command(
                 ["dnf", "install"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--assumeyes"))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -94,7 +94,7 @@ impl Backend for Dnf {
             run_command(
                 ["dnf", "mark", "dependency"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--assumeyes"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -102,7 +102,7 @@ impl Backend for Dnf {
             run_command(
                 ["dnf", "autoremove"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                    .chain(no_confirm.then_some("--assumeyes")),
                 Perms::Sudo,
             )?;
         }
@@ -118,7 +118,7 @@ impl Backend for Dnf {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm))
+                .chain(no_confirm.then_some("--assumeyes"))
                 .chain(packages.iter().map(String::as_str)),
             Perms::Sudo,
         )
@@ -128,7 +128,7 @@ impl Backend for Dnf {
         run_command(
             ["dnf", "upgrade"]
                 .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                .chain(no_confirm.then_some("--assumeyes")),
             Perms::Sudo,
         )
     }
@@ -159,7 +159,7 @@ impl Backend for Dnf {
             run_command(
                 ["dnf", "copr", "enable", repo.as_str()]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                    .chain(no_confirm.then_some("--assumeyes")),
                 Perms::Sudo,
             )?;
         }
@@ -172,7 +172,7 @@ impl Backend for Dnf {
             run_command(
                 ["dnf", "copr", "remove", repo.as_str()]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                    .chain(no_confirm.then_some("--assumeyes")),
                 Perms::Sudo,
             )?;
         }

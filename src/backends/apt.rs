@@ -79,7 +79,7 @@ impl Backend for Apt {
             run_command(
                 ["apt-get", "install"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.keys().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -97,7 +97,7 @@ impl Backend for Apt {
             run_command(
                 ["apt-get", "remove"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -115,7 +115,7 @@ impl Backend for Apt {
             run_command(
                 ["apt-get", "install", "--only-upgrade"]
                     .into_iter()
-                    .chain(Some("--yes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--yes"))
                     .chain(packages.iter().map(String::as_str)),
                 Perms::Sudo,
             )?;
@@ -128,7 +128,7 @@ impl Backend for Apt {
         run_command(
             ["apt-get", "upgrade"]
                 .into_iter()
-                .chain(Some("--yes").filter(|_| no_confirm)),
+                .chain(no_confirm.then_some("--yes")),
             Perms::Sudo,
         )
     }

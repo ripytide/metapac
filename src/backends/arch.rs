@@ -151,7 +151,7 @@ impl Backend for Arch {
                     "--asexplicit",
                 ]
                 .into_iter()
-                .chain(Some("--noconfirm").filter(|_| no_confirm))
+                .chain(no_confirm.then_some("--noconfirm"))
                 .chain(packages.keys().map(String::as_str)),
                 config.package_manager.change_perms(),
             )?;
@@ -198,7 +198,7 @@ impl Backend for Arch {
                     "--recursive",
                 ]
                 .into_iter()
-                .chain(Some("--noconfirm").filter(|_| no_confirm))
+                .chain(no_confirm.then_some("--noconfirm"))
                 .chain(orphans),
                 config.package_manager.change_perms(),
             )?;
@@ -241,7 +241,7 @@ impl Backend for Arch {
                 "--sysupgrade",
             ]
             .into_iter()
-            .chain(Some("--noconfirm").filter(|_| no_confirm)),
+            .chain(no_confirm.then_some("--noconfirm")),
             config.package_manager.change_perms(),
         )
     }

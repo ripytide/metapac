@@ -98,7 +98,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "install"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--assumeyes"))
                     .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -136,7 +136,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "uninstall"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--assumeyes"))
                     .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -173,7 +173,7 @@ impl Backend for Flatpak {
             run_command(
                 ["flatpak", "update"]
                     .into_iter()
-                    .chain(Some("--assumeyes").filter(|_| no_confirm))
+                    .chain(no_confirm.then_some("--assumeyes"))
                     .map(ToString::to_string)
                     .chain(match installation.as_str() {
                         "user" => Some("--user".to_string()),
@@ -192,7 +192,7 @@ impl Backend for Flatpak {
         run_command(
             ["flatpak", "update"]
                 .into_iter()
-                .chain(Some("--assumeyes").filter(|_| no_confirm)),
+                .chain(no_confirm.then_some("--assumeyes")),
             Perms::Same,
         )
     }

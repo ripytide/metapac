@@ -75,11 +75,7 @@ impl Backend for Uv {
             run_command(
                 ["uv", "tool", "install"]
                     .into_iter()
-                    .chain(
-                        Some("--python")
-                            .into_iter()
-                            .filter(|_| options.python.is_some()),
-                    )
+                    .chain(options.python.is_some().then_some("--python"))
                     .chain(options.python.as_deref())
                     .chain([package.as_str()]),
                 Perms::Same,

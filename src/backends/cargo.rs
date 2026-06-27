@@ -96,27 +96,19 @@ impl Backend for Cargo {
                         vec!["install"]
                     })
                     .chain(
-                        Some("--locked")
-                            .into_iter()
-                            .filter(|_| options.locked.unwrap_or(config.locked)),
+                        options
+                            .locked
+                            .unwrap_or(config.locked)
+                            .then_some("--locked"),
                     )
-                    .chain(Some("--git").into_iter().filter(|_| options.git.is_some()))
+                    .chain(options.git.is_some().then_some("--git"))
                     .chain(options.git.as_deref())
+                    .chain((options.all_features == Some(true)).then_some("--all_features"))
                     .chain(
-                        Some("--all-features")
-                            .into_iter()
-                            .filter(|_| options.all_features.is_some_and(|x| x)),
+                        (options.no_default_features == Some(true))
+                            .then_some("--no-default-features"),
                     )
-                    .chain(
-                        Some("--no-default-features")
-                            .into_iter()
-                            .filter(|_| options.no_default_features.is_some_and(|x| x)),
-                    )
-                    .chain(
-                        Some("--features")
-                            .into_iter()
-                            .filter(|_| !options.features.is_empty()),
-                    )
+                    .chain((!options.features.is_empty()).then_some("--features"))
                     .chain(options.features.iter().map(String::as_str))
                     .chain([package.as_str()]),
                 Perms::Same,
