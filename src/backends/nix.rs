@@ -73,10 +73,16 @@ impl Backend for Nix {
         let args = ["nix", "profile", "list", "--json", "--no-pretty"]
             .into_iter()
             .map(String::from)
-            .chain(profile_args(config))
+            .chain(
+                config
+                    .profile
+                    .iter()
+                    .flat_map(|x| ["--profile".to_string(), x.clone()]),
+            )
             .collect::<Vec<_>>();
 
         let output = run_command_for_stdout(args, Perms::Same, StdErr::Show)?;
+
         parse_installed_packages(&output)
     }
 
@@ -89,8 +95,18 @@ impl Backend for Nix {
             let args = ["nix", "profile", "add"]
                 .into_iter()
                 .map(String::from)
-                .chain(profile_args(config))
-                .chain(eval_flag_args(config))
+                .chain(config.impure.then_some("--impure".to_string()))
+                .chain(
+                    config
+                        .accept_flake_config
+                        .then_some("--accept-flake-config".to_string()),
+                )
+                .chain(
+                    config
+                        .profile
+                        .iter()
+                        .flat_map(|x| ["--profile".to_string(), x.clone()]),
+                )
                 .chain(
                     options
                         .priority
@@ -120,7 +136,12 @@ impl Backend for Nix {
             let args = ["nix", "profile", "remove"]
                 .into_iter()
                 .map(String::from)
-                .chain(profile_args(config))
+                .chain(
+                    config
+                        .profile
+                        .iter()
+                        .flat_map(|x| ["--profile".to_string(), x.clone()]),
+                )
                 .chain(packages.iter().cloned())
                 .collect::<Vec<_>>();
             run_command(args, Perms::Same)?;
@@ -134,8 +155,18 @@ impl Backend for Nix {
             let args = ["nix", "profile", "upgrade"]
                 .into_iter()
                 .map(String::from)
-                .chain(profile_args(config))
-                .chain(eval_flag_args(config))
+                .chain(config.impure.then_some("--impure".to_string()))
+                .chain(
+                    config
+                        .accept_flake_config
+                        .then_some("--accept-flake-config".to_string()),
+                )
+                .chain(
+                    config
+                        .profile
+                        .iter()
+                        .flat_map(|x| ["--profile".to_string(), x.clone()]),
+                )
                 .chain(packages.iter().cloned())
                 .collect::<Vec<_>>();
             run_command(args, Perms::Same)?;
@@ -148,8 +179,18 @@ impl Backend for Nix {
         let args = ["nix", "profile", "upgrade", "--all"]
             .into_iter()
             .map(String::from)
-            .chain(profile_args(config))
-            .chain(eval_flag_args(config))
+            .chain(config.impure.then_some("--impure".to_string()))
+            .chain(
+                config
+                    .accept_flake_config
+                    .then_some("--accept-flake-config".to_string()),
+            )
+            .chain(
+                config
+                    .profile
+                    .iter()
+                    .flat_map(|x| ["--profile".to_string(), x.clone()]),
+            )
             .collect::<Vec<_>>();
         run_command(args, Perms::Same)
     }
@@ -185,26 +226,6 @@ impl Backend for Nix {
     fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["nix", "--version"], Perms::Same, StdErr::Show)
     }
-}
-
-fn profile_args(config: &NixConfig) -> impl Iterator<Item = String> {
-    config
-        .profile
-        .iter()
-        .cloned()
-        .flat_map(|profile| ["--profile".to_string(), profile])
-}
-
-fn eval_flag_args(config: &NixConfig) -> impl Iterator<Item = String> {
-    config
-        .impure
-        .then_some("--impure".to_string())
-        .into_iter()
-        .chain(
-            config
-                .accept_flake_config
-                .then_some("--accept-flake-config".to_string()),
-        )
 }
 
 fn parse_installed_packages(stdout: &str) -> Result<BTreeMap<String, NixPackageOptions>> {
