@@ -176,18 +176,20 @@ impl Backend for Arch {
                 .chain(packages.iter().map(String::as_str)),
                 config.package_manager.change_perms(),
             )?;
+        }
 
-            let orphans_output = run_command_for_stdout(
-                [
-                    config.package_manager.as_command(),
-                    "--query",
-                    "--deps",
-                    "--unrequired",
-                    "--quiet",
-                ],
-                Perms::Same,
-                StdErr::Show,
-            )?;
+        let orphans_command = run_command_for_stdout(
+            [
+                config.package_manager.as_command(),
+                "--query",
+                "--deps",
+                "--unrequired",
+                "--quiet",
+            ],
+            Perms::Same,
+            StdErr::Show,
+        );
+        if let Ok(orphans_output) = orphans_command {
             let orphans = orphans_output.lines();
 
             run_command(
