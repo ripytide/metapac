@@ -148,6 +148,10 @@ impl Backend for Xbps {
         })
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["xbps-install", "--sync"], Perms::Sudo)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }

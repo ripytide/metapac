@@ -72,10 +72,7 @@ impl Backend for Brew {
         _: &Self::Config,
     ) -> Result<()> {
         for package in packages.keys() {
-            run_command(
-                ["brew", "install", package.as_str()].into_iter(),
-                Perms::Same,
-            )?;
+            run_command(["brew", "install", package.as_str()], Perms::Same)?;
         }
 
         Ok(())
@@ -115,6 +112,10 @@ impl Backend for Brew {
         Self::version(config).map_or(Ok(()), |_| {
             run_command(["brew", "cleanup", "--prune-prefix"], Perms::Same)
         })
+    }
+
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["brew", "update"], Perms::Same)
     }
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {

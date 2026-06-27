@@ -125,6 +125,10 @@ impl Backend for Scoop {
         run_command(["scoop.cmd", "cleanup", "--all", "--cache"], Perms::Same)
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["scoop.cmd", "update"], Perms::Same)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }

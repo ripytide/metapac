@@ -143,6 +143,10 @@ impl Backend for Zypper {
         Self::version(config).map_or(Ok(()), |_| run_command(["zypper", "clean"], Perms::Sudo))
     }
 
+    fn refresh(_: &Self::Config) -> Result<()> {
+        run_command(["zypper", "refresh"], Perms::Sudo)
+    }
+
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
         Ok(BTreeMap::new())
     }

@@ -135,6 +135,14 @@ pub trait Backend {
     /// Attempts to clean all cache.
     fn clean_cache(config: &Self::Config) -> Result<()>;
 
+    /// Attempts to refresh the backend's local package metadata.
+    ///
+    /// Backends that do not have a local package metadata refresh operation should have a no-op
+    /// implementation.
+    fn refresh(_config: &Self::Config) -> Result<()> {
+        Ok(())
+    }
+
     /// Attempts to return the currently active repos.
     fn get_installed_repos(config: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>>;
 

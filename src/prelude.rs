@@ -27,7 +27,7 @@ pub use crate::backends::yarn::{Yarn, YarnPackageOptions};
 pub use crate::backends::zypper::{Zypper, ZypperPackageOptions};
 pub use crate::cli::{
     BackendsCommand, CleanCacheCommand, CleanCommand, Command, CompletionsCommand, MainSubcommand,
-    SyncCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
+    RefreshCommand, SyncCommand, UnmanagedCommand, UpdateAllCommand, UpdateCommand,
 };
 pub use crate::cmd::{Perms, StdErr};
 pub use crate::completions::AnyShell;

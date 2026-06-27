@@ -11,7 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a new `nix` backend using `nix profile`, including package options for
   `installable` and `priority`, plus backend config options for `profile`,
-  `impure`, and `accept_flake_config`.
+  `impure`, and `accept_flake_config` (requested in #219, fixed in #220),
+  thanks @maax3v3!
+
+- Added a new `metapac refresh` subcommand to allow the updating of
+  backends' local package metadata (e.g. `apt-get update` for `apt`, `brew
+  update` for `brew`, `dnf makecache` for `dnf`) (requested in #230, fixed
+  in #231), thanks @lrntgr!
 
 ## [0.9.4] - 2026-04-05
 
@@ -43,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a panic when parsing `flatpak` remotes and removed `sudo` from all
   `flatpak` commands as `flatpak` does its own privilege escalation
   (reported in #207, fixed in #208)
- 
+
 ## [0.9.0] - 2026-01-25
 
 ‼️ This is a extremely breaking release. All users will need to fix their
