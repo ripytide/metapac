@@ -85,7 +85,7 @@ impl CleanCommand {
         if !unmanaged.is_empty() {
             print!(
                 "{}",
-                &unmanaged.clone().to_complex().to_raw().to_string_pretty()?
+                unmanaged.clone().to_complex().to_raw().to_string_pretty()?
             );
 
             if self.no_confirm {
@@ -105,8 +105,8 @@ impl CleanCommand {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
                     if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        $upper_backend::remove_repos(&unmanaged.$lower_backend.repos.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
                         $upper_backend::uninstall_packages(&unmanaged.$lower_backend.packages.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
+                        $upper_backend::remove_repos(&unmanaged.$lower_backend.repos.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
                     }
                 )*
             };
@@ -128,7 +128,7 @@ impl SyncCommand {
         }
 
         if !missing.is_empty() {
-            print!("{}", &missing.clone().to_raw().to_string_pretty()?);
+            print!("{}", missing.clone().to_raw().to_string_pretty()?);
         }
 
         if self.no_confirm {
@@ -196,7 +196,7 @@ impl UnmanagedCommand {
         if unmanaged.is_empty() {
             log::info!("no unmanaged packages");
         } else {
-            print!("{}", &unmanaged.to_complex().to_raw().to_string_pretty()?);
+            print!("{}", unmanaged.to_complex().to_raw().to_string_pretty()?);
         }
 
         Ok(())
