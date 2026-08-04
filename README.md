@@ -463,7 +463,7 @@ arch = {
 brew = {
   repos = [
     "homebrew/cask-fonts",
-    { name = "opencode-ai/tap" },
+    "ublue-os/tap",
   ],
   packages = ["package1", { name = "package2" }]
 }
