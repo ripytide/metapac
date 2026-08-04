@@ -105,8 +105,8 @@ impl CleanCommand {
             ($(($upper_backend:ident, $lower_backend:ident)),*) => {
                 $(
                     if enabled_backends.contains(&AnyBackend::$upper_backend) {
-                        $upper_backend::remove_repos(&unmanaged.$lower_backend.repos.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
                         $upper_backend::uninstall_packages(&unmanaged.$lower_backend.packages.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
+                        $upper_backend::remove_repos(&unmanaged.$lower_backend.repos.keys().cloned().collect(), self.no_confirm, &config.backend_configs().$lower_backend)?;
                     }
                 )*
             };
