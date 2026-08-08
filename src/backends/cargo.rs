@@ -87,32 +87,7 @@ impl Backend for Cargo {
         config: &Self::Config,
     ) -> Result<()> {
         for (package, options) in packages {
-            run_command(
-                ["cargo"]
-                    .into_iter()
-                    .chain(if config.binstall {
-                        vec!["binstall", "--no-confirm"]
-                    } else {
-                        vec!["install"]
-                    })
-                    .chain(
-                        options
-                            .locked
-                            .unwrap_or(config.locked)
-                            .then_some("--locked"),
-                    )
-                    .chain(options.git.is_some().then_some("--git"))
-                    .chain(options.git.as_deref())
-                    .chain((options.all_features == Some(true)).then_some("--all_features"))
-                    .chain(
-                        (options.no_default_features == Some(true))
-                            .then_some("--no-default-features"),
-                    )
-                    .chain((!options.features.is_empty()).then_some("--features"))
-                    .chain(options.features.iter().map(String::as_str))
-                    .chain([package.as_str()]),
-                Perms::Same,
-            )?;
+            run_command(install_args(package, options, config), Perms::Same)?;
         }
 
         Ok(())
@@ -208,6 +183,36 @@ impl Backend for Cargo {
     }
 }
 
+fn install_args<'a>(
+    package: &'a str,
+    options: &'a CargoPackageOptions,
+    config: &'a CargoConfig,
+) -> Vec<&'a str> {
+    // binstall does not support installing from git repositories, so fall back
+    // to a regular cargo install when the git option is enabled.
+    ["cargo"]
+        .into_iter()
+        .chain(if config.binstall && options.git.is_none() {
+            vec!["binstall", "--no-confirm"]
+        } else {
+            vec!["install"]
+        })
+        .chain(
+            options
+                .locked
+                .unwrap_or(config.locked)
+                .then_some("--locked"),
+        )
+        .chain(options.git.is_some().then_some("--git"))
+        .chain(options.git.as_deref())
+        .chain((options.all_features == Some(true)).then_some("--all_features"))
+        .chain((options.no_default_features == Some(true)).then_some("--no-default-features"))
+        .chain((!options.features.is_empty()).then_some("--features"))
+        .chain(options.features.iter().map(String::as_str))
+        .chain([package])
+        .collect()
+}
+
 fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptions>> {
     let toml: toml::Table =
         toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
@@ -254,4 +259,44 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptio
     }
 
     Ok(packages)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn config(binstall: bool) -> CargoConfig {
+        CargoConfig {
+            locked: false,
+            binstall,
+        }
+    }
+
+    fn git_options() -> CargoPackageOptions {
+        CargoPackageOptions {
+            git: Some("https://example.com/repo".to_string()),
+            ..CargoPackageOptions::default()
+        }
+    }
+
+    #[test]
+    fn falls_back_to_cargo_install_for_git_packages_when_binstall_is_enabled() {
+        let config = config(true);
+        let options = git_options();
+        let args = install_args("foo", &options, &config);
+
+        assert_eq!(args[1], "install");
+        assert!(args.contains(&"--git"));
+        assert_eq!(args.last(), Some(&"foo"));
+    }
+
+    #[test]
+    fn uses_binstall_for_packages_without_git() {
+        let config = config(true);
+        let options = CargoPackageOptions::default();
+        let args = install_args("foo", &options, &config);
+
+        assert_eq!(args[1], "binstall");
+        assert_eq!(args[2], "--no-confirm");
+    }
 }
