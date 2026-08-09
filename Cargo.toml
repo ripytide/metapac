@@ -13,9 +13,9 @@ categories = ["command-line-utilities"]
 allow-branch = ["main"]
 
 [dependencies]
-clap = { version = "4.5.56", features = ["derive"] }
-clap_complete = "4.5.65"
-clap_complete_nushell = "4.5.10"
+clap = { version = "4.6.6", features = ["derive"] }
+clap_complete = "4.6.9"
+clap_complete_nushell = "4.6.1"
 color-eyre = "0.6.5"
 derive_more = { version = "2.1.1", features = ["full"] }
 dialoguer = "0.12.0"
@@ -23,23 +23,23 @@ dirs = "6.0.0"
 home = "0.5.12"
 hostname = "0.4.2"
 indoc = "2.0.7"
-itertools = "0.14.0"
-libc = "0.2.180"
-log = { version = "0.4.29", features = ["std"] }
+itertools = "0.15.0"
+libc = "0.2.189"
+log = { version = "0.4.33", features = ["std"] }
 pretty_env_logger = "0.5.0"
-regex = "1.12.2"
-serde = { version = "1.0.228", features = ["derive"] }
-serde-inline-default = "1.0.1"
-serde_json = "1.0.149"
-strum = { version = "0.27.2", features = ["derive"] }
+regex = "1.13.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde-inline-default = "1.0.2"
+serde_json = "1.0.151"
+strum = { version = "0.28.0", features = ["derive"] }
 taplo = "0.14.0"
-tempfile = "3.24.0"
-toml = "0.9.11"
-toml_edit = { version = "0.24.0", features = ["display", "serde"] }
+tempfile = "3.27.0"
+toml = "1.1.4"
+toml_edit = { version = "0.25.13", features = ["display", "serde"] }
 walkdir = "2.5.0"
 
 [dev-dependencies]
-assert_cmd = "2.1.2"
+assert_cmd = "2.2.2"
 markdown = "1.0.0"
 
 [lints.clippy]
