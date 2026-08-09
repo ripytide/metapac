@@ -118,8 +118,17 @@ impl Backend for Brew {
         run_command(["brew", "update"], Perms::Same)
     }
 
-    fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
-        Ok(BTreeMap::new())
+    fn get_installed_repos(config: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
+        if Self::version(config).is_err() {
+            return Ok(BTreeMap::new());
+        }
+
+        let taps = run_command_for_stdout(["brew", "tap"], Perms::Same, StdErr::Show)?;
+
+        Ok(taps
+            .lines()
+            .map(|x| (x.to_string(), Self::RepoOptions {}))
+            .collect())
     }
 
     fn add_repos(
@@ -127,19 +136,21 @@ impl Backend for Brew {
         _: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        if repos.is_empty() {
-            Ok(())
-        } else {
-            Err(eyre!("unimplemented"))
+        for repo in repos.keys() {
+            run_command(["brew", "tap", repo.as_str()], Perms::Same)?;
+            run_command(["brew", "trust", "--tap", repo.as_str()], Perms::Same)?;
         }
+
+        Ok(())
     }
 
     fn remove_repos(repos: &BTreeSet<String>, _: bool, _: &Self::Config) -> Result<()> {
-        if repos.is_empty() {
-            Ok(())
-        } else {
-            Err(eyre!("unimplemented"))
+        for repo in repos {
+            run_command(["brew", "untap", repo.as_str()], Perms::Same)?;
+            run_command(["brew", "untrust", "--tap", repo.as_str()], Perms::Same)?;
         }
+
+        Ok(())
     }
 
     fn version(_: &Self::Config) -> Result<String> {

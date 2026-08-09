@@ -460,7 +460,13 @@ arch = {
     },
   ]
 }
-brew = { packages = ["package1", { name = "package2" }] }
+brew = {
+  repos = [
+    "homebrew/cask-fonts",
+    "ublue-os/tap",
+  ],
+  packages = ["package1", { name = "package2" }]
+}
 bun = { packages = ["package1", { name = "package2" }] }
 cargo = {
   packages = [
