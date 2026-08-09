@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.10.1] - 2026-08-09
+
+### Added
+
+- Added repo support for the `brew` backend which `brew tap` and `brew
+  trust --tap`s new repos and does the reverse to remove them (fixed in
+  #235), thanks @Xarianne!
+
+### Fixed
+
+- Fixed repos being removed before packages were uninstalled causing issues
+  with the `dnf`, `flatpak` and `apt` backends. Repos are now removed after
+  packages are uninstalled (fixed in #234), thanks @Xarianne!
+
 ## [0.10.0] - 2026-06-27
 
 ### Added
