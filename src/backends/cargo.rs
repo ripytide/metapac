@@ -35,6 +35,8 @@ pub struct CargoPackageOptions {
     features: Vec<String>,
     #[serde(default)]
     locked: Option<bool>,
+    #[serde(default)]
+    binstall: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -90,7 +92,7 @@ impl Backend for Cargo {
             run_command(
                 ["cargo"]
                     .into_iter()
-                    .chain(if config.binstall {
+                    .chain(if options.binstall.unwrap_or(config.binstall) {
                         vec!["binstall", "--no-confirm"]
                     } else {
                         vec!["install"]
@@ -248,6 +250,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptio
                     no_default_features: None,
                     features: Vec::new(),
                     locked: None,
+                    binstall: None,
                 },
             );
         }

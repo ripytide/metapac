@@ -343,9 +343,9 @@ package_manager = "paru"
 # Default: false
 locked = false
 
-# Whether to use `cargo-binstall` instead of `cargo install` for installing packages.
-# When `true`, metapac will use `cargo binstall --no-confirm` instead of `cargo install`.
-# This can be faster for installing packages as it downloads pre-built binaries.
+# Whether to default to installing cargo packages with `cargo-binstall`,
+# When `true`, metapac will use `cargo binstall --no-confirm` instead of
+# `cargo install` to install packages.
 # Default: false
 binstall = false
 
@@ -480,7 +480,8 @@ cargo = {
         features = [
           "feature1",
         ],
-        locked = true
+        locked = true,
+        binstall = true
       }
     },
   ]
