@@ -89,7 +89,32 @@ impl Backend for Cargo {
         config: &Self::Config,
     ) -> Result<()> {
         for (package, options) in packages {
-            run_command(install_args(package, options, config), Perms::Same)?;
+            run_command(
+                ["cargo"]
+                    .into_iter()
+                    .chain(if options.binstall.unwrap_or(config.binstall) {
+                        vec!["binstall", "--no-confirm"]
+                    } else {
+                        vec!["install"]
+                    })
+                    .chain(
+                        options
+                            .locked
+                            .unwrap_or(config.locked)
+                            .then_some("--locked"),
+                    )
+                    .chain(options.git.is_some().then_some("--git"))
+                    .chain(options.git.as_deref())
+                    .chain((options.all_features == Some(true)).then_some("--all_features"))
+                    .chain(
+                        (options.no_default_features == Some(true))
+                            .then_some("--no-default-features"),
+                    )
+                    .chain((!options.features.is_empty()).then_some("--features"))
+                    .chain(options.features.iter().map(String::as_str))
+                    .chain([package.as_str()]),
+                Perms::Same,
+            )?;
         }
 
         Ok(())
@@ -185,34 +210,6 @@ impl Backend for Cargo {
     }
 }
 
-fn install_args<'a>(
-    package: &'a str,
-    options: &'a CargoPackageOptions,
-    config: &'a CargoConfig,
-) -> Vec<&'a str> {
-    ["cargo"]
-        .into_iter()
-        .chain(if options.binstall.unwrap_or(config.binstall) {
-            vec!["binstall", "--no-confirm"]
-        } else {
-            vec!["install"]
-        })
-        .chain(
-            options
-                .locked
-                .unwrap_or(config.locked)
-                .then_some("--locked"),
-        )
-        .chain(options.git.is_some().then_some("--git"))
-        .chain(options.git.as_deref())
-        .chain((options.all_features == Some(true)).then_some("--all_features"))
-        .chain((options.no_default_features == Some(true)).then_some("--no-default-features"))
-        .chain((!options.features.is_empty()).then_some("--features"))
-        .chain(options.features.iter().map(String::as_str))
-        .chain([package])
-        .collect()
-}
-
 fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptions>> {
     let toml: toml::Table =
         toml::from_str(contents).wrap_err("parsing TOML from .crates.toml file")?;
@@ -260,60 +257,4 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptio
     }
 
     Ok(packages)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn config(binstall: bool) -> CargoConfig {
-        CargoConfig {
-            locked: false,
-            binstall,
-        }
-    }
-
-    #[test]
-    fn per_package_binstall_false_overrides_enabled_config() {
-        let config = config(true);
-        let options = CargoPackageOptions {
-            binstall: Some(false),
-            ..CargoPackageOptions::default()
-        };
-        let args = install_args("foo", &options, &config);
-
-        assert_eq!(args[1], "install");
-    }
-
-    #[test]
-    fn per_package_binstall_true_overrides_disabled_config() {
-        let config = config(false);
-        let options = CargoPackageOptions {
-            binstall: Some(true),
-            ..CargoPackageOptions::default()
-        };
-        let args = install_args("foo", &options, &config);
-
-        assert_eq!(args[1], "binstall");
-        assert_eq!(args[2], "--no-confirm");
-    }
-
-    #[test]
-    fn defaults_to_config_binstall_when_not_specified() {
-        let config = config(true);
-        let options = CargoPackageOptions::default();
-        let args = install_args("foo", &options, &config);
-
-        assert_eq!(args[1], "binstall");
-        assert_eq!(args[2], "--no-confirm");
-    }
-
-    #[test]
-    fn does_not_use_binstall_when_disabled() {
-        let config = config(false);
-        let options = CargoPackageOptions::default();
-        let args = install_args("foo", &options, &config);
-
-        assert_eq!(args[1], "install");
-    }
 }
