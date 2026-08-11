@@ -608,6 +608,8 @@ of any other package managers we should be aware of.
 - [upt](https://github.com/sigoden/upt/tree/main): written in rust,
   supports 28 package managers! Designed for manual package management
   rather than declarative.
+- [meta-package-manager](https://github.com/kdeldycke/meta-package-manager):
+  written in Python, supports 75 package managers on Linux, macOS and Windows.
 
 ## Credits
 
