@@ -35,6 +35,8 @@ pub struct CargoPackageOptions {
     features: Vec<String>,
     #[serde(default)]
     locked: Option<bool>,
+    #[serde(default)]
+    binstall: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -188,11 +190,9 @@ fn install_args<'a>(
     options: &'a CargoPackageOptions,
     config: &'a CargoConfig,
 ) -> Vec<&'a str> {
-    // binstall does not support installing from git repositories, so fall back
-    // to a regular cargo install when the git option is enabled.
     ["cargo"]
         .into_iter()
-        .chain(if config.binstall && options.git.is_none() {
+        .chain(if options.binstall.unwrap_or(config.binstall) {
             vec!["binstall", "--no-confirm"]
         } else {
             vec!["install"]
@@ -253,6 +253,7 @@ fn extract_packages(contents: &str) -> Result<BTreeMap<String, CargoPackageOptio
                     no_default_features: None,
                     features: Vec::new(),
                     locked: None,
+                    binstall: None,
                 },
             );
         }
@@ -272,31 +273,47 @@ mod tests {
         }
     }
 
-    fn git_options() -> CargoPackageOptions {
-        CargoPackageOptions {
-            git: Some("https://example.com/repo".to_string()),
-            ..CargoPackageOptions::default()
-        }
-    }
-
     #[test]
-    fn falls_back_to_cargo_install_for_git_packages_when_binstall_is_enabled() {
+    fn per_package_binstall_false_overrides_enabled_config() {
         let config = config(true);
-        let options = git_options();
+        let options = CargoPackageOptions {
+            binstall: Some(false),
+            ..CargoPackageOptions::default()
+        };
         let args = install_args("foo", &options, &config);
 
         assert_eq!(args[1], "install");
-        assert!(args.contains(&"--git"));
-        assert_eq!(args.last(), Some(&"foo"));
     }
 
     #[test]
-    fn uses_binstall_for_packages_without_git() {
+    fn per_package_binstall_true_overrides_disabled_config() {
+        let config = config(false);
+        let options = CargoPackageOptions {
+            binstall: Some(true),
+            ..CargoPackageOptions::default()
+        };
+        let args = install_args("foo", &options, &config);
+
+        assert_eq!(args[1], "binstall");
+        assert_eq!(args[2], "--no-confirm");
+    }
+
+    #[test]
+    fn defaults_to_config_binstall_when_not_specified() {
         let config = config(true);
         let options = CargoPackageOptions::default();
         let args = install_args("foo", &options, &config);
 
         assert_eq!(args[1], "binstall");
         assert_eq!(args[2], "--no-confirm");
+    }
+
+    #[test]
+    fn does_not_use_binstall_when_disabled() {
+        let config = config(false);
+        let options = CargoPackageOptions::default();
+        let args = install_args("foo", &options, &config);
+
+        assert_eq!(args[1], "install");
     }
 }

@@ -346,6 +346,7 @@ locked = false
 # Whether to use `cargo-binstall` instead of `cargo install` for installing packages.
 # When `true`, metapac will use `cargo binstall --no-confirm` instead of `cargo install`.
 # This can be faster for installing packages as it downloads pre-built binaries.
+# Can be overridden per-package with the `binstall` package option.
 # Default: false
 binstall = false
 
@@ -475,6 +476,7 @@ cargo = {
       name = "package2",
       options = {
         git = "https://github.com/ripytide/metapac",
+        binstall = true,
         all_features = true,
         no_default_features = false,
         features = [
