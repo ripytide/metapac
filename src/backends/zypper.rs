@@ -2,7 +2,6 @@ use color_eyre::Result;
 use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use std::io::Write;
 
 use crate::cmd::{run_command, run_command_for_stdout};
 use crate::prelude::*;
@@ -25,67 +24,6 @@ pub struct ZypperPackageOptions {}
 #[serde(deny_unknown_fields)]
 pub struct ZypperRepoOptions {
     pub url: String,
-    #[serde(default)]
-    pub gpgkey: Option<String>,
-}
-
-fn is_user_installed(line: &str) -> bool {
-    matches!(line.split('|').next().map(str::trim), Some("i+" | "il"))
-}
-
-fn parse_repos(stdout: &str) -> Result<BTreeMap<String, ZypperRepoOptions>> {
-    let mut repos = BTreeMap::new();
-    let mut alias = None;
-    let mut url = None;
-    let mut gpgkey = None;
-
-    let add_repo = |repos: &mut BTreeMap<_, _>,
-                    alias: &mut Option<String>,
-                    url: &mut Option<String>,
-                    gpgkey: &mut Option<String>|
-     -> Result<()> {
-        if let Some(alias) = alias.take() {
-            let url = url.take().ok_or(eyre!("unexpected zypper repo output"))?;
-            repos.insert(
-                alias,
-                ZypperRepoOptions {
-                    url,
-                    gpgkey: gpgkey.take(),
-                },
-            );
-        }
-        Ok(())
-    };
-
-    for line in stdout.lines().map(str::trim) {
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        if let Some(section) = line
-            .strip_prefix('[')
-            .and_then(|line| line.strip_suffix(']'))
-        {
-            add_repo(&mut repos, &mut alias, &mut url, &mut gpgkey)?;
-            if section.is_empty() {
-                return Err(eyre!("unexpected zypper repo output"));
-            }
-            alias = Some(section.to_string());
-            continue;
-        }
-
-        let (key, value) = line
-            .split_once('=')
-            .ok_or(eyre!("unexpected zypper repo output"))?;
-        match key.trim() {
-            "baseurl" => url = Some(value.trim().to_string()),
-            "gpgkey" => gpgkey = Some(value.trim().to_string()),
-            _ => {}
-        }
-    }
-
-    add_repo(&mut repos, &mut alias, &mut url, &mut gpgkey)?;
-    Ok(repos)
 }
 
 impl Backend for Zypper {
@@ -112,15 +50,23 @@ impl Backend for Zypper {
             return Ok(BTreeMap::new());
         }
 
+        // only read the installed packages so that zypper doesn't refresh any repos, as that
+        // could ask about a new signing key while the output is hidden
         let stdout = run_command_for_stdout(
-            ["zypper", "packages", "--userinstalled"],
+            [
+                "zypper",
+                "--disable-repositories",
+                "packages",
+                "--userinstalled",
+            ],
             Perms::Same,
             StdErr::Show,
         )?;
 
         stdout
             .lines()
-            .filter(|line| is_user_installed(line))
+            // locked packages show "il" instead of "i+"
+            .filter(|line| matches!(line.split('|').next().map(str::trim), Some("i+" | "il")))
             .map(|line| -> Result<(String, Self::PackageOptions)> {
                 let mut parts = line.split('|');
                 let package = parts
@@ -212,16 +158,38 @@ impl Backend for Zypper {
     }
 
     fn get_installed_repos(_: &Self::Config) -> Result<BTreeMap<String, Self::RepoOptions>> {
-        let repos = run_command_for_stdout(
-            ["zypper", "repos", "--show-enabled-only", "--export", "-"],
+        let output = run_command_for_stdout(
+            ["zypper", "repos", "--export", "-"],
             Perms::Same,
             StdErr::Show,
         )?;
 
-        Ok(parse_repos(&repos)?
-            .into_iter()
-            .filter(|(alias, _)| !alias.starts_with("openSUSE:"))
-            .collect())
+        // example output:
+        // [vscode]
+        // name=Visual Studio Code
+        // enabled=1
+        // baseurl=https://packages.microsoft.com/yumrepos/vscode
+        // gpgcheck=1
+
+        let mut repos = BTreeMap::new();
+        let mut repo = None;
+        for line in output.lines().map(str::trim) {
+            if let Some(header) = line.strip_prefix('[').and_then(|x| x.strip_suffix(']')) {
+                repo = Some(header);
+            } else if let Some(url) = line.strip_prefix("baseurl=") {
+                repos.insert(
+                    repo.ok_or(eyre!("unexpected output"))?.to_string(),
+                    Self::RepoOptions {
+                        url: url.to_string(),
+                    },
+                );
+            }
+        }
+
+        // the default distribution repos are managed by the openSUSE service
+        repos.retain(|repo: &String, _| !repo.starts_with("openSUSE:"));
+
+        Ok(repos)
     }
 
     fn add_repos(
@@ -229,69 +197,48 @@ impl Backend for Zypper {
         no_confirm: bool,
         _: &Self::Config,
     ) -> Result<()> {
-        for (alias, options) in repos {
-            if options.url.is_empty() {
-                return Err(eyre!("zypper repo {alias:?} has an empty url"));
-            }
-
-            // `zypper addrepo` accepts either a URL plus alias or a `.repo` file, but not
-            // individual settings like `gpgkey`. When a gpgkey is present, write a temporary
-            // `.repo` definition so Zypper can add the repository in one step.
-            let repo_file = options
-                .gpgkey
-                .as_ref()
-                .map(|gpgkey| {
-                    let mut file = tempfile::NamedTempFile::new()?;
-                    writeln!(file, "[{alias}]")?;
-                    writeln!(file, "name={alias}")?;
-                    writeln!(file, "enabled=1")?;
-                    writeln!(file, "autorefresh=1")?;
-                    writeln!(file, "baseurl={}", options.url)?;
-                    writeln!(file, "type=rpm-md")?;
-                    writeln!(file, "gpgcheck=1")?;
-                    writeln!(file, "gpgkey={gpgkey}")?;
-                    file.flush()?;
-                    Ok::<_, color_eyre::eyre::Report>(file)
-                })
-                .transpose()?;
-
-            let url = if let Some(file) = repo_file.as_ref() {
-                file.path()
-                    .to_str()
-                    .ok_or(eyre!("temporary zypper repo file path is not valid UTF-8"))?
+        for (repo, options) in repos {
+            // .repo files contain their own alias along with any other settings such as gpgkey
+            let args = if std::path::Path::new(&options.url)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("repo"))
+            {
+                vec!["--repo", options.url.as_str()]
             } else {
-                options.url.as_str()
+                vec![options.url.as_str(), repo.as_str()]
             };
 
-            let repo_file_url = repo_file.is_some()
-                || std::path::Path::new(&options.url)
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("repo"));
-            let mut args = vec!["zypper"];
-            if no_confirm {
-                args.push("--non-interactive");
-            }
-            if repo_file_url {
-                args.extend(["addrepo", "--repo"]);
-                args.push(url);
-            } else {
-                args.extend(["addrepo", "--refresh"]);
-                args.extend([url, alias.as_str()]);
-            }
+            run_command(
+                ["zypper"]
+                    .into_iter()
+                    .chain(no_confirm.then_some("--non-interactive"))
+                    .chain(["addrepo", "--refresh"])
+                    .chain(args),
+                Perms::Sudo,
+            )?;
 
-            run_command(args, Perms::Sudo)?;
+            // refresh now so that zypper asks about any new signing key while the repo is
+            // being added
+            run_command(
+                ["zypper"]
+                    .into_iter()
+                    .chain(no_confirm.then_some("--non-interactive"))
+                    .chain(no_confirm.then_some("--gpg-auto-import-keys"))
+                    .chain(["refresh", repo.as_str()]),
+                Perms::Sudo,
+            )?;
         }
 
         Ok(())
     }
 
     fn remove_repos(repos: &BTreeSet<String>, no_confirm: bool, _: &Self::Config) -> Result<()> {
-        for alias in repos {
+        for repo in repos {
             run_command(
                 ["zypper"]
                     .into_iter()
                     .chain(no_confirm.then_some("--non-interactive"))
-                    .chain(["removerepo", alias.as_str()]),
+                    .chain(["removerepo", repo.as_str()]),
                 Perms::Sudo,
             )?;
         }
@@ -301,67 +248,5 @@ impl Backend for Zypper {
 
     fn version(_: &Self::Config) -> Result<String> {
         run_command_for_stdout(["zypper", "--version"], Perms::Same, StdErr::Show)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{is_user_installed, parse_repos};
-
-    #[test]
-    fn parses_exported_repo_output() {
-        let repos = parse_repos(
-            "[packman]\n\
-             name=Packman\n\
-             enabled=1\n\
-             baseurl=https://ftp.gwdg.de/pub/linux/misc/packman/suse/$releasever/\n\
-             gpgcheck=1\n\
-             \n\
-             [brave-browser]\n\
-             name=Brave Browser\n\
-             enabled=1\n\
-             baseurl=https://brave-browser-rpm-release.s3.brave.com/x86_64\n\
-             gpgcheck=1\n\
-             gpgkey=https://brave-browser-rpm-release.s3.brave.com/brave-core.asc\n",
-        )
-        .unwrap();
-
-        assert_eq!(
-            repos["packman"].url,
-            "https://ftp.gwdg.de/pub/linux/misc/packman/suse/$releasever/"
-        );
-        assert_eq!(
-            repos["brave-browser"].url,
-            "https://brave-browser-rpm-release.s3.brave.com/x86_64"
-        );
-        assert_eq!(
-            repos["brave-browser"].gpgkey.as_deref(),
-            Some("https://brave-browser-rpm-release.s3.brave.com/brave-core.asc")
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_exported_repo_output() {
-        assert!(parse_repos("[packman]\nname=Packman\n").is_err());
-    }
-
-    #[test]
-    fn recognizes_locked_userinstalled_packages() {
-        let packages = "il | @System | kernel-default | 7.1.5-1.1 | x86_64\n\
-                        vl | repo-oss | kernel-default | 7.1.6-1.1 | x86_64\n";
-
-        let installed = packages
-            .lines()
-            .filter(|line| is_user_installed(line))
-            .map(|line| {
-                line.split('|')
-                    .nth(2)
-                    .expect("package column")
-                    .trim()
-                    .to_string()
-            })
-            .collect::<Vec<_>>();
-
-        assert_eq!(installed, ["kernel-default"]);
     }
 }

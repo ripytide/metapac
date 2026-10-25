@@ -289,28 +289,7 @@ Standard usage.
 
 ### zypper
 
-Zypper repositories use their alias as the repo name. You can add a repository
-using its URL or a `.repo` file URL. The output from `metapac unmanaged` can be
-copied into a group file and includes the GPG key when one is needed.
-
-```toml
-zypper = {
-  repos = [
-    {
-      name = "packman",
-      options = {
-        url = "https://ftp.gwdg.de/pub/linux/misc/packman/suse/$releasever/"
-      }
-    },
-    {
-      name = "brave-browser",
-      options = {
-        url = "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
-      }
-    }
-  ]
-}
-```
+Standard usage.
 
 ## Config
 
@@ -584,7 +563,21 @@ vscode = { packages = ["package1", { name = "package2" }] }
 winget = { packages = ["ripytide.package1", { name = "ripytide.package2" }] }
 xbps = { packages = ["package1", { name = "package2" }] }
 yarn = { packages = ["package1", { name = "package2" }] }
-zypper = { packages = ["package1", { name = "package2" }] }
+zypper = {
+  repos = [
+    {
+      name = "vscode",
+      options = { url = "https://packages.microsoft.com/yumrepos/vscode" }
+    },
+    {
+      name = "brave-browser",
+      options = {
+        url = "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
+      }
+    },
+  ],
+  packages = ["package1", { name = "package2" }]
+}
 ```
 
 ## Wishlist
