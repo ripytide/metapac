@@ -184,6 +184,7 @@ impl Backend for Arch {
                 "--query",
                 "--deps",
                 "--unrequired",
+                "--unrequired",
                 "--quiet",
             ],
             Perms::Same,
