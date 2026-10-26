@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added repo support for the `zypper` backend (added in #238), thanks @Xarianne!
 
+### Changed
+
+- The `url` option for `flatpak` repos is no longer optional and will now fail
+  when parsing group files instead of when attempting to install repos, catching
+  issues earlier (fixed in #241).
+
 ### Fixed
 
 - Fixed packages only required as optional dependencies not being removed by

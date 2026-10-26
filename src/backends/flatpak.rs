@@ -24,7 +24,7 @@ pub struct FlatpakPackageOptions {
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FlatpakRepoOptions {
-    pub url: Option<String>,
+    pub url: String,
 }
 
 impl Backend for Flatpak {
@@ -225,7 +225,7 @@ impl Backend for Flatpak {
                 (
                     format!("{}:{}", installation, parts[1]),
                     FlatpakRepoOptions {
-                        url: Some(parts[2].to_string()),
+                        url: parts[2].to_string(),
                     },
                 )
             })
@@ -253,14 +253,7 @@ impl Backend for Flatpak {
                         "system" => Some("--system".to_string()),
                         x => Some(format!("--installation={x}")),
                     })
-                    .chain([
-                        name.to_string(),
-                        options
-                            .url
-                            .as_deref()
-                            .ok_or(eyre!("flatpak repos must have the \"url\" option set"))?
-                            .to_string(),
-                    ]),
+                    .chain([name.to_string(), options.url.clone()]),
                 Perms::Same,
             )?;
         }
