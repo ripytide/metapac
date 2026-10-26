@@ -563,7 +563,21 @@ vscode = { packages = ["package1", { name = "package2" }] }
 winget = { packages = ["ripytide.package1", { name = "ripytide.package2" }] }
 xbps = { packages = ["package1", { name = "package2" }] }
 yarn = { packages = ["package1", { name = "package2" }] }
-zypper = { packages = ["package1", { name = "package2" }] }
+zypper = {
+  repos = [
+    {
+      name = "vscode",
+      options = { url = "https://packages.microsoft.com/yumrepos/vscode" }
+    },
+    {
+      name = "brave-browser",
+      options = {
+        url = "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
+      }
+    },
+  ],
+  packages = ["package1", { name = "package2" }]
+}
 ```
 
 ## Wishlist
