@@ -104,7 +104,7 @@ impl Backend for Zypper {
     ) -> Result<()> {
         if !packages.is_empty() {
             run_command(
-                ["zypper", "remove"]
+                ["zypper", "remove", "--clean-deps"]
                     .into_iter()
                     .chain(no_confirm.then_some("--no-confirm"))
                     .chain(packages.iter().map(String::as_str)),
